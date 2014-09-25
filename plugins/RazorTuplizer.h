@@ -1,13 +1,13 @@
 // -*- C++ -*-
-// Class:      MiniSelector
+// Class:      RazorTuplizer
 /*
 Description: Base class for miniAOD analysis with CRAB
 */
-// Original Author:  Dustin James Anderson
+//         Author:  Caltech razor team
 //         Created:  Thu, 17 Jul 2014 15:00:06 GMT
 
-#ifndef MINISELECTOR_H
-#define MINISELECTOR_H
+#ifndef RAZORTUPLIZER_H
+#define RAZORTUPLIZER_H
 
 // system include files
 #include <memory>
@@ -56,11 +56,37 @@ using namespace std;
 
 //------ Class declaration ------//
 
-class MiniSelector : public edm::EDAnalyzer {
+class RazorTuplizer : public edm::EDAnalyzer {
     public:
         //analyzer constructor and destructor
-        explicit MiniSelector(const edm::ParameterSet&);
-        ~MiniSelector();
+        explicit RazorTuplizer(const edm::ParameterSet&);
+        ~RazorTuplizer();
+
+        void loadEvent(const edm::Event& iEvent); //call at the beginning of each event to get input handles from the python config
+        void resetBranches();
+        
+        //enable desired output variables
+        void enableEventInfoBranches();
+        void setBranches();
+        void enableMuonBranches();
+        void enableElectronBranches();
+        void enableTauBranches();
+        void enablePhotonBranches();
+        void enableJetBranches();
+        void enableJetAK8Branches();
+        void enableMetBranches();
+        void enableRazorBranches();
+
+        //select objects and fill tree branches
+        bool fillEventInfo(const edm::Event& iEvent);
+        bool fillMuons();
+        bool fillElectrons();
+        bool fillTaus();
+        bool fillPhotons();
+        bool fillJets();
+        bool fillJetsAK8();
+        bool fillMet();
+        bool fillRazor();
 
         //------ HELPER FUNCTIONS ------//
         
@@ -74,8 +100,6 @@ class MiniSelector : public edm::EDAnalyzer {
         //returns true if particle 1 is an ancestor of particle 2, false otherwise
         //(takes two members of prunedGenParticles)
         bool isAncestor(const reco::Candidate* ancestor, const reco::Candidate * particle);
-
-        void loadEvent(const edm::Event& iEvent); //call at the beginning of each event to get input handles from the python config
 
     protected:
         virtual void beginJob() override;
@@ -165,6 +189,67 @@ class MiniSelector : public edm::EDAnalyzer {
         edm::Handle<vector<reco::PhotonCore> > gedPhotonCores;
         edm::Handle<vector<reco::SuperCluster> > superClusters;
         edm::Handle<vector<pat::PackedCandidate> > lostTracks;
+
+        //output tree
+        TTree *outputTree;
+
+        //------ Variables for tree ------//
+
+        //Muons
+        int nMuons;
+        float muonE[99];
+        float muonPt[99];
+        float muonEta[99];
+        float muonPhi[99];
+
+        //Electrons
+        int nElectrons;
+        float eleE[99];
+        float elePt[99];
+        float eleEta[99];
+        float elePhi[99];
+
+        //Taus
+        int nTaus;
+        float tauE[99];
+        float tauPt[99];
+        float tauEta[99];
+        float tauPhi[99];
+
+        //Photons
+        int nPhotons;
+        float phoE[99];
+        float phoPt[99];
+        float phoEta[99];
+        float phoPhi[99];
+
+        //AK4 Jets
+        int nJets;
+        float jetE[99];
+        float jetPt[99];
+        float jetEta[99];
+        float jetPhi[99];
+
+        //AK8 Jets
+        int nFatJets;
+        float fatJetE[99];
+        float fatJetPt[99];
+        float fatJetEta[99];
+        float fatJetPhi[99];
+
+        //MET 
+        double metPt;
+        double metPhi;
+
+        //razor variables
+        double MR, RSQ;
+
+        //event info
+        int nPV;
+        int runNum;
+        int lumiNum;
+        int eventNum;
+
 };
 
 #endif

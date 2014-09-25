@@ -11,7 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/results/top/StoreResults/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/USER/Spring14dr_PU_S14_POSTLS170_V6AN1_miniAOD706p1_814812ec83fce2f620905d2bb30e9100-v2/00000/0012F41F-FA17-E411-A1FF-0025905A48B2.root' #PU 40, 50 ns CSA14 TTJets sample
+        'root://xrootd-cms.infn.it//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root' #PU 20, 25 ns CSA14 TTJets sample
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -30,9 +30,9 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 #------ Declare the correct global tag ------#
 
 #global tag for CSA14 25ns 20 PU (asymptotic alignment and calibration) scenario
-#process.GlobalTag.globaltag = 'PLS170_V7AN1::All'
+process.GlobalTag.globaltag = 'PLS170_V7AN1::All'
 #global tag for CSA14 50ns 40 PU (more pessimistic alignment and calibration) scenario
-process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
+#process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
