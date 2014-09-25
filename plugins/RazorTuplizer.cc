@@ -233,6 +233,9 @@ void RazorTuplizer::resetBranches(){
         RSQ = -999;
 
         nPV = -1;
+        eventNum = 0;
+        lumiNum = 0;
+        runNum = 0;
     }
 }
 
