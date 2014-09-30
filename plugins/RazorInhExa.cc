@@ -36,8 +36,15 @@ void RazorAna::resetAnaBranches(){
   resetBranches();
   //Re-set newly defined variables;
   for(int j = 0; j < 99; j++){
-    muonIsLoose[j] = 0.0;
-    muonIsTight[j] = 0.0;
+    //Mu
+    muonIsLoose[j] = -99.0;
+    muonIsTight[j] = -99.0;
+    
+    //Ele
+    SC_EleE[j] = -99.0;
+    //SC_ElePt[j] = -99.0;
+    SC_EleEta[j] = -99.0;
+    SC_ElePhi[j] = -99.0;
   }
 };
 
@@ -55,13 +62,16 @@ void RazorAna::setAnaBranches(){
 
 void RazorAna::enableMuonBranchesAna(){
   enableMuonBranches();
-  std::cout << "======= enable new Branches =====" << std::endl;
   outputTree->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/F");
   outputTree->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/F");
 };
 
 void RazorAna::enableEleBranchesAna(){
   enableElectronBranches();
+  outputTree->Branch("SC_EleE", SC_EleE,"SC_EleE[nMuons]/F");
+  //outputTree->Branch("SC_ElePt", SC_ElePt,"SC_ElePt[nMuons]/F");
+  outputTree->Branch("SC_EleEta", SC_EleEta,"SC_EleEta[nMuons]/F");
+  outputTree->Branch("SC_ElePhi", SC_ElePhi,"SC_ElePhi[nMuons]/F");
 }
 
 void RazorAna::enableTauBranchesAna(){
@@ -115,6 +125,10 @@ bool RazorAna::fillElectrons(){
     elePt[nElectrons] = ele.pt();
     eleEta[nElectrons] = ele.eta();
     elePhi[nElectrons] = ele.phi();
+    SC_EleE[nElectrons] = ele.superCluster()->energy();
+    //SC_ElePt[nElectrons] = ele.superCluster()->pt();
+    SC_EleEta[nElectrons] = ele.superCluster()->eta();
+    SC_ElePhi[nElectrons] = ele.superCluster()->phi();
     nElectrons++;
   }
   

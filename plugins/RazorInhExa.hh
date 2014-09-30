@@ -37,9 +37,16 @@ public:
 protected:
   void beginJob() override;
   void analyze(const edm::Event&, const edm::EventSetup&);
-
+  
+  //Mu
   float muonIsLoose[99];
   float muonIsTight[99];
+  
+  //Ele
+  float SC_EleE[99];
+  //float SC_ElePt[99]; 
+  float SC_EleEta[99];
+  float SC_ElePhi[99];
 };
 
 //define this as a plug-in
