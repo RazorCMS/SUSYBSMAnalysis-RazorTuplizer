@@ -17,6 +17,8 @@ Running the BASE ntuplizer
 --------------
 
     cmsRun python/razorTuplizer.py
+    
+Before running, check python/razorTuplizer.py to make sure that the correct global tag is defined. (process.GlobalTag.globaltag = ...)
 
 To run using CRAB3:
 
