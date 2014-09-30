@@ -12,24 +12,24 @@ public:
   explicit RazorAna(const edm::ParameterSet&);
   ~RazorAna();
   
-  void resetAnaBranches();
-  void setAnaBranches();
+  void resetBranches();
+  void setBranches();
   
-  void enableMuonBranchesAna();
-  void enableEleBranchesAna();
-  void enableTauBranchesAna();
-  void enablePhotonBranchesAna();
-  void enableJetBranchesAna();
-  void enableJetAK8BranchesAna();
-  void enableMetBranchesAna();
-  void enableRazorBranchesAna();
+  void enableMuonBranches();
+  void enableElectronBranches();
+  void enableTauBranches();
+  void enablePhotonBranches();
+  void enableJetBranches();
+  void enableJetAK8Branches();
+  void enableMetBranches();
+  void enableRazorBranches();
 
   //Re-defining select objects and fill tree branches 
   bool fillMuons();//Fills muon 4-momentum only. PT > 5GeV                                                                 
-  bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV                                                                      
+  bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV                                                                     
   bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV                                                                          
   bool fillPhotons();//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3                                                       
-  bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV                                                            
+  bool fillJets();//Fills AK4 Jet 4-momentum, CSV, and CISV. PT > 20GeV                                                            
   bool fillJetsAK8();//Fills AK5 Jet 4-momentum.                                                                                   
   bool fillMet();//Fills MET(mag, phi)                                                                                             
   bool fillRazor();//Fills MR and RSQ

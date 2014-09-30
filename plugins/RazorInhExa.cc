@@ -14,7 +14,7 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   using namespace edm;
   
   //initialize
-  resetAnaBranches();
+  resetBranches();
   loadEvent(iEvent); //loads objects and resets tree branches
 
   bool isGoodEvent =
@@ -32,8 +32,8 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   if(isGoodEvent) outputTree->Fill();
 };
 
-void RazorAna::resetAnaBranches(){
-  resetBranches();
+void RazorAna::resetBranches(){
+  RazorTuplizer::resetBranches();
   //Re-set newly defined variables;
   for(int j = 0; j < 99; j++){
     //Mu
@@ -48,54 +48,54 @@ void RazorAna::resetAnaBranches(){
   }
 };
 
-void RazorAna::setAnaBranches(){
+void RazorAna::setBranches(){
   enableEventInfoBranches();
-  enableMuonBranchesAna();
-  enableEleBranchesAna();
-  enableTauBranchesAna();
-  enablePhotonBranchesAna();
-  enableJetBranchesAna();
-  enableJetAK8BranchesAna();
-  enableMetBranchesAna();
-  enableRazorBranchesAna();
+  enableMuonBranches();
+  enableElectronBranches();
+  enableTauBranches();
+  enablePhotonBranches();
+  enableJetBranches();
+  enableJetAK8Branches();
+  enableMetBranches();
+  enableRazorBranches();
 };
 
-void RazorAna::enableMuonBranchesAna(){
-  enableMuonBranches();
+void RazorAna::enableMuonBranches(){
+  RazorTuplizer::enableMuonBranches();
   outputTree->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/F");
   outputTree->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/F");
 };
 
-void RazorAna::enableEleBranchesAna(){
-  enableElectronBranches();
+void RazorAna::enableElectronBranches(){
+  RazorTuplizer::enableElectronBranches();
   outputTree->Branch("SC_EleE", SC_EleE,"SC_EleE[nMuons]/F");
   //outputTree->Branch("SC_ElePt", SC_ElePt,"SC_ElePt[nMuons]/F");
   outputTree->Branch("SC_EleEta", SC_EleEta,"SC_EleEta[nMuons]/F");
   outputTree->Branch("SC_ElePhi", SC_ElePhi,"SC_ElePhi[nMuons]/F");
 }
 
-void RazorAna::enableTauBranchesAna(){
-  enableTauBranches();
+void RazorAna::enableTauBranches(){
+  RazorTuplizer::enableTauBranches();
 };
 
-void RazorAna::enablePhotonBranchesAna(){
-  enablePhotonBranches();
+void RazorAna::enablePhotonBranches(){
+  RazorTuplizer::enablePhotonBranches();
 };
 
-void RazorAna::enableJetBranchesAna(){
-  enableJetBranches();
+void RazorAna::enableJetBranches(){
+  RazorTuplizer::enableJetBranches();
 };
 
-void RazorAna::enableJetAK8BranchesAna(){
-  enableJetAK8Branches();
+void RazorAna::enableJetAK8Branches(){
+  RazorTuplizer::enableJetAK8Branches();
 };
 
-void RazorAna::enableMetBranchesAna(){
-  enableMetBranches();
+void RazorAna::enableMetBranches(){
+  RazorTuplizer::enableMetBranches();
 }
 
-void RazorAna::enableRazorBranchesAna(){
-  enableRazorBranches();
+void RazorAna::enableRazorBranches(){
+  RazorTuplizer::enableRazorBranches();
 }
 
 /*
@@ -221,5 +221,5 @@ bool RazorAna::fillRazor(){
 
 //------ Method called once each job just before starting event loop ------//                                                               
 void RazorAna::beginJob(){
-  setAnaBranches();
+  setBranches();
 };
