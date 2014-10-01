@@ -41,10 +41,26 @@ void RazorAna::resetBranches(){
     muonIsTight[j] = -99.0;
     
     //Ele
-    SC_EleE[j] = -99.0;
-    //SC_ElePt[j] = -99.0;
-    SC_EleEta[j] = -99.0;
-    SC_ElePhi[j] = -99.0;
+    eleE_SC[j] = -99.0;
+    //elePt_SC[j] = -99.0;
+    eleEta_SC[j] = -99.0;
+    elePhi_SC[j] = -99.0;
+    eleSigmaIetaIeta[j] = -99.0;
+    eleFull5x5SigmaIetaIeta[j] = -99.0;
+    eleR9[j] = -99;
+    ele_dEta[j] = -99;
+    ele_dPhi[j] = -99;
+    ele_HoverE[j] = -99;
+    ele_d0[j] = -99;
+    ele_dZ[j] = -99;
+    ele_sumChargedHadronPt[j] = -99.0;
+    ele_sumNeutralHadronEt[j] = -99.0;
+    ele_sumPhotonEt[j] = -99.0;
+    ele_MissHits[j] = -99;
+    ele_ConvRejec[j] = -99;
+    ele_OneOverEminusOneOverP[j] = -99;
+    ele_RegressionE[j] = -99;
+    ele_CombineP4[j] = -99;
   }
 };
 
@@ -68,10 +84,12 @@ void RazorAna::enableMuonBranches(){
 
 void RazorAna::enableElectronBranches(){
   RazorTuplizer::enableElectronBranches();
-  outputTree->Branch("SC_EleE", SC_EleE,"SC_EleE[nMuons]/F");
-  //outputTree->Branch("SC_ElePt", SC_ElePt,"SC_ElePt[nMuons]/F");
-  outputTree->Branch("SC_EleEta", SC_EleEta,"SC_EleEta[nMuons]/F");
-  outputTree->Branch("SC_ElePhi", SC_ElePhi,"SC_ElePhi[nMuons]/F");
+  outputTree->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
+  //outputTree->Branch("SC_ElePt", SC_ElePt,"SC_ElePt[nElectrons]/F");
+  outputTree->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
+  outputTree->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
+  outputTree->Branch("eleSigmaIetaIeta", eleSigmaIetaIeta, "eleSigmaIetaIeta[nElectrons]/F");
+  outputTree->Branch("eleFull5x5SigmaIetaIeta", eleFull5x5SigmaIetaIeta, "eleFull5x5SigmaIetaIeta[nElectrons]/F");
 }
 
 void RazorAna::enableTauBranches(){
@@ -125,10 +143,19 @@ bool RazorAna::fillElectrons(){
     elePt[nElectrons] = ele.pt();
     eleEta[nElectrons] = ele.eta();
     elePhi[nElectrons] = ele.phi();
-    SC_EleE[nElectrons] = ele.superCluster()->energy();
+    eleE_SC[nElectrons] = ele.superCluster()->energy();
     //SC_ElePt[nElectrons] = ele.superCluster()->pt();
-    SC_EleEta[nElectrons] = ele.superCluster()->eta();
-    SC_ElePhi[nElectrons] = ele.superCluster()->phi();
+    eleEta_SC[nElectrons] = ele.superCluster()->eta();
+    elePhi_SC[nElectrons] = ele.superCluster()->phi();
+    eleSigmaIetaIeta[nElectrons] = ele.sigmaIetaIeta();
+    eleFull5x5SigmaIetaIeta[nElectrons] = ele.full5x5_sigmaIetaIeta();
+    eleR9[nElectrons] = ele.r9();
+    ele_dEta[nElectrons] = ele.deltaEtaSuperClusterTrackAtVtx();
+    ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
+    ele_HoverE[nElectrons] = ele.hcalOverEcalBc();
+    ele_sumChargedHadronPt[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
+    ele_sumNeutralHadronEt[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
+    ele_sumPhotonEt[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
     nElectrons++;
   }
   
