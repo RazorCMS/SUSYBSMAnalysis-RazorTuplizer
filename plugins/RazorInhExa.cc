@@ -84,12 +84,28 @@ void RazorAna::enableMuonBranches(){
 
 void RazorAna::enableElectronBranches(){
   RazorTuplizer::enableElectronBranches();
+  outputTree->Branch("eleCharge", eleCharge, "eleCharge[nElectrons]/F");
   outputTree->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
   //outputTree->Branch("SC_ElePt", SC_ElePt,"SC_ElePt[nElectrons]/F");
   outputTree->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
   outputTree->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
   outputTree->Branch("eleSigmaIetaIeta", eleSigmaIetaIeta, "eleSigmaIetaIeta[nElectrons]/F");
   outputTree->Branch("eleFull5x5SigmaIetaIeta", eleFull5x5SigmaIetaIeta, "eleFull5x5SigmaIetaIeta[nElectrons]/F");
+  outputTree->Branch("eleR9", eleR9, "eleR9[nElectrons]/F");
+  outputTree->Branch("ele_dEta", ele_dEta, "ele_dEta[nElectrons]/F");
+  outputTree->Branch("ele_dPhi", ele_dPhi, "ele_dPhi[nElectrons]/F");
+  outputTree->Branch("ele_HoverE", ele_HoverE, "ele_HoverE[nElectrons]/F");
+  outputTree->Branch("ele_d0", ele_d0, "ele_d0[nElectrons]/F");
+  outputTree->Branch("ele_dZ", ele_dZ, "ele_dZ[nElectrons]/F");
+  outputTree->Branch("ele_sumChargedHadronPt", ele_sumChargedHadronPt, "ele_sumChargedHadronPt[nElectrons]/F");
+  outputTree->Branch("ele_sumNeutralHadronEt", ele_sumNeutralHadronEt, "ele_sumNeutralHadronEt[nElectrons]/F");
+  outputTree->Branch("ele_sumPhotonEt", ele_sumPhotonEt, "ele_sumPhotonEt[nElectrons]/F");
+  outputTree->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/F");
+  outputTree->Branch("ele_ConvRejec", ele_ConvRejec, "ele_ConvRejec[nElectrons]/I");
+  outputTree->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
+  outputTree->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
+  outputTree->Branch("ele_TrackRegressionE", ele_TrackRegressionE, "ele_TrackRegressionE[nElectrons]/F");
+  //outputTree->Branch("", , "[nElectrons]/F");
 }
 
 void RazorAna::enableTauBranches(){
@@ -143,6 +159,7 @@ bool RazorAna::fillElectrons(){
     elePt[nElectrons] = ele.pt();
     eleEta[nElectrons] = ele.eta();
     elePhi[nElectrons] = ele.phi();
+    eleCharge[nElectrons] = ele.gsfTrack()->charge();
     eleE_SC[nElectrons] = ele.superCluster()->energy();
     //SC_ElePt[nElectrons] = ele.superCluster()->pt();
     eleEta_SC[nElectrons] = ele.superCluster()->eta();
@@ -156,6 +173,12 @@ bool RazorAna::fillElectrons(){
     ele_sumChargedHadronPt[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
     ele_sumNeutralHadronEt[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
     ele_sumPhotonEt[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
+    ele_MissHits[nElectrons] = ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
+    ele_ConvRejec[nElectrons] = ele.convFlags();
+    ele_OneOverEminusOneOverP[nElectrons] = 1./ele.correctedEcalEnergy()  -  1./ele.trackMomentumAtVtx().R();
+    ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
+    ele_TrackRegressionE[nElectrons] = ele.ecalTrackRegressionEnergy();
+    //ele_CombineP4[nElectrons] = ele.p4(2).E();
     nElectrons++;
   }
   

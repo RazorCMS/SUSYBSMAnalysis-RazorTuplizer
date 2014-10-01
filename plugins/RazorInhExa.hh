@@ -43,6 +43,7 @@ protected:
   float muonIsTight[99];
   
   //Ele
+  float eleCharge[99];
   float eleE_SC[99];
   //float SC_ElePt[99]; 
   float eleEta_SC[99];
@@ -59,9 +60,10 @@ protected:
   float ele_sumNeutralHadronEt[99];
   float ele_sumPhotonEt[99];
   float ele_MissHits[99];
-  float ele_ConvRejec[99];
+  int ele_ConvRejec[99];
   float ele_OneOverEminusOneOverP[99];
   float ele_RegressionE[99];
+  float ele_TrackRegressionE[99];
   float ele_CombineP4[99];
 };
 
