@@ -199,7 +199,8 @@ bool RazorAna::fillMuons(){
     muon_dZ[nMuons] = mu.muonBestTrack()->dz(PV.position());
     muon_ip3d[nMuons] = mu.dB(pat::Muon::PV3D);
     muon_ip3dSignificance[nMuons] = mu.dB(pat::Muon::PV3D)/mu.edB(pat::Muon::PV3D);
-    muonType[nMuons] = mu.isMuon() || mu.isGlobalMuon();
+    muonType[nMuons] = mu.isMuon() + mu.isGlobalMuon() + mu.isTrackerMuon() + mu.isStandAloneMuon()
+      + mu.isCaloMuon() + mu.isPFMuon() + mu.isRPCMuon();
     muon_sumChargedHadronPt[nMuons] = mu.pfIsolationR04().sumChargedHadronPt;
     muon_sumChargedParticlePt[nMuons] = mu.pfIsolationR04().sumChargedParticlePt;
     muon_sumNeutralHadronEt[nMuons] = mu.pfIsolationR04().sumNeutralHadronEt;
