@@ -92,6 +92,10 @@ protected:
   float pho_RegressionE[99];
   float pho_pfMVA[99];
   
+  //Jets
+  float jetMass[99];
+  float jetJetArea[99];
+  float jetPileupE[99];  
 };
 
 //define this as a plug-in

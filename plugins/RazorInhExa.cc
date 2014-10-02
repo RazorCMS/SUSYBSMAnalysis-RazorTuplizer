@@ -85,6 +85,11 @@ void RazorAna::resetBranches(){
     pho_isConversion[j] = -99;
     pho_RegressionE[j] = -99.0;
     pho_pfMVA[j] = -99.0;
+
+    //Jets
+    jetMass[j] =  -99.0;
+    jetJetArea[j] = -99.0;
+    jetPileupE[j] = -99.0;
   }
 };
 
@@ -115,18 +120,12 @@ void RazorAna::enableMuonBranches(){
   outputTree->Branch("muon_sumChargedParticlePt", muon_sumChargedParticlePt, "muon_sumChargedParticlePt[nMuons]/F");
   outputTree->Branch("muon_sumNeutralHadronEt", muon_sumNeutralHadronEt, "muon_sumNeutralHadronEt[nMuons]/F");
   outputTree->Branch("muon_sumPhotonEt", muon_sumPhotonEt, "muon_sumPhotonEt[nMuons]/F");
-  //outputTree->Branch("", , "[nMuons]/F");
-  //outputTree->Branch("", , "[nMuons]/F");
-  //outputTree->Branch("", , "[nMuons]/F");
-  //outputTree->Branch("", , "[nMuons]/F");
-  //outputTree->Branch("", , "[nMuons]/F");
 };
 
 void RazorAna::enableElectronBranches(){
   RazorTuplizer::enableElectronBranches();
   outputTree->Branch("eleCharge", eleCharge, "eleCharge[nElectrons]/F");
   outputTree->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
-  //outputTree->Branch("SC_ElePt", SC_ElePt,"SC_ElePt[nElectrons]/F");
   outputTree->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
   outputTree->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
   outputTree->Branch("eleSigmaIetaIeta", eleSigmaIetaIeta, "eleSigmaIetaIeta[nElectrons]/F");
@@ -145,8 +144,7 @@ void RazorAna::enableElectronBranches(){
   outputTree->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
   outputTree->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
   outputTree->Branch("ele_TrackRegressionE", ele_TrackRegressionE, "ele_TrackRegressionE[nElectrons]/F");
-  //outputTree->Branch("", , "[nElectrons]/F");
-}
+};
 
 void RazorAna::enableTauBranches(){
   RazorTuplizer::enableTauBranches();
@@ -168,6 +166,9 @@ void RazorAna::enablePhotonBranches(){
 
 void RazorAna::enableJetBranches(){
   RazorTuplizer::enableJetBranches();
+  outputTree->Branch("jetMass", jetMass, "jetMass[nJets]/F");
+  outputTree->Branch("jetJetArea", jetJetArea, "jetJetArea[nJets]/F");
+  outputTree->Branch("jetPileupE", jetPileupE, "jetPileupE[nJets]/F");
 };
 
 void RazorAna::enableJetAK8Branches(){
@@ -225,10 +226,8 @@ bool RazorAna::fillElectrons(){
     elePt[nElectrons] = ele.pt();
     eleEta[nElectrons] = ele.eta();
     elePhi[nElectrons] = ele.phi();
-    //eleCharge[nElectrons] = ele.gsfTrack()->charge();
     eleCharge[nElectrons] = ele.charge();
     eleE_SC[nElectrons] = ele.superCluster()->energy();
-    //SC_ElePt[nElectrons] = ele.superCluster()->pt();
     eleEta_SC[nElectrons] = ele.superCluster()->eta();
     elePhi_SC[nElectrons] = ele.superCluster()->phi();
     eleSigmaIetaIeta[nElectrons] = ele.sigmaIetaIeta();
@@ -297,6 +296,9 @@ bool RazorAna::fillJets(){
     jetPhi[nJets] = j.phi();
     jetCSV[nJets] = j.bDiscriminator("combinedSecondaryVertexBJetTags");
     jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexBJetTags");
+    jetMass[nJets] = j.mass();
+    jetJetArea[nJets] = j.jetArea();
+    jetPileupE[nJets] = j.pileup();
     nJets++;
   }
 
