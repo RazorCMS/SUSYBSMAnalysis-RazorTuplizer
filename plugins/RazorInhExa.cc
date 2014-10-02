@@ -159,7 +159,8 @@ bool RazorAna::fillElectrons(){
     elePt[nElectrons] = ele.pt();
     eleEta[nElectrons] = ele.eta();
     elePhi[nElectrons] = ele.phi();
-    eleCharge[nElectrons] = ele.gsfTrack()->charge();
+    //eleCharge[nElectrons] = ele.gsfTrack()->charge();
+    eleCharge[nElectrons] = ele.charge();
     eleE_SC[nElectrons] = ele.superCluster()->energy();
     //SC_ElePt[nElectrons] = ele.superCluster()->pt();
     eleEta_SC[nElectrons] = ele.superCluster()->eta();

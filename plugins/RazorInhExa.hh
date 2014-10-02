@@ -42,6 +42,7 @@ protected:
   float muonIsLoose[99];
   float muonIsTight[99];
   
+  
   //Ele
   float eleCharge[99];
   float eleE_SC[99];
@@ -65,6 +66,7 @@ protected:
   float ele_RegressionE[99];
   float ele_TrackRegressionE[99];
   float ele_CombineP4[99];
+  
 };
 
 //define this as a plug-in
