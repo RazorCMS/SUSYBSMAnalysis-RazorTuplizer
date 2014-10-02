@@ -24,6 +24,7 @@ public:
   void enableJetAK8Branches();
   void enableMetBranches();
   void enableRazorBranches();
+  void enableMCBranches();
 
   //Re-defining select objects and fill tree branches 
   bool fillEventInfo(const edm::Event& iEvent);
@@ -35,6 +36,7 @@ public:
   bool fillJetsAK8();//Fills AK5 Jet 4-momentum.
   bool fillMet();//Fills MET(mag, phi)
   bool fillRazor();//Fills MR and RSQ
+  bool fillMC(); //Fill MC variables
 
 protected:
   void beginJob() override;

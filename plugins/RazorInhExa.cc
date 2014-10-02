@@ -26,7 +26,8 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJets()
     && fillJetsAK8()
     && fillMet()
-    && fillRazor();
+    && fillRazor()
+    && fillMC();
 
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) outputTree->Fill();
@@ -102,6 +103,7 @@ void RazorAna::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
+  enableMCBranches();
 };
 
 
@@ -185,6 +187,10 @@ void RazorAna::enableMetBranches(){
 
 void RazorAna::enableRazorBranches(){
   RazorTuplizer::enableRazorBranches();
+}
+
+void RazorAna::enableMCBranches(){
+  RazorTuplizer::enableMCBranches();
 }
 
 /*
@@ -367,6 +373,10 @@ bool RazorAna::fillRazor(){
 
   return true;
 };
+
+bool RazorAna::fillMC(){
+  return RazorTuplizer::fillMC();
+}
 
 //------ Method called once each job just before starting event loop ------//                                                               
 void RazorAna::beginJob(){

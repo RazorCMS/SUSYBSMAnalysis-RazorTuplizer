@@ -73,6 +73,7 @@ void RazorTuplizer::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
+  enableMCBranches();
 }
 
 void RazorTuplizer::enableEventInfoBranches(){
@@ -142,6 +143,11 @@ void RazorTuplizer::enableRazorBranches(){
   outputTree->Branch("RSQ", &RSQ, "RSQ/D");
 }
 
+void RazorTuplizer::enableMCBranches(){
+  outputTree->Branch("genMetPt", &genMetPt, "genMetPt/D");
+  outputTree->Branch("genMetPhi", &genMetPhi, "genMetPhi/D");
+}
+
 //------ Load the miniAOD objects and reset tree variables for each event ------//
 void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   //load all miniAOD objects for the current event
@@ -185,7 +191,6 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(superClustersToken_,superClusters);
   iEvent.getByToken(lostTracksToken_,lostTracks);
   
-  //resetBranches();
 }   
 
 //called by the loadEvent() method
@@ -230,9 +235,13 @@ void RazorTuplizer::resetBranches(){
     fatJetPt[i] = 0.0;
     fatJetEta[i] = 0.0;
     fatJetPhi[i] = 0.0;
-    
+  }
+
     metPt = -999;
     metPhi = -999;
+
+    genMetPt = -999;
+    genMetPhi = -999;
     
     MR = -999;
     RSQ = -999;
@@ -241,7 +250,6 @@ void RazorTuplizer::resetBranches(){
     eventNum = 0;
     lumiNum = 0;
     runNum = 0;
-  }
 }
 
 //------ Methods to fill tree variables ------//
@@ -353,6 +361,14 @@ bool RazorTuplizer::fillMet(){
   return true;
 }
 
+bool RazorTuplizer::fillMC(){
+    const pat::MET &Met = mets->front();
+    genMetPt = Met.genMET()->pt();
+    genMetPhi = Met.genMET()->phi();
+
+    return true;
+}
+
 bool RazorTuplizer::fillRazor(){ 
   //get good jets for razor calculation
   vector<TLorentzVector> goodJets;
@@ -395,7 +411,8 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillJets()
     && fillJetsAK8()
     && fillMet()
-    && fillRazor();
+    && fillRazor()
+    && fillMC();
   
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) outputTree->Fill();
