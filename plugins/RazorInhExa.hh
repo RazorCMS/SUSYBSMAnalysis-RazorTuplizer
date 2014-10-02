@@ -39,9 +39,18 @@ protected:
   void analyze(const edm::Event&, const edm::EventSetup&);
   
   //Mu
+  int muonCharge[99];//muon charge
   float muonIsLoose[99];
   float muonIsTight[99];
-  
+  float muon_d0[99];//transverse impact paramenter
+  float muon_dZ[99];//impact parameter
+  float muon_ip3d[99];//3d impact paramenter
+  float muon_ip3dSignificance[99];//3d impact paramenter/error
+  unsigned int muonType[99];//muonTypeBit: global, tracker, standalone 
+  float muon_sumChargedHadronPt[99];//pfISO dr04
+  float muon_sumChargedParticlePt[99];//pfISO dr04
+  float muon_sumNeutralHadronEt[99];//pfISO dr04
+  float muon_sumPhotonEt[99];//pfISO dr04
   
   //Ele
   float eleCharge[99];
@@ -66,6 +75,20 @@ protected:
   float ele_RegressionE[99];
   float ele_TrackRegressionE[99];
   float ele_CombineP4[99];
+  
+  //Taus
+
+  //Photons
+  float phoSigmaIetaIeta[99];
+  float phoFull5x5SigmaIetaIeta[99];
+  float phoR9[99];
+  float pho_HoverE[99];
+  float pho_sumChargedHadronPt[99];
+  float pho_sumNeutralHadronEt[99];
+  float pho_sumPhotonEt[99];
+  int pho_isConversion[99];
+  float pho_RegressionE[99];
+  float pho_pfMVA[99];
   
 };
 

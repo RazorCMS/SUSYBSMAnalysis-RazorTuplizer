@@ -37,12 +37,21 @@ void RazorAna::resetBranches(){
   //Re-set newly defined variables;
   for(int j = 0; j < 99; j++){
     //Mu
+    muonCharge[j] = -99.0;
     muonIsLoose[j] = -99.0;
     muonIsTight[j] = -99.0;
+    muon_d0[j] = -99.0;
+    muon_dZ[j] = -99.0;
+    muon_ip3d[j] = -99.0;
+    muon_ip3dSignificance[j] = -99.0;
+    muonType[j] = 0;
+    muon_sumChargedHadronPt[j] = -99.0;
+    muon_sumChargedParticlePt[j] = -99.0;
+    muon_sumNeutralHadronEt[j] = -99.0;
+    muon_sumPhotonEt[j] = -99.0;
     
     //Ele
     eleE_SC[j] = -99.0;
-    //elePt_SC[j] = -99.0;
     eleEta_SC[j] = -99.0;
     elePhi_SC[j] = -99.0;
     eleSigmaIetaIeta[j] = -99.0;
@@ -61,6 +70,20 @@ void RazorAna::resetBranches(){
     ele_OneOverEminusOneOverP[j] = -99;
     ele_RegressionE[j] = -99;
     ele_CombineP4[j] = -99;
+
+    //Taus
+    
+    //Photons
+    phoSigmaIetaIeta[j] = -99.0;
+    phoFull5x5SigmaIetaIeta[j] = -99.0;
+    phoR9[j] = -99.0;
+    pho_HoverE[j] = -99.0;
+    pho_sumChargedHadronPt[j] = -99.0;
+    pho_sumNeutralHadronEt[j] = -99.0;
+    pho_sumPhotonEt[j] = -99.0;
+    pho_isConversion[j] = -99;
+    pho_RegressionE[j] = -99.0;
+    pho_pfMVA[j] = -99.0;
   }
 };
 
@@ -78,8 +101,23 @@ void RazorAna::setBranches(){
 
 void RazorAna::enableMuonBranches(){
   RazorTuplizer::enableMuonBranches();
+  outputTree->Branch("muonCharge", muonCharge, "muonCharge[nMuons]/F");
   outputTree->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/F");
   outputTree->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/F");
+  outputTree->Branch("muon_d0", muon_d0, "muon_d0[nMuons]/F");
+  outputTree->Branch("muon_dZ", muon_dZ, "muon_dZ[nMuons]/F");
+  outputTree->Branch("muon_ip3d", muon_ip3d, "muon_ip3d[nMuons]/F");
+  outputTree->Branch("muon_ip3dSignificance", muon_ip3dSignificance, "muon_ip3dSignificance[nMuons]/F");
+  outputTree->Branch("muonType", muonType, "muonType[nMuons]/s");
+  outputTree->Branch("muon_sumChargedHadronPt", muon_sumChargedHadronPt, "muon_sumChargedHadronPt[nMuons]/F");
+  outputTree->Branch("muon_sumChargedParticlePt", muon_sumChargedParticlePt, "muon_sumChargedParticlePt[nMuons]/F");
+  outputTree->Branch("muon_sumNeutralHadronEt", muon_sumNeutralHadronEt, "muon_sumNeutralHadronEt[nMuons]/F");
+  outputTree->Branch("muon_sumPhotonEt", muon_sumPhotonEt, "muon_sumPhotonEt[nMuons]/F");
+  //outputTree->Branch("", , "[nMuons]/F");
+  //outputTree->Branch("", , "[nMuons]/F");
+  //outputTree->Branch("", , "[nMuons]/F");
+  //outputTree->Branch("", , "[nMuons]/F");
+  //outputTree->Branch("", , "[nMuons]/F");
 };
 
 void RazorAna::enableElectronBranches(){
@@ -114,6 +152,16 @@ void RazorAna::enableTauBranches(){
 
 void RazorAna::enablePhotonBranches(){
   RazorTuplizer::enablePhotonBranches();
+  outputTree->Branch("phoSigmaIetaIeta", phoSigmaIetaIeta, "phoSigmaIetaIeta[nPhotons]/F");
+  outputTree->Branch("phoFull5x5SigmaIetaIeta", phoFull5x5SigmaIetaIeta, "phoFull5x5SigmaIetaIeta[nPhotons]/F");
+  outputTree->Branch("phoR9", phoR9, "phoR9[nPhotons]/F");
+  outputTree->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
+  outputTree->Branch("pho_sumChargedHadronPt", pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
+  outputTree->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
+  outputTree->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
+  outputTree->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/I");
+  outputTree->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
+  outputTree->Branch("pho_pfMVA", pho_pfMVA, "pho_pfMVA[nPhotons]/F");
 };
 
 void RazorAna::enableJetBranches(){
@@ -144,8 +192,18 @@ bool RazorAna::fillMuons(){
     muonPt[nMuons] = mu.pt();
     muonEta[nMuons] = mu.eta();
     muonPhi[nMuons] = mu.phi();
+    muonCharge[nMuons] = mu.charge();
     muonIsLoose[nMuons] = mu.isLooseMuon();
     muonIsTight[nMuons] = mu.isTightMuon(PV);
+    muon_d0[nMuons] = -mu.muonBestTrack()->dxy(PV.position());
+    muon_dZ[nMuons] = mu.muonBestTrack()->dz(PV.position());
+    muon_ip3d[nMuons] = mu.dB(pat::Muon::PV3D);
+    muon_ip3dSignificance[nMuons] = mu.dB(pat::Muon::PV3D)/mu.edB(pat::Muon::PV3D);
+    muonType[nMuons] = mu.isMuon() || mu.isGlobalMuon();
+    muon_sumChargedHadronPt[nMuons] = mu.pfIsolationR04().sumChargedHadronPt;
+    muon_sumChargedParticlePt[nMuons] = mu.pfIsolationR04().sumChargedParticlePt;
+    muon_sumNeutralHadronEt[nMuons] = mu.pfIsolationR04().sumNeutralHadronEt;
+    muon_sumPhotonEt[nMuons] =  mu.pfIsolationR04().sumPhotonEt;
     nMuons++;
   }
 
@@ -153,6 +211,7 @@ bool RazorAna::fillMuons(){
 };
 
 bool RazorAna::fillElectrons(){
+  const reco::Vertex &PV = vertices->front();
   for(const pat::Electron &ele : *electrons){
     if(ele.pt() < 5) continue;
     eleE[nElectrons] = ele.energy();
@@ -171,6 +230,8 @@ bool RazorAna::fillElectrons(){
     ele_dEta[nElectrons] = ele.deltaEtaSuperClusterTrackAtVtx();
     ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
     ele_HoverE[nElectrons] = ele.hcalOverEcalBc();
+    ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(PV.position());
+    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());
     ele_sumChargedHadronPt[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
     ele_sumNeutralHadronEt[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
     ele_sumPhotonEt[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
@@ -179,7 +240,6 @@ bool RazorAna::fillElectrons(){
     ele_OneOverEminusOneOverP[nElectrons] = 1./ele.correctedEcalEnergy()  -  1./ele.trackMomentumAtVtx().R();
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
     ele_TrackRegressionE[nElectrons] = ele.ecalTrackRegressionEnergy();
-    //ele_CombineP4[nElectrons] = ele.p4(2).E();
     nElectrons++;
   }
   
@@ -206,6 +266,15 @@ bool RazorAna::fillPhotons(){
     phoPt[nPhotons] = pho.pt();
     phoEta[nPhotons] = pho.eta();
     phoPhi[nPhotons] = pho.phi();
+    phoSigmaIetaIeta[nPhotons] = pho.sigmaIetaIeta();
+    phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();
+    phoR9[nPhotons] = pho.r9();
+    pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
+    pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
+    pho_sumPhotonEt[nPhotons] = pho.photonIso();
+    pho_isConversion[nPhotons] = pho.hasConversionTracks();
+    pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
+    pho_pfMVA[nPhotons] = pho.pfMVA();
     nPhotons++;
   }
 
