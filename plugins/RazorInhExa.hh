@@ -15,6 +15,7 @@ public:
   void resetBranches();
   void setBranches();
   
+  void enableEventInfoBranches();
   void enableMuonBranches();
   void enableElectronBranches();
   void enableTauBranches();
@@ -26,6 +27,7 @@ public:
   void enableMCBranches();
 
   //Re-defining select objects and fill tree branches 
+  bool fillEventInfo(const edm::Event& iEvent);
   bool fillMuons();//Fills muon 4-momentum only. PT > 5GeV
   bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
   bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV

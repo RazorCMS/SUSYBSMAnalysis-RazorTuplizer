@@ -263,7 +263,13 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   //select the primary vertex, if any
   if (vertices->empty()) return false; // skip the event if no PV found
   //const reco::Vertex &PV = vertices->front();
-  nPV = vertices->size();
+  
+  nPV = 0;
+  //Check for good vertices
+  for(unsigned int i = 0; i < vertices->size(); i++){
+    if(vertices->at(i).isValid() && !vertices->at(i).isFake())nPV++;
+  }
+  if(nPV == 0)return false;
   
   return true;
 }

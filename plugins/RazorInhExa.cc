@@ -106,6 +106,12 @@ void RazorAna::setBranches(){
   enableMCBranches();
 };
 
+
+void RazorAna::enableEventInfoBranches(){
+  RazorTuplizer::enableEventInfoBranches();
+  //outputTree->Branch("", , "");
+};
+
 void RazorAna::enableMuonBranches(){
   RazorTuplizer::enableMuonBranches();
   outputTree->Branch("muonCharge", muonCharge, "muonCharge[nMuons]/F");
@@ -190,6 +196,26 @@ void RazorAna::enableMCBranches(){
 /*
 Re-defining Fill methods (will not use mother class methods)
 */
+
+bool RazorAna::fillEventInfo(const edm::Event& iEvent){
+  //store basic event info
+  runNum = iEvent.id().run();
+  lumiNum = iEvent.luminosityBlock();
+  eventNum = iEvent.id().event();
+
+  //select the primary vertex, if any
+  if (vertices->empty()) return false; // skip the event if no PV found
+  //const reco::Vertex &PV = vertices->front();                                                       
+  nPV = 0;
+  //Check for good vertices
+  for(unsigned int i = 0; i < vertices->size(); i++){
+    if(vertices->at(i).isValid() && !vertices->at(i).isFake())nPV++;
+  }
+  if(nPV == 0)return false;
+
+  return true;  
+};
+
 bool RazorAna::fillMuons(){
   //PV required for Tight working point
   const reco::Vertex &PV = vertices->front();
