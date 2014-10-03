@@ -19,6 +19,7 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
   bool isGoodEvent =
     fillEventInfo(iEvent)
+    && fillPileUp()
     && fillMuons()
     && fillElectrons()
     && fillTaus()
@@ -26,8 +27,7 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJets()
     && fillJetsAK8()
     && fillMet()
-    && fillRazor()
-    && fillMC();
+    && fillRazor();
 
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) outputTree->Fill();
@@ -36,7 +36,14 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 void RazorAna::resetBranches(){
   RazorTuplizer::resetBranches();
   //Re-set newly defined variables;
+  //PU
+  nBunchXing = 0;
   for(int j = 0; j < 99; j++){
+    //PU
+    BunchXing[j] = -99;
+    nPU[j] = -99;
+    nPUmean[j] = -99.0;
+    
     //Mu
     muonCharge[j] = -99.0;
     muonIsLoose[j] = -99.0;
@@ -90,11 +97,17 @@ void RazorAna::resetBranches(){
     jetMass[j] =  -99.0;
     jetJetArea[j] = -99.0;
     jetPileupE[j] = -99.0;
+
+    //Event Info
+    pvX = -99.0;
+    pvY = -99.0;
+    pvZ = -99.0;
   }
 };
 
 void RazorAna::setBranches(){
   enableEventInfoBranches();
+  enablePileUpBranches();
   enableMuonBranches();
   enableElectronBranches();
   enableTauBranches();
@@ -103,13 +116,21 @@ void RazorAna::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
-  enableMCBranches();
 };
 
 
 void RazorAna::enableEventInfoBranches(){
   RazorTuplizer::enableEventInfoBranches();
-  //outputTree->Branch("", , "");
+  outputTree->Branch("pvX", &pvX, "pvX/F");
+  outputTree->Branch("pvY", &pvY, "pvY/F");
+  outputTree->Branch("pvZ", &pvZ, "pvZ/F");
+};
+
+void RazorAna::enablePileUpBranches(){
+  outputTree->Branch("nBunchXing", &nBunchXing, "nBunchXing/I");
+  outputTree->Branch("BunchXing", BunchXing, "BunchXing[nBunchXing]/I");
+  outputTree->Branch("nPU", nPU, "nPU[nBunchXing]/I");
+  outputTree->Branch("nPUmean", nPUmean, "nPUmean[nBunchXing]/F");
 };
 
 void RazorAna::enableMuonBranches(){
@@ -189,10 +210,6 @@ void RazorAna::enableRazorBranches(){
   RazorTuplizer::enableRazorBranches();
 }
 
-void RazorAna::enableMCBranches(){
-  RazorTuplizer::enableMCBranches();
-}
-
 /*
 Re-defining Fill methods (will not use mother class methods)
 */
@@ -205,7 +222,11 @@ bool RazorAna::fillEventInfo(const edm::Event& iEvent){
 
   //select the primary vertex, if any
   if (vertices->empty()) return false; // skip the event if no PV found
-  //const reco::Vertex &PV = vertices->front();                                                       
+  const reco::Vertex &PV = vertices->front();
+  pvX = PV.x();
+  pvY = PV.y();
+  pvZ= PV.z();
+  
   nPV = 0;
   //Check for good vertices
   for(unsigned int i = 0; i < vertices->size(); i++){
@@ -214,6 +235,17 @@ bool RazorAna::fillEventInfo(const edm::Event& iEvent){
   if(nPV == 0)return false;
 
   return true;  
+};
+
+bool RazorAna::fillPileUp(){
+  for(const PileupSummaryInfo &pu : *puInfo){
+    BunchXing[nBunchXing] = pu.getBunchCrossing();
+    nPU[nBunchXing] = pu.getPU_NumInteractions();
+    nPUmean[nBunchXing] = pu.getTrueNumInteractions();
+    nBunchXing++;
+    //std::cout << "BC: " << pu.getBunchCrossing() << std::endl;
+  }
+  return true;
 };
 
 bool RazorAna::fillMuons(){
@@ -373,10 +405,6 @@ bool RazorAna::fillRazor(){
 
   return true;
 };
-
-bool RazorAna::fillMC(){
-  return RazorTuplizer::fillMC();
-}
 
 //------ Method called once each job just before starting event loop ------//                                                               
 void RazorAna::beginJob(){
