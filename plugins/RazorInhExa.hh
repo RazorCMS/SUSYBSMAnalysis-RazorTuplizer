@@ -16,6 +16,7 @@ public:
   void setBranches();
   
   void enableEventInfoBranches();
+  void enablePileUpBranches();
   void enableMuonBranches();
   void enableElectronBranches();
   void enableTauBranches();
@@ -24,10 +25,10 @@ public:
   void enableJetAK8Branches();
   void enableMetBranches();
   void enableRazorBranches();
-  void enableMCBranches();
 
   //Re-defining select objects and fill tree branches 
   bool fillEventInfo(const edm::Event& iEvent);
+  bool fillPileUp();//Fill summary PU info
   bool fillMuons();//Fills muon 4-momentum only. PT > 5GeV
   bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
   bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
@@ -36,12 +37,17 @@ public:
   bool fillJetsAK8();//Fills AK5 Jet 4-momentum.
   bool fillMet();//Fills MET(mag, phi)
   bool fillRazor();//Fills MR and RSQ
-  bool fillMC(); //Fill MC variables
 
 protected:
   void beginJob() override;
   void analyze(const edm::Event&, const edm::EventSetup&);
   
+  //PU
+  int nBunchXing;
+  int BunchXing[99];
+  int nPU[99];
+  float nPUmean[99];
+
   //Mu
   int muonCharge[99];//muon charge
   float muonIsLoose[99];
@@ -98,6 +104,12 @@ protected:
   float jetMass[99];
   float jetJetArea[99];
   float jetPileupE[99];  
+  
+  //Event Info
+  float pvX;
+  float pvY;
+  float pvZ;
+
 };
 
 //define this as a plug-in
