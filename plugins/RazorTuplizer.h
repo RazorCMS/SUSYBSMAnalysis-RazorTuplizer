@@ -246,6 +246,12 @@ protected:
   float metPhi;
 
   //MC
+  int nGenJets;
+  float genJetE[99];
+  float genJetPt[99];
+  float genJetEta[99];
+  float genJetPhi[99];
+
   float genMetPt;
   float genMetPhi;
   

@@ -134,18 +134,24 @@ void RazorTuplizer::enableJetAK8Branches(){
 }
 
 void RazorTuplizer::enableMetBranches(){
-  outputTree->Branch("metPt", &metPt, "metPt/D");
-  outputTree->Branch("metPhi", &metPhi, "metPhi/D");
+  outputTree->Branch("metPt", &metPt, "metPt/F");
+  outputTree->Branch("metPhi", &metPhi, "metPhi/F");
 }
 
 void RazorTuplizer::enableRazorBranches(){
-  outputTree->Branch("MR", &MR, "MR/D");
-  outputTree->Branch("RSQ", &RSQ, "RSQ/D");
+  outputTree->Branch("MR", &MR, "MR/F");
+  outputTree->Branch("RSQ", &RSQ, "RSQ/F");
 }
 
 void RazorTuplizer::enableMCBranches(){
-  outputTree->Branch("genMetPt", &genMetPt, "genMetPt/D");
-  outputTree->Branch("genMetPhi", &genMetPhi, "genMetPhi/D");
+  outputTree->Branch("nGenJets", &nGenJets, "nGenJets/I");
+  outputTree->Branch("genJetE", genJetE, "genJetE[nGenJets]/F");
+  outputTree->Branch("genJetPt", genJetPt, "genJetPt[nGenJets]/F");
+  outputTree->Branch("genJetEta", genJetEta, "genJetEta[nGenJets]/F");
+  outputTree->Branch("genJetPhi", genJetPhi, "genJetPhi[nGenJets]/F");
+
+  outputTree->Branch("genMetPt", &genMetPt, "genMetPt/F");
+  outputTree->Branch("genMetPhi", &genMetPhi, "genMetPhi/F");
 }
 
 //------ Load the miniAOD objects and reset tree variables for each event ------//
@@ -202,6 +208,7 @@ void RazorTuplizer::resetBranches(){
   nPhotons = 0;
   nJets = 0;
   nFatJets = 0;
+  nGenJets = 0;
   
   for(int i = 0; i < 99; i++){
     muonE[i] = 0.0;
@@ -235,6 +242,11 @@ void RazorTuplizer::resetBranches(){
     fatJetPt[i] = 0.0;
     fatJetEta[i] = 0.0;
     fatJetPhi[i] = 0.0;
+
+    genJetE[i] = 0.0;
+    genJetPt[i] = 0.0;
+    genJetEta[i] = 0.0;
+    genJetPhi[i] = 0.0;
   }
 
     metPt = -999;
@@ -362,6 +374,14 @@ bool RazorTuplizer::fillMet(){
 }
 
 bool RazorTuplizer::fillMC(){
+    for(const reco::GenJet &j : *genJets){
+        genJetE[nGenJets] = j.energy();
+        genJetPt[nGenJets] = j.pt();
+        genJetEta[nGenJets] = j.eta();
+        genJetPhi[nGenJets] = j.phi();
+        nGenJets++;
+    }
+
     const pat::MET &Met = mets->front();
     genMetPt = Met.genMET()->pt();
     genMetPhi = Met.genMET()->phi();
