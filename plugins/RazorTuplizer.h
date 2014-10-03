@@ -96,9 +96,9 @@ public:
   //(minimizes sum of mass^2's of hemispheres)
   vector<TLorentzVector> getHemispheres(vector<TLorentzVector> jets);
   //compute M_R using two hemispheres
-  double computeMR(TLorentzVector hem1, TLorentzVector hem2);
+  float computeMR(TLorentzVector hem1, TLorentzVector hem2);
   //compute R^2 using two hemispheres and MET vector
-  double computeR2(TLorentzVector hem1, TLorentzVector hem2, TLorentzVector pfMet);
+  float computeR2(TLorentzVector hem1, TLorentzVector hem2, TLorentzVector pfMet);
   //returns true if particle 1 is an ancestor of particle 2, false otherwise
   //(takes two members of prunedGenParticles)
   bool isAncestor(const reco::Candidate* ancestor, const reco::Candidate * particle);
@@ -242,15 +242,15 @@ protected:
   float fatJetPhi[99];
   
   //MET 
-  double metPt;
-  double metPhi;
+  float metPt;
+  float metPhi;
 
   //MC
-  double genMetPt;
-  double genMetPhi;
+  float genMetPt;
+  float genMetPhi;
   
   //razor variables
-  double MR, RSQ;
+  float MR, RSQ;
   
   //event info
   int nPV;

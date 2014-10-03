@@ -57,11 +57,11 @@ vector<TLorentzVector> RazorTuplizer::getHemispheres(vector<TLorentzVector> jets
   return hemsOut;
 }
 
-double RazorTuplizer::computeMR(TLorentzVector hem1, TLorentzVector hem2){
+float RazorTuplizer::computeMR(TLorentzVector hem1, TLorentzVector hem2){
   return sqrt(pow(hem1.P() + hem2.P(), 2) - pow(hem1.Pz() + hem2.Pz(), 2));
 }
 
-double RazorTuplizer::computeR2(TLorentzVector hem1, TLorentzVector hem2, TLorentzVector pfMet){
+float RazorTuplizer::computeR2(TLorentzVector hem1, TLorentzVector hem2, TLorentzVector pfMet){
   double mR = computeMR(hem1, hem2);
   double term1 = pfMet.Pt()/2*(hem1.Pt() + hem2.Pt());
   double term2 = pfMet.Px()/2*(hem1.Px() + hem2.Px()) + pfMet.Py()/2*(hem1.Py() + hem2.Py()); //dot product of MET with (p1T + p2T)
