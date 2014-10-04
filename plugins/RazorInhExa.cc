@@ -27,7 +27,8 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJets()
     && fillJetsAK8()
     && fillMet()
-    && fillRazor();
+    && fillRazor()
+    && fillGenParticles();
 
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) outputTree->Fill();
@@ -339,6 +340,9 @@ bool RazorAna::fillPhotons(){
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
     pho_pfMVA[nPhotons] = pho.pfMVA();
+    const reco::Candidate* genPhoton = pho.genPhoton();
+    if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<
+      " recoPT: " << pho.pt() << std::endl;
     nPhotons++;
   }
 
@@ -406,7 +410,50 @@ bool RazorAna::fillRazor(){
   return true;
 };
 
-//------ Method called once each job just before starting event loop ------//                                                               
+bool RazorAna::fillGenParticles(){
+  std::cout << "====>PrunedSize: " << prunedGenParticles->size() << std::endl;
+  int ctr = 0;
+  for(size_t i=0; i<prunedGenParticles->size();i++){
+    if((abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6)
+       || (abs((*prunedGenParticles)[i].pdgId()) >= 11 && abs((*prunedGenParticles)[i].pdgId()) <= 16)
+       || (abs((*prunedGenParticles)[i].pdgId()) >= 21 && abs((*prunedGenParticles)[i].pdgId()) <= 25)
+       || (abs((*prunedGenParticles)[i].pdgId()) >= 32 && abs((*prunedGenParticles)[i].pdgId()) <= 42)
+       || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
+       ){
+      if((*prunedGenParticles)[i].mother() != NULL)std::cout << (*prunedGenParticles)[i].mother()->pdgId() << std::endl;
+      ctr++;
+    }
+    if(abs((*prunedGenParticles)[i].pdgId()) == 22)std::cout << "PhoPT " << (*prunedGenParticles)[i].pt() << std::endl;
+    if(abs((*prunedGenParticles)[i].pdgId()) > 500 && abs((*prunedGenParticles)[i].pdgId()) <600){
+      const reco::Candidate * bMeson = &(*prunedGenParticles)[i];
+      //std::cout << "PdgID: " << bMeson->pdgId() << " pt " << bMeson->pt() << " eta: " << bMeson->eta() << " phi: " << bMeson->phi() << std::endl;
+      //std::cout << "  found daugthers: " << std::endl;
+      for(size_t j=0; j<packedGenParticles->size();j++){
+	//get the pointer to the first survied ancestor of a given packed GenParticle in the prunedCollection 
+	const reco::Candidate * motherInPrunedCollection = (*packedGenParticles)[j].mother(0) ;
+	if(motherInPrunedCollection != nullptr && isAncestor( bMeson , motherInPrunedCollection)){
+	  //std::cout << "     PdgID: " << (*packedGenParticles)[j].pdgId() << " pt " << (*packedGenParticles)[j].pt() << " eta: " << (*packedGenParticles)[j].eta() << " phi: " << (*packedGenParticles)[j].phi() << std::endl;
+	}
+      }
+    }
+    
+  }
+  std::cout << "===> nGEN: " << ctr << std::endl;
+  return true;
+};
+
+bool RazorAna::isAncestor(const reco::Candidate* ancestor, const reco::Candidate* particle){
+  //particle is already the ancestor
+  if(ancestor == particle ) return true;
+  //otherwise loop on mothers, if any and return true if the ancestor is found
+  for(size_t i=0;i< particle->numberOfMothers();i++){
+    if(isAncestor(ancestor,particle->mother(i))) return true;
+  }
+  //if we did not return yet, then particle and ancestor are not relatives
+  return false;
+};
+
+//------ Method called once each job just before starting event loop ------//
 void RazorAna::beginJob(){
   setBranches();
 };

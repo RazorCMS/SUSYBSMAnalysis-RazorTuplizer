@@ -37,6 +37,9 @@ public:
   bool fillJetsAK8();//Fills AK5 Jet 4-momentum.
   bool fillMet();//Fills MET(mag, phi)
   bool fillRazor();//Fills MR and RSQ
+  bool fillGenParticles();
+
+  bool isAncestor(const reco::Candidate*, const reco::Candidate*);
 
 protected:
   void beginJob() override;
