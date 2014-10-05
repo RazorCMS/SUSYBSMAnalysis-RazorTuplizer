@@ -25,6 +25,7 @@ public:
   void enableJetAK8Branches();
   void enableMetBranches();
   void enableRazorBranches();
+  void enableGenParticles();
 
   //Re-defining select objects and fill tree branches 
   bool fillEventInfo(const edm::Event& iEvent);
@@ -112,6 +113,27 @@ protected:
   float pvX;
   float pvY;
   float pvZ;
+
+  //MET
+  float sumMET;
+  float genMETpt;
+  float genMETphi;
+  float UncMETdpx;
+  float UncMETdpy;
+  float UncMETdSumEt;
+
+  //Gen Info
+  unsigned int nGenParticle;
+  int motherIndex[99];
+  int motherId[99];
+  int gParticleId[99];
+  float gParticleE[99];
+  float gParticlePt[99];
+  float gParticleEta[99];
+  float gParticlePhi[99];
+  float gParticleVx[99];
+  float gParticleVy[99];
+  float gParticleVz[99];
 
 };
 

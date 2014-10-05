@@ -28,6 +28,7 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJetsAK8()
     && fillMet()
     && fillRazor()
+    && fillMC()
     && fillGenParticles();
 
   //fill the tree if the event wasn't rejected
@@ -103,6 +104,27 @@ void RazorAna::resetBranches(){
     pvX = -99.0;
     pvY = -99.0;
     pvZ = -99.0;
+
+    //MET
+    sumMET = -99.0;
+    genMETpt = -99.0;
+    genMETphi = -99.0;
+    UncMETdpx = -99.0;
+    UncMETdpy = -99.0;
+    UncMETdSumEt = -99.0;
+    
+    //GenInfo
+    nGenParticle = 0;
+    motherIndex[j] = -99999;
+    motherId[j] = -99999;
+    gParticleId[j] = -99999;
+    gParticleE[j] = -99999.0;
+    gParticlePt[j] = -99999.0;
+    gParticleEta[j] = -99999.0;
+    gParticlePhi[j] = -99999.0;
+    gParticleVx[j] = -99999.0;
+    gParticleVy[j] = -99999.0;
+    gParticleVz[j] = -99999.0;
   }
 };
 
@@ -117,6 +139,9 @@ void RazorAna::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
+  enableMCBranches();
+  enableGenParticles();
+  
 };
 
 
@@ -205,10 +230,26 @@ void RazorAna::enableJetAK8Branches(){
 
 void RazorAna::enableMetBranches(){
   RazorTuplizer::enableMetBranches();
+  outputTree->Branch("sumMET", &sumMET, "sumMET/F");
+  outputTree->Branch("genMETpt", &genMETpt, "genMETpt/F");
+  outputTree->Branch("genMETphi", &genMETphi, "genMETphi/F");
 }
 
 void RazorAna::enableRazorBranches(){
   RazorTuplizer::enableRazorBranches();
+}
+void RazorAna::enableGenParticles(){
+  outputTree->Branch("nGenParticle", &nGenParticle, "nGenParticle/s");
+  outputTree->Branch("motherIndex", motherIndex, "motherIndex[nGenParticle]/I");
+  outputTree->Branch("motherId", motherId, "motherId[nGenParticle]/I");
+  outputTree->Branch("gParticleId", gParticleId, "gParticleId[nGenParticle]/I");
+  outputTree->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
+  outputTree->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
+  outputTree->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
+  outputTree->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
+  outputTree->Branch("gParticleVx", gParticleVx, "gParticleVx[nGenParticle]/F");
+  outputTree->Branch("gParticleVy", gParticleVy, "gParticleVy[nGenParticle]/F");
+  outputTree->Branch("gParticleVz", gParticleVz, "gParticleVz[nGenParticle]/F");
 }
 
 /*
@@ -340,9 +381,11 @@ bool RazorAna::fillPhotons(){
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
     pho_pfMVA[nPhotons] = pho.pfMVA();
+    /*
     const reco::Candidate* genPhoton = pho.genPhoton();
     if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<
       " recoPT: " << pho.pt() << std::endl;
+    */
     nPhotons++;
   }
 
@@ -383,7 +426,9 @@ bool RazorAna::fillMet(){
   const pat::MET &Met = mets->front();
   metPt = Met.pt();
   metPhi = Met.phi();
-
+  sumMET = Met.sumEt();
+  genMETpt = Met.genMET()->pt();
+  genMETphi = Met.genMET()->phi();
   return true;
 };
 
@@ -411,8 +456,8 @@ bool RazorAna::fillRazor(){
 };
 
 bool RazorAna::fillGenParticles(){
-  std::cout << "====>PrunedSize: " << prunedGenParticles->size() << std::endl;
-  int ctr = 0;
+  std::vector<const reco::Candidate*> prunnedV;//Allows easier comparison for mother finding
+  //Fills selected gen particles
   for(size_t i=0; i<prunedGenParticles->size();i++){
     if((abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 11 && abs((*prunedGenParticles)[i].pdgId()) <= 16)
@@ -420,25 +465,33 @@ bool RazorAna::fillGenParticles(){
        || (abs((*prunedGenParticles)[i].pdgId()) >= 32 && abs((*prunedGenParticles)[i].pdgId()) <= 42)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
        ){
-      if((*prunedGenParticles)[i].mother() != NULL)std::cout << (*prunedGenParticles)[i].mother()->pdgId() << std::endl;
-      ctr++;
+      prunnedV.push_back(&(*prunedGenParticles)[i]);
     }
-    if(abs((*prunedGenParticles)[i].pdgId()) == 22)std::cout << "PhoPT " << (*prunedGenParticles)[i].pt() << std::endl;
-    if(abs((*prunedGenParticles)[i].pdgId()) > 500 && abs((*prunedGenParticles)[i].pdgId()) <600){
-      const reco::Candidate * bMeson = &(*prunedGenParticles)[i];
-      //std::cout << "PdgID: " << bMeson->pdgId() << " pt " << bMeson->pt() << " eta: " << bMeson->eta() << " phi: " << bMeson->phi() << std::endl;
-      //std::cout << "  found daugthers: " << std::endl;
-      for(size_t j=0; j<packedGenParticles->size();j++){
-	//get the pointer to the first survied ancestor of a given packed GenParticle in the prunedCollection 
-	const reco::Candidate * motherInPrunedCollection = (*packedGenParticles)[j].mother(0) ;
-	if(motherInPrunedCollection != nullptr && isAncestor( bMeson , motherInPrunedCollection)){
-	  //std::cout << "     PdgID: " << (*packedGenParticles)[j].pdgId() << " pt " << (*packedGenParticles)[j].pt() << " eta: " << (*packedGenParticles)[j].eta() << " phi: " << (*packedGenParticles)[j].phi() << std::endl;
-	}
+  }
+  //Total number of gen particles
+  nGenParticle = prunnedV.size();
+  //Look for mother particle and Fill gen variables
+  for(unsigned int i = 0; i < prunnedV.size(); i++){
+    gParticleId[i] = prunnedV[i]->pdgId();
+    gParticleE[i] = prunnedV[i]->energy();
+    gParticlePt[i] = prunnedV[i]->pt();
+    gParticleEta[i] = prunnedV[i]->eta();
+    gParticlePhi[i] = prunnedV[i]->phi();
+    gParticleVx[i] = prunnedV[i]->vx();
+    gParticleVy[i] = prunnedV[i]->vy();
+    gParticleVz[i] = prunnedV[i]->vz();
+    if(prunnedV[i]->numberOfMothers() == 0){
+      motherIndex[i] = -1;
+      motherId[i] = -9999; 
+      continue;
+    }
+    for(unsigned int j = 0; j < prunnedV.size(); j++){
+      if(prunnedV[j] == prunnedV[i]->mother()){
+	motherIndex[i] = j;
+	motherId[i] = prunnedV[j]->pdgId();
       }
     }
-    
   }
-  std::cout << "===> nGEN: " << ctr << std::endl;
   return true;
 };
 
