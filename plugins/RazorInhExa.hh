@@ -54,8 +54,8 @@ protected:
 
   //Mu
   int muonCharge[99];//muon charge
-  float muonIsLoose[99];
-  float muonIsTight[99];
+  bool muonIsLoose[99];
+  bool muonIsTight[99];
   float muon_d0[99];//transverse impact paramenter
   float muon_dZ[99];//impact parameter
   float muon_ip3d[99];//3d impact paramenter
@@ -83,11 +83,10 @@ protected:
   float ele_sumChargedHadronPt[99];
   float ele_sumNeutralHadronEt[99];
   float ele_sumPhotonEt[99];
-  float ele_MissHits[99];
+  int ele_MissHits[99];
   int ele_ConvRejec[99];
   float ele_OneOverEminusOneOverP[99];
   float ele_RegressionE[99];
-  float ele_TrackRegressionE[99];
   float ele_CombineP4[99];
   
   //Taus
@@ -102,7 +101,7 @@ protected:
   float pho_sumPhotonEt[99];
   int pho_isConversion[99];
   float pho_RegressionE[99];
-  float pho_pfMVA[99];
+  float pho_IDMVA[99];
   
   //Jets
   float jetMass[99];

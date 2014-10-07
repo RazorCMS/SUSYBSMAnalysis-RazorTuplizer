@@ -47,9 +47,9 @@ void RazorAna::resetBranches(){
     nPUmean[j] = -99.0;
     
     //Mu
-    muonCharge[j] = -99.0;
-    muonIsLoose[j] = -99.0;
-    muonIsTight[j] = -99.0;
+    muonCharge[j] = -99;
+    muonIsLoose[j] = false;
+    muonIsTight[j] = false;
     muon_d0[j] = -99.0;
     muon_dZ[j] = -99.0;
     muon_ip3d[j] = -99.0;
@@ -77,9 +77,9 @@ void RazorAna::resetBranches(){
     ele_sumPhotonEt[j] = -99.0;
     ele_MissHits[j] = -99;
     ele_ConvRejec[j] = -99;
-    ele_OneOverEminusOneOverP[j] = -99;
-    ele_RegressionE[j] = -99;
-    ele_CombineP4[j] = -99;
+    ele_OneOverEminusOneOverP[j] = -99.0;
+    ele_RegressionE[j] = -99.0;
+    ele_CombineP4[j] = -99.0;
 
     //Taus
     
@@ -93,7 +93,7 @@ void RazorAna::resetBranches(){
     pho_sumPhotonEt[j] = -99.0;
     pho_isConversion[j] = -99;
     pho_RegressionE[j] = -99.0;
-    pho_pfMVA[j] = -99.0;
+    pho_IDMVA[j] = -99.0;
 
     //Jets
     jetMass[j] =  -99.0;
@@ -161,9 +161,9 @@ void RazorAna::enablePileUpBranches(){
 
 void RazorAna::enableMuonBranches(){
   RazorTuplizer::enableMuonBranches();
-  outputTree->Branch("muonCharge", muonCharge, "muonCharge[nMuons]/F");
-  outputTree->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/F");
-  outputTree->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/F");
+  outputTree->Branch("muonCharge", muonCharge, "muonCharge[nMuons]/I");
+  outputTree->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/O");
+  outputTree->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/O");
   outputTree->Branch("muon_d0", muon_d0, "muon_d0[nMuons]/F");
   outputTree->Branch("muon_dZ", muon_dZ, "muon_dZ[nMuons]/F");
   outputTree->Branch("muon_ip3d", muon_ip3d, "muon_ip3d[nMuons]/F");
@@ -178,9 +178,9 @@ void RazorAna::enableMuonBranches(){
 void RazorAna::enableElectronBranches(){
   RazorTuplizer::enableElectronBranches();
   outputTree->Branch("eleCharge", eleCharge, "eleCharge[nElectrons]/F");
-  outputTree->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
-  outputTree->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
-  outputTree->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
+  //outputTree->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
+  //outputTree->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
+  //outputTree->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
   outputTree->Branch("eleSigmaIetaIeta", eleSigmaIetaIeta, "eleSigmaIetaIeta[nElectrons]/F");
   outputTree->Branch("eleFull5x5SigmaIetaIeta", eleFull5x5SigmaIetaIeta, "eleFull5x5SigmaIetaIeta[nElectrons]/F");
   outputTree->Branch("eleR9", eleR9, "eleR9[nElectrons]/F");
@@ -192,11 +192,11 @@ void RazorAna::enableElectronBranches(){
   outputTree->Branch("ele_sumChargedHadronPt", ele_sumChargedHadronPt, "ele_sumChargedHadronPt[nElectrons]/F");
   outputTree->Branch("ele_sumNeutralHadronEt", ele_sumNeutralHadronEt, "ele_sumNeutralHadronEt[nElectrons]/F");
   outputTree->Branch("ele_sumPhotonEt", ele_sumPhotonEt, "ele_sumPhotonEt[nElectrons]/F");
-  outputTree->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/F");
+  outputTree->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
   outputTree->Branch("ele_ConvRejec", ele_ConvRejec, "ele_ConvRejec[nElectrons]/I");
   outputTree->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
   outputTree->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
-  outputTree->Branch("ele_TrackRegressionE", ele_TrackRegressionE, "ele_TrackRegressionE[nElectrons]/F");
+  outputTree->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
 };
 
 void RazorAna::enableTauBranches(){
@@ -214,7 +214,7 @@ void RazorAna::enablePhotonBranches(){
   outputTree->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
   outputTree->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/I");
   outputTree->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
-  outputTree->Branch("pho_pfMVA", pho_pfMVA, "pho_pfMVA[nPhotons]/F");
+  outputTree->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
 };
 
 void RazorAna::enableJetBranches(){
@@ -345,7 +345,7 @@ bool RazorAna::fillElectrons(){
     ele_ConvRejec[nElectrons] = ele.convFlags();
     ele_OneOverEminusOneOverP[nElectrons] = 1./ele.correctedEcalEnergy()  -  1./ele.trackMomentumAtVtx().R();
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
-    ele_TrackRegressionE[nElectrons] = ele.ecalTrackRegressionEnergy();
+    ele_CombineP4[nElectrons] = ele.ecalTrackRegressionEnergy();
     nElectrons++;
   }
   
@@ -380,7 +380,7 @@ bool RazorAna::fillPhotons(){
     pho_sumPhotonEt[nPhotons] = pho.photonIso();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
-    pho_pfMVA[nPhotons] = pho.pfMVA();
+    pho_IDMVA[nPhotons] = pho.pfMVA();
     /*
     const reco::Candidate* genPhoton = pho.genPhoton();
     if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<
