@@ -2,7 +2,7 @@ from WMCore.Configuration import Configuration
 config = Configuration()
 
 config.section_("General")
-config.General.requestName = 'SMS-T1qqqq_2J_mGl-1400_mLSP-100_Tune4C_13TeV-madgraph-tauola__duanders-Spring14dr-PU_S14_POSTLS170_V6AN1-miniAOD706p1-v2-814812ec83fce2f620905d2bb30e9100__03Oct2014_V1'  #change the request name for each new task
+config.General.requestName = 'SMS-T1qqqq_2J_mGl-1400_mLSP-100_Tune4C_13TeV-madgraph-tauola__duanders-Spring14dr-PU_S14_POSTLS170_V6AN1-miniAOD706p1-v2-814812ec83fce2f620905d2bb30e9100__03Oct2014_V3'  #change the request name for each new task
 config.General.workArea = 'crab'
 
 config.section_("JobType")
@@ -29,7 +29,8 @@ config.Data.unitsPerJob = 3
 config.Data.publication = False
 #config.Data.publishDbsUrl = 'phys03' #enable for publishing
 #config.Data.publishDataName = 'razorNtuple'
-config.Data.ignoreLocality = True #enable AAA
+config.Data.ignoreLocality = False #disable AAA
+#config.Data.ignoreLocality = True #enable AAA
 
 config.section_("Site")
 config.Site.storageSite = 'T2_US_Caltech'

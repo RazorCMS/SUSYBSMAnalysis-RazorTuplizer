@@ -115,8 +115,6 @@ protected:
 
   //MET
   float sumMET;
-  float genMETpt;
-  float genMETphi;
   float UncMETdpx;
   float UncMETdpy;
   float UncMETdSumEt;

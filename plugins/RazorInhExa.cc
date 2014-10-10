@@ -107,8 +107,6 @@ void RazorAna::resetBranches(){
 
     //MET
     sumMET = -99.0;
-    genMETpt = -99.0;
-    genMETphi = -99.0;
     UncMETdpx = -99.0;
     UncMETdpy = -99.0;
     UncMETdSumEt = -99.0;
@@ -231,8 +229,6 @@ void RazorAna::enableJetAK8Branches(){
 void RazorAna::enableMetBranches(){
   RazorTuplizer::enableMetBranches();
   outputTree->Branch("sumMET", &sumMET, "sumMET/F");
-  outputTree->Branch("genMETpt", &genMETpt, "genMETpt/F");
-  outputTree->Branch("genMETphi", &genMETphi, "genMETphi/F");
 }
 
 void RazorAna::enableRazorBranches(){
@@ -427,8 +423,8 @@ bool RazorAna::fillMet(){
   metPt = Met.pt();
   metPhi = Met.phi();
   sumMET = Met.sumEt();
-  genMETpt = Met.genMET()->pt();
-  genMETphi = Met.genMET()->phi();
+  genMetPt = Met.genMET()->pt();
+  genMetPhi = Met.genMET()->phi();
   return true;
 };
 
