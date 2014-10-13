@@ -54,7 +54,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   edm::Service<TFileService> fs;
   
   //set up output tree
-  outputTree = fs->make<TTree>("outputTree", "selected miniAOD information");
+  RazorEvents = fs->make<TTree>("RazorEvents", "selected miniAOD information");
   //setBranches();
 }
 
@@ -77,81 +77,81 @@ void RazorTuplizer::setBranches(){
 }
 
 void RazorTuplizer::enableEventInfoBranches(){
-  outputTree->Branch("nPV", &nPV, "nPV/I");
-  outputTree->Branch("runNum", &runNum, "runNum/I");
-  outputTree->Branch("lumiNum", &lumiNum, "lumiNum/I");
-  outputTree->Branch("eventNum", &eventNum, "eventNum/I");
+  RazorEvents->Branch("nPV", &nPV, "nPV/I");
+  RazorEvents->Branch("runNum", &runNum, "runNum/I");
+  RazorEvents->Branch("lumiNum", &lumiNum, "lumiNum/I");
+  RazorEvents->Branch("eventNum", &eventNum, "eventNum/I");
 }
 
 void RazorTuplizer::enableMuonBranches(){
-  outputTree->Branch("nMuons", &nMuons,"nMuons/I");
-  outputTree->Branch("muonE", muonE,"muonE[nMuons]/F");
-  outputTree->Branch("muonPt", muonPt,"muonPt[nMuons]/F");
-  outputTree->Branch("muonEta", muonEta,"muonEta[nMuons]/F");
-  outputTree->Branch("muonPhi", muonPhi,"muonPhi[nMuons]/F");
+  RazorEvents->Branch("nMuons", &nMuons,"nMuons/I");
+  RazorEvents->Branch("muonE", muonE,"muonE[nMuons]/F");
+  RazorEvents->Branch("muonPt", muonPt,"muonPt[nMuons]/F");
+  RazorEvents->Branch("muonEta", muonEta,"muonEta[nMuons]/F");
+  RazorEvents->Branch("muonPhi", muonPhi,"muonPhi[nMuons]/F");
 }
 
 void RazorTuplizer::enableElectronBranches(){
-  outputTree->Branch("nElectrons", &nElectrons,"nElectrons/I");
-  outputTree->Branch("eleE", eleE,"eleE[nElectrons]/F");
-  outputTree->Branch("elePt", elePt,"elePt[nElectrons]/F");
-  outputTree->Branch("eleEta", eleEta,"eleEta[nElectrons]/F");
-  outputTree->Branch("elePhi", elePhi,"elePhi[nElectrons]/F");
+  RazorEvents->Branch("nElectrons", &nElectrons,"nElectrons/I");
+  RazorEvents->Branch("eleE", eleE,"eleE[nElectrons]/F");
+  RazorEvents->Branch("elePt", elePt,"elePt[nElectrons]/F");
+  RazorEvents->Branch("eleEta", eleEta,"eleEta[nElectrons]/F");
+  RazorEvents->Branch("elePhi", elePhi,"elePhi[nElectrons]/F");
 }
 
 void RazorTuplizer::enableTauBranches(){
-  outputTree->Branch("nTaus", &nTaus,"nTaus/I");
-  outputTree->Branch("tauE", tauE,"tauE[nTaus]/F");
-  outputTree->Branch("tauPt", tauPt,"tauPt[nTaus]/F");
-  outputTree->Branch("tauEta", tauEta,"tauEta[nTaus]/F");
-  outputTree->Branch("tauPhi", tauPhi,"tauPhi[nTaus]/F");
+  RazorEvents->Branch("nTaus", &nTaus,"nTaus/I");
+  RazorEvents->Branch("tauE", tauE,"tauE[nTaus]/F");
+  RazorEvents->Branch("tauPt", tauPt,"tauPt[nTaus]/F");
+  RazorEvents->Branch("tauEta", tauEta,"tauEta[nTaus]/F");
+  RazorEvents->Branch("tauPhi", tauPhi,"tauPhi[nTaus]/F");
 }
 
 void RazorTuplizer::enablePhotonBranches(){
-  outputTree->Branch("nPhotons", &nPhotons,"nPhotons/I");
-  outputTree->Branch("phoE", phoE,"phoE[nPhotons]/F");
-  outputTree->Branch("phoPt", phoPt,"phoPt[nPhotons]/F");
-  outputTree->Branch("phoEta", phoEta,"phoEta[nPhotons]/F");
-  outputTree->Branch("phoPhi", phoPhi,"phoPhi[nPhotons]/F");
+  RazorEvents->Branch("nPhotons", &nPhotons,"nPhotons/I");
+  RazorEvents->Branch("phoE", phoE,"phoE[nPhotons]/F");
+  RazorEvents->Branch("phoPt", phoPt,"phoPt[nPhotons]/F");
+  RazorEvents->Branch("phoEta", phoEta,"phoEta[nPhotons]/F");
+  RazorEvents->Branch("phoPhi", phoPhi,"phoPhi[nPhotons]/F");
 }
 
 void RazorTuplizer::enableJetBranches(){
-  outputTree->Branch("nJets", &nJets,"nJets/I");
-  outputTree->Branch("jetE", jetE,"jetE[nJets]/F");
-  outputTree->Branch("jetPt", jetPt,"jetPt[nJets]/F");
-  outputTree->Branch("jetEta", jetEta,"jetEta[nJets]/F");
-  outputTree->Branch("jetPhi", jetPhi,"jetPhi[nJets]/F");
-  outputTree->Branch("jetCSV", jetCSV,"jetCSV[nJets]/F");
-  outputTree->Branch("jetCISV", jetCISV,"jetCISV[nJets]/F");
+  RazorEvents->Branch("nJets", &nJets,"nJets/I");
+  RazorEvents->Branch("jetE", jetE,"jetE[nJets]/F");
+  RazorEvents->Branch("jetPt", jetPt,"jetPt[nJets]/F");
+  RazorEvents->Branch("jetEta", jetEta,"jetEta[nJets]/F");
+  RazorEvents->Branch("jetPhi", jetPhi,"jetPhi[nJets]/F");
+  RazorEvents->Branch("jetCSV", jetCSV,"jetCSV[nJets]/F");
+  RazorEvents->Branch("jetCISV", jetCISV,"jetCISV[nJets]/F");
 }
 
 void RazorTuplizer::enableJetAK8Branches(){
-  outputTree->Branch("nFatJets", &nFatJets,"nFatJets/I");
-  outputTree->Branch("fatJetE", fatJetE,"fatJetE[nFatJets]/F");
-  outputTree->Branch("fatJetPt", fatJetPt,"fatJetPt[nFatJets]/F");
-  outputTree->Branch("fatJetEta", fatJetEta,"fatJetEta[nFatJets]/F");
-  outputTree->Branch("fatJetPhi", fatJetPhi,"fatJetPhi[nFatJets]/F");
+  RazorEvents->Branch("nFatJets", &nFatJets,"nFatJets/I");
+  RazorEvents->Branch("fatJetE", fatJetE,"fatJetE[nFatJets]/F");
+  RazorEvents->Branch("fatJetPt", fatJetPt,"fatJetPt[nFatJets]/F");
+  RazorEvents->Branch("fatJetEta", fatJetEta,"fatJetEta[nFatJets]/F");
+  RazorEvents->Branch("fatJetPhi", fatJetPhi,"fatJetPhi[nFatJets]/F");
 }
 
 void RazorTuplizer::enableMetBranches(){
-  outputTree->Branch("metPt", &metPt, "metPt/F");
-  outputTree->Branch("metPhi", &metPhi, "metPhi/F");
+  RazorEvents->Branch("metPt", &metPt, "metPt/F");
+  RazorEvents->Branch("metPhi", &metPhi, "metPhi/F");
 }
 
 void RazorTuplizer::enableRazorBranches(){
-  outputTree->Branch("MR", &MR, "MR/F");
-  outputTree->Branch("RSQ", &RSQ, "RSQ/F");
+  RazorEvents->Branch("MR", &MR, "MR/F");
+  RazorEvents->Branch("RSQ", &RSQ, "RSQ/F");
 }
 
 void RazorTuplizer::enableMCBranches(){
-  outputTree->Branch("nGenJets", &nGenJets, "nGenJets/I");
-  outputTree->Branch("genJetE", genJetE, "genJetE[nGenJets]/F");
-  outputTree->Branch("genJetPt", genJetPt, "genJetPt[nGenJets]/F");
-  outputTree->Branch("genJetEta", genJetEta, "genJetEta[nGenJets]/F");
-  outputTree->Branch("genJetPhi", genJetPhi, "genJetPhi[nGenJets]/F");
+  RazorEvents->Branch("nGenJets", &nGenJets, "nGenJets/I");
+  RazorEvents->Branch("genJetE", genJetE, "genJetE[nGenJets]/F");
+  RazorEvents->Branch("genJetPt", genJetPt, "genJetPt[nGenJets]/F");
+  RazorEvents->Branch("genJetEta", genJetEta, "genJetEta[nGenJets]/F");
+  RazorEvents->Branch("genJetPhi", genJetPhi, "genJetPhi[nGenJets]/F");
 
-  outputTree->Branch("genMetPt", &genMetPt, "genMetPt/F");
-  outputTree->Branch("genMetPhi", &genMetPhi, "genMetPhi/F");
+  RazorEvents->Branch("genMetPt", &genMetPt, "genMetPt/F");
+  RazorEvents->Branch("genMetPhi", &genMetPhi, "genMetPhi/F");
 }
 
 //------ Load the miniAOD objects and reset tree variables for each event ------//
@@ -393,7 +393,8 @@ bool RazorTuplizer::fillRazor(){
   //get good jets for razor calculation
   vector<TLorentzVector> goodJets;
   for (const pat::Jet &j : *jets) {
-    if (j.pt() < 20) continue;
+    if (j.pt() < 40) continue;
+    if (fabs(j.eta()) > 3.0) continue;
     //add to goodJets vector
     TLorentzVector newJet(j.px(), j.py(), j.pz(), j.energy());
     goodJets.push_back(newJet);
@@ -435,7 +436,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillMC();
   
   //fill the tree if the event wasn't rejected
-  if(isGoodEvent) outputTree->Fill();
+  if(isGoodEvent) RazorEvents->Fill();
 }
 
 //------ Method called once each job just before starting event loop ------//

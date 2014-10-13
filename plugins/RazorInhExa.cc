@@ -32,7 +32,7 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillGenParticles();
 
   //fill the tree if the event wasn't rejected
-  if(isGoodEvent) outputTree->Fill();
+  if(isGoodEvent) RazorEvents->Fill();
 };
 
 void RazorAna::resetBranches(){
@@ -145,56 +145,56 @@ void RazorAna::setBranches(){
 
 void RazorAna::enableEventInfoBranches(){
   RazorTuplizer::enableEventInfoBranches();
-  outputTree->Branch("pvX", &pvX, "pvX/F");
-  outputTree->Branch("pvY", &pvY, "pvY/F");
-  outputTree->Branch("pvZ", &pvZ, "pvZ/F");
+  RazorEvents->Branch("pvX", &pvX, "pvX/F");
+  RazorEvents->Branch("pvY", &pvY, "pvY/F");
+  RazorEvents->Branch("pvZ", &pvZ, "pvZ/F");
 };
 
 void RazorAna::enablePileUpBranches(){
-  outputTree->Branch("nBunchXing", &nBunchXing, "nBunchXing/I");
-  outputTree->Branch("BunchXing", BunchXing, "BunchXing[nBunchXing]/I");
-  outputTree->Branch("nPU", nPU, "nPU[nBunchXing]/I");
-  outputTree->Branch("nPUmean", nPUmean, "nPUmean[nBunchXing]/F");
+  RazorEvents->Branch("nBunchXing", &nBunchXing, "nBunchXing/I");
+  RazorEvents->Branch("BunchXing", BunchXing, "BunchXing[nBunchXing]/I");
+  RazorEvents->Branch("nPU", nPU, "nPU[nBunchXing]/I");
+  RazorEvents->Branch("nPUmean", nPUmean, "nPUmean[nBunchXing]/F");
 };
 
 void RazorAna::enableMuonBranches(){
   RazorTuplizer::enableMuonBranches();
-  outputTree->Branch("muonCharge", muonCharge, "muonCharge[nMuons]/I");
-  outputTree->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/O");
-  outputTree->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/O");
-  outputTree->Branch("muon_d0", muon_d0, "muon_d0[nMuons]/F");
-  outputTree->Branch("muon_dZ", muon_dZ, "muon_dZ[nMuons]/F");
-  outputTree->Branch("muon_ip3d", muon_ip3d, "muon_ip3d[nMuons]/F");
-  outputTree->Branch("muon_ip3dSignificance", muon_ip3dSignificance, "muon_ip3dSignificance[nMuons]/F");
-  outputTree->Branch("muonType", muonType, "muonType[nMuons]/s");
-  outputTree->Branch("muon_sumChargedHadronPt", muon_sumChargedHadronPt, "muon_sumChargedHadronPt[nMuons]/F");
-  outputTree->Branch("muon_sumChargedParticlePt", muon_sumChargedParticlePt, "muon_sumChargedParticlePt[nMuons]/F");
-  outputTree->Branch("muon_sumNeutralHadronEt", muon_sumNeutralHadronEt, "muon_sumNeutralHadronEt[nMuons]/F");
-  outputTree->Branch("muon_sumPhotonEt", muon_sumPhotonEt, "muon_sumPhotonEt[nMuons]/F");
+  RazorEvents->Branch("muonCharge", muonCharge, "muonCharge[nMuons]/I");
+  RazorEvents->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/O");
+  RazorEvents->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/O");
+  RazorEvents->Branch("muon_d0", muon_d0, "muon_d0[nMuons]/F");
+  RazorEvents->Branch("muon_dZ", muon_dZ, "muon_dZ[nMuons]/F");
+  RazorEvents->Branch("muon_ip3d", muon_ip3d, "muon_ip3d[nMuons]/F");
+  RazorEvents->Branch("muon_ip3dSignificance", muon_ip3dSignificance, "muon_ip3dSignificance[nMuons]/F");
+  RazorEvents->Branch("muonType", muonType, "muonType[nMuons]/s");
+  RazorEvents->Branch("muon_sumChargedHadronPt", muon_sumChargedHadronPt, "muon_sumChargedHadronPt[nMuons]/F");
+  RazorEvents->Branch("muon_sumChargedParticlePt", muon_sumChargedParticlePt, "muon_sumChargedParticlePt[nMuons]/F");
+  RazorEvents->Branch("muon_sumNeutralHadronEt", muon_sumNeutralHadronEt, "muon_sumNeutralHadronEt[nMuons]/F");
+  RazorEvents->Branch("muon_sumPhotonEt", muon_sumPhotonEt, "muon_sumPhotonEt[nMuons]/F");
 };
 
 void RazorAna::enableElectronBranches(){
   RazorTuplizer::enableElectronBranches();
-  outputTree->Branch("eleCharge", eleCharge, "eleCharge[nElectrons]/F");
-  //outputTree->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
-  //outputTree->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
-  //outputTree->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
-  outputTree->Branch("eleSigmaIetaIeta", eleSigmaIetaIeta, "eleSigmaIetaIeta[nElectrons]/F");
-  outputTree->Branch("eleFull5x5SigmaIetaIeta", eleFull5x5SigmaIetaIeta, "eleFull5x5SigmaIetaIeta[nElectrons]/F");
-  outputTree->Branch("eleR9", eleR9, "eleR9[nElectrons]/F");
-  outputTree->Branch("ele_dEta", ele_dEta, "ele_dEta[nElectrons]/F");
-  outputTree->Branch("ele_dPhi", ele_dPhi, "ele_dPhi[nElectrons]/F");
-  outputTree->Branch("ele_HoverE", ele_HoverE, "ele_HoverE[nElectrons]/F");
-  outputTree->Branch("ele_d0", ele_d0, "ele_d0[nElectrons]/F");
-  outputTree->Branch("ele_dZ", ele_dZ, "ele_dZ[nElectrons]/F");
-  outputTree->Branch("ele_sumChargedHadronPt", ele_sumChargedHadronPt, "ele_sumChargedHadronPt[nElectrons]/F");
-  outputTree->Branch("ele_sumNeutralHadronEt", ele_sumNeutralHadronEt, "ele_sumNeutralHadronEt[nElectrons]/F");
-  outputTree->Branch("ele_sumPhotonEt", ele_sumPhotonEt, "ele_sumPhotonEt[nElectrons]/F");
-  outputTree->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
-  outputTree->Branch("ele_ConvRejec", ele_ConvRejec, "ele_ConvRejec[nElectrons]/I");
-  outputTree->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
-  outputTree->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
-  outputTree->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
+  RazorEvents->Branch("eleCharge", eleCharge, "eleCharge[nElectrons]/F");
+  //RazorEvents->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
+  //RazorEvents->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
+  //RazorEvents->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
+  RazorEvents->Branch("eleSigmaIetaIeta", eleSigmaIetaIeta, "eleSigmaIetaIeta[nElectrons]/F");
+  RazorEvents->Branch("eleFull5x5SigmaIetaIeta", eleFull5x5SigmaIetaIeta, "eleFull5x5SigmaIetaIeta[nElectrons]/F");
+  RazorEvents->Branch("eleR9", eleR9, "eleR9[nElectrons]/F");
+  RazorEvents->Branch("ele_dEta", ele_dEta, "ele_dEta[nElectrons]/F");
+  RazorEvents->Branch("ele_dPhi", ele_dPhi, "ele_dPhi[nElectrons]/F");
+  RazorEvents->Branch("ele_HoverE", ele_HoverE, "ele_HoverE[nElectrons]/F");
+  RazorEvents->Branch("ele_d0", ele_d0, "ele_d0[nElectrons]/F");
+  RazorEvents->Branch("ele_dZ", ele_dZ, "ele_dZ[nElectrons]/F");
+  RazorEvents->Branch("ele_sumChargedHadronPt", ele_sumChargedHadronPt, "ele_sumChargedHadronPt[nElectrons]/F");
+  RazorEvents->Branch("ele_sumNeutralHadronEt", ele_sumNeutralHadronEt, "ele_sumNeutralHadronEt[nElectrons]/F");
+  RazorEvents->Branch("ele_sumPhotonEt", ele_sumPhotonEt, "ele_sumPhotonEt[nElectrons]/F");
+  RazorEvents->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
+  RazorEvents->Branch("ele_ConvRejec", ele_ConvRejec, "ele_ConvRejec[nElectrons]/I");
+  RazorEvents->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
+  RazorEvents->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
+  RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
 };
 
 void RazorAna::enableTauBranches(){
@@ -203,23 +203,23 @@ void RazorAna::enableTauBranches(){
 
 void RazorAna::enablePhotonBranches(){
   RazorTuplizer::enablePhotonBranches();
-  outputTree->Branch("phoSigmaIetaIeta", phoSigmaIetaIeta, "phoSigmaIetaIeta[nPhotons]/F");
-  outputTree->Branch("phoFull5x5SigmaIetaIeta", phoFull5x5SigmaIetaIeta, "phoFull5x5SigmaIetaIeta[nPhotons]/F");
-  outputTree->Branch("phoR9", phoR9, "phoR9[nPhotons]/F");
-  outputTree->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
-  outputTree->Branch("pho_sumChargedHadronPt", pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
-  outputTree->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
-  outputTree->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
-  outputTree->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/I");
-  outputTree->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
-  outputTree->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
+  RazorEvents->Branch("phoSigmaIetaIeta", phoSigmaIetaIeta, "phoSigmaIetaIeta[nPhotons]/F");
+  RazorEvents->Branch("phoFull5x5SigmaIetaIeta", phoFull5x5SigmaIetaIeta, "phoFull5x5SigmaIetaIeta[nPhotons]/F");
+  RazorEvents->Branch("phoR9", phoR9, "phoR9[nPhotons]/F");
+  RazorEvents->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt", pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
+  RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
+  RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
+  RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/I");
+  RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
+  RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
 };
 
 void RazorAna::enableJetBranches(){
   RazorTuplizer::enableJetBranches();
-  outputTree->Branch("jetMass", jetMass, "jetMass[nJets]/F");
-  outputTree->Branch("jetJetArea", jetJetArea, "jetJetArea[nJets]/F");
-  outputTree->Branch("jetPileupE", jetPileupE, "jetPileupE[nJets]/F");
+  RazorEvents->Branch("jetMass", jetMass, "jetMass[nJets]/F");
+  RazorEvents->Branch("jetJetArea", jetJetArea, "jetJetArea[nJets]/F");
+  RazorEvents->Branch("jetPileupE", jetPileupE, "jetPileupE[nJets]/F");
 };
 
 void RazorAna::enableJetAK8Branches(){
@@ -228,24 +228,24 @@ void RazorAna::enableJetAK8Branches(){
 
 void RazorAna::enableMetBranches(){
   RazorTuplizer::enableMetBranches();
-  outputTree->Branch("sumMET", &sumMET, "sumMET/F");
+  RazorEvents->Branch("sumMET", &sumMET, "sumMET/F");
 }
 
 void RazorAna::enableRazorBranches(){
   RazorTuplizer::enableRazorBranches();
 }
 void RazorAna::enableGenParticles(){
-  outputTree->Branch("nGenParticle", &nGenParticle, "nGenParticle/s");
-  outputTree->Branch("motherIndex", motherIndex, "motherIndex[nGenParticle]/I");
-  outputTree->Branch("motherId", motherId, "motherId[nGenParticle]/I");
-  outputTree->Branch("gParticleId", gParticleId, "gParticleId[nGenParticle]/I");
-  outputTree->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
-  outputTree->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
-  outputTree->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
-  outputTree->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
-  outputTree->Branch("gParticleVx", gParticleVx, "gParticleVx[nGenParticle]/F");
-  outputTree->Branch("gParticleVy", gParticleVy, "gParticleVy[nGenParticle]/F");
-  outputTree->Branch("gParticleVz", gParticleVz, "gParticleVz[nGenParticle]/F");
+  RazorEvents->Branch("nGenParticle", &nGenParticle, "nGenParticle/s");
+  RazorEvents->Branch("motherIndex", motherIndex, "motherIndex[nGenParticle]/I");
+  RazorEvents->Branch("motherId", motherId, "motherId[nGenParticle]/I");
+  RazorEvents->Branch("gParticleId", gParticleId, "gParticleId[nGenParticle]/I");
+  RazorEvents->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
+  RazorEvents->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
+  RazorEvents->Branch("gParticleVx", gParticleVx, "gParticleVx[nGenParticle]/F");
+  RazorEvents->Branch("gParticleVy", gParticleVy, "gParticleVy[nGenParticle]/F");
+  RazorEvents->Branch("gParticleVz", gParticleVz, "gParticleVz[nGenParticle]/F");
 }
 
 /*
@@ -432,7 +432,8 @@ bool RazorAna::fillRazor(){
   //get good jets for razor calculation                                  
   vector<TLorentzVector> goodJets;
   for (const pat::Jet &j : *jets) {
-    if (j.pt() < 20) continue;
+    if (j.pt() < 40) continue;
+    if (fabs(j.eta()) > 3.0) continue;
     //add to goodJets vector                                          
     TLorentzVector newJet(j.px(), j.py(), j.pz(), j.energy());
     goodJets.push_back(newJet);

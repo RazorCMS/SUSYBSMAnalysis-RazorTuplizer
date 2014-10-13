@@ -193,7 +193,7 @@ protected:
   edm::Handle<vector<pat::PackedCandidate> > lostTracks;
   
   //output tree
-  TTree *outputTree;
+  TTree *RazorEvents;
   
   //------ Variables for tree ------//
 
