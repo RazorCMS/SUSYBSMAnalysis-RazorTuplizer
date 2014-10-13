@@ -107,6 +107,7 @@ protected:
   float jetMass[99];
   float jetJetArea[99];
   float jetPileupE[99];  
+  float jetPileupId[99];
   
   //Event Info
   float pvX;
@@ -122,16 +123,12 @@ protected:
   //Gen Info
   unsigned int nGenParticle;
   int motherIndex[99];
-  int motherId[99];
   int gParticleId[99];
+  int gParticleStatus[99];
   float gParticleE[99];
   float gParticlePt[99];
   float gParticleEta[99];
   float gParticlePhi[99];
-  float gParticleVx[99];
-  float gParticleVy[99];
-  float gParticleVz[99];
-
 };
 
 //define this as a plug-in

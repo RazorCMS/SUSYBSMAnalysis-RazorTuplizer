@@ -99,6 +99,7 @@ void RazorAna::resetBranches(){
     jetMass[j] =  -99.0;
     jetJetArea[j] = -99.0;
     jetPileupE[j] = -99.0;
+    jetPileupId[j] = -99.0;
 
     //Event Info
     pvX = -99.0;
@@ -114,15 +115,12 @@ void RazorAna::resetBranches(){
     //GenInfo
     nGenParticle = 0;
     motherIndex[j] = -99999;
-    motherId[j] = -99999;
     gParticleId[j] = -99999;
+    gParticleStatus[j] = -99999;
     gParticleE[j] = -99999.0;
     gParticlePt[j] = -99999.0;
     gParticleEta[j] = -99999.0;
     gParticlePhi[j] = -99999.0;
-    gParticleVx[j] = -99999.0;
-    gParticleVy[j] = -99999.0;
-    gParticleVz[j] = -99999.0;
   }
 };
 
@@ -220,6 +218,7 @@ void RazorAna::enableJetBranches(){
   RazorEvents->Branch("jetMass", jetMass, "jetMass[nJets]/F");
   RazorEvents->Branch("jetJetArea", jetJetArea, "jetJetArea[nJets]/F");
   RazorEvents->Branch("jetPileupE", jetPileupE, "jetPileupE[nJets]/F");
+  RazorEvents->Branch("jetPileupId", jetPileupId, "jetPileupId[nJets]/F");
 };
 
 void RazorAna::enableJetAK8Branches(){
@@ -237,15 +236,12 @@ void RazorAna::enableRazorBranches(){
 void RazorAna::enableGenParticles(){
   RazorEvents->Branch("nGenParticle", &nGenParticle, "nGenParticle/s");
   RazorEvents->Branch("motherIndex", motherIndex, "motherIndex[nGenParticle]/I");
-  RazorEvents->Branch("motherId", motherId, "motherId[nGenParticle]/I");
   RazorEvents->Branch("gParticleId", gParticleId, "gParticleId[nGenParticle]/I");
+  RazorEvents->Branch("gParticleStatus", gParticleStatus, "gParticleStatus[nGenParticle]/I");
   RazorEvents->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
   RazorEvents->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
   RazorEvents->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
   RazorEvents->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
-  RazorEvents->Branch("gParticleVx", gParticleVx, "gParticleVx[nGenParticle]/F");
-  RazorEvents->Branch("gParticleVy", gParticleVy, "gParticleVy[nGenParticle]/F");
-  RazorEvents->Branch("gParticleVz", gParticleVz, "gParticleVz[nGenParticle]/F");
 }
 
 /*
@@ -400,6 +396,7 @@ bool RazorAna::fillJets(){
     jetMass[nJets] = j.mass();
     jetJetArea[nJets] = j.jetArea();
     jetPileupE[nJets] = j.pileup();
+    jetPileupId[nJets] = j.userFloat("pileupJetId:fullDiscriminant");
     nJets++;
   }
 
@@ -453,40 +450,40 @@ bool RazorAna::fillRazor(){
 };
 
 bool RazorAna::fillGenParticles(){
-  std::vector<const reco::Candidate*> prunnedV;//Allows easier comparison for mother finding
+  std::vector<const reco::Candidate*> prunedV;//Allows easier comparison for mother finding
   //Fills selected gen particles
   for(size_t i=0; i<prunedGenParticles->size();i++){
-    if((abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6)
+/*    if((abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 11 && abs((*prunedGenParticles)[i].pdgId()) <= 16)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 21 && abs((*prunedGenParticles)[i].pdgId()) <= 25)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 32 && abs((*prunedGenParticles)[i].pdgId()) <= 42)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
        ){
-      prunnedV.push_back(&(*prunedGenParticles)[i]);
+      prunedV.push_back(&(*prunedGenParticles)[i]);
     }
+*/
+      prunedV.push_back(&(*prunedGenParticles)[i]); //keep all pruned particles
   }
   //Total number of gen particles
-  nGenParticle = prunnedV.size();
+  nGenParticle = prunedV.size();
   //Look for mother particle and Fill gen variables
-  for(unsigned int i = 0; i < prunnedV.size(); i++){
-    gParticleId[i] = prunnedV[i]->pdgId();
-    gParticleE[i] = prunnedV[i]->energy();
-    gParticlePt[i] = prunnedV[i]->pt();
-    gParticleEta[i] = prunnedV[i]->eta();
-    gParticlePhi[i] = prunnedV[i]->phi();
-    gParticleVx[i] = prunnedV[i]->vx();
-    gParticleVy[i] = prunnedV[i]->vy();
-    gParticleVz[i] = prunnedV[i]->vz();
-    if(prunnedV[i]->numberOfMothers() == 0){
+  for(unsigned int i = 0; i < prunedV.size(); i++){
+    gParticleId[i] = prunedV[i]->pdgId();
+    gParticleStatus[i] = prunedV[i]->status();
+    gParticleE[i] = prunedV[i]->energy();
+    gParticlePt[i] = prunedV[i]->pt();
+    gParticleEta[i] = prunedV[i]->eta();
+    gParticlePhi[i] = prunedV[i]->phi();
+    if(prunedV[i]->numberOfMothers() == 0){
       motherIndex[i] = -1;
-      motherId[i] = -9999; 
-      continue;
     }
-    for(unsigned int j = 0; j < prunnedV.size(); j++){
-      if(prunnedV[j] == prunnedV[i]->mother()){
-	motherIndex[i] = j;
-	motherId[i] = prunnedV[j]->pdgId();
-      }
+    else {
+        for(unsigned int j = 0; j < prunedV.size(); j++){
+            if(prunedV[j] == prunedV[i]->mother()){
+                motherIndex[i] = j;
+                break;
+            }
+        }   
     }
   }
   return true;
