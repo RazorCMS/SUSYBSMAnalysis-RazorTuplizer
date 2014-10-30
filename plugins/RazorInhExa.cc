@@ -72,11 +72,9 @@ void RazorAna::resetBranches(){
     ele_HoverE[j] = -99;
     ele_d0[j] = -99;
     ele_dZ[j] = -99;
-    ele_sumChargedHadronPt[j] = -99.0;
-    ele_sumNeutralHadronEt[j] = -99.0;
-    ele_sumPhotonEt[j] = -99.0;
+    ele_relIsoDBetaCorr[j] = -99.0;
     ele_MissHits[j] = -99;
-    ele_ConvRejec[j] = -99;
+    ele_PassConvVeto[j] = false;
     ele_OneOverEminusOneOverP[j] = -99.0;
     ele_RegressionE[j] = -99.0;
     ele_CombineP4[j] = -99.0;
@@ -114,7 +112,7 @@ void RazorAna::resetBranches(){
     
     //GenInfo
     nGenParticle = 0;
-    motherIndex[j] = -99999;
+    gParticleMotherId[j] = -99999;
     gParticleId[j] = -99999;
     gParticleStatus[j] = -99999;
     gParticleE[j] = -99999.0;
@@ -175,7 +173,7 @@ void RazorAna::enableElectronBranches(){
   RazorTuplizer::enableElectronBranches();
   RazorEvents->Branch("eleCharge", eleCharge, "eleCharge[nElectrons]/F");
   //RazorEvents->Branch("EleE_SC", eleE_SC,"eleE_SC[nElectrons]/F");
-  //RazorEvents->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
+  RazorEvents->Branch("eleEta_SC", eleEta_SC,"eleEta_SC[nElectrons]/F");
   //RazorEvents->Branch("elePhi_SC", elePhi_SC,"elePhi_SC[nElectrons]/F");
   RazorEvents->Branch("eleSigmaIetaIeta", eleSigmaIetaIeta, "eleSigmaIetaIeta[nElectrons]/F");
   RazorEvents->Branch("eleFull5x5SigmaIetaIeta", eleFull5x5SigmaIetaIeta, "eleFull5x5SigmaIetaIeta[nElectrons]/F");
@@ -185,11 +183,9 @@ void RazorAna::enableElectronBranches(){
   RazorEvents->Branch("ele_HoverE", ele_HoverE, "ele_HoverE[nElectrons]/F");
   RazorEvents->Branch("ele_d0", ele_d0, "ele_d0[nElectrons]/F");
   RazorEvents->Branch("ele_dZ", ele_dZ, "ele_dZ[nElectrons]/F");
-  RazorEvents->Branch("ele_sumChargedHadronPt", ele_sumChargedHadronPt, "ele_sumChargedHadronPt[nElectrons]/F");
-  RazorEvents->Branch("ele_sumNeutralHadronEt", ele_sumNeutralHadronEt, "ele_sumNeutralHadronEt[nElectrons]/F");
-  RazorEvents->Branch("ele_sumPhotonEt", ele_sumPhotonEt, "ele_sumPhotonEt[nElectrons]/F");
+  RazorEvents->Branch("ele_relIsoDBetaCorr", ele_relIsoDBetaCorr, "ele_relIsoDBetaCorr[nElectrons]/F");
   RazorEvents->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
-  RazorEvents->Branch("ele_ConvRejec", ele_ConvRejec, "ele_ConvRejec[nElectrons]/I");
+  RazorEvents->Branch("ele_PassConvVeto", ele_PassConvVeto, "ele_PassConvVeto[nElectrons]/O");
   RazorEvents->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
   RazorEvents->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
   RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
@@ -235,7 +231,7 @@ void RazorAna::enableRazorBranches(){
 }
 void RazorAna::enableGenParticles(){
   RazorEvents->Branch("nGenParticle", &nGenParticle, "nGenParticle/s");
-  RazorEvents->Branch("motherIndex", motherIndex, "motherIndex[nGenParticle]/I");
+  RazorEvents->Branch("gParticleMotherId", gParticleMotherId, "gParticleMotherId[nGenParticle]/I");
   RazorEvents->Branch("gParticleId", gParticleId, "gParticleId[nGenParticle]/I");
   RazorEvents->Branch("gParticleStatus", gParticleStatus, "gParticleStatus[nGenParticle]/I");
   RazorEvents->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
@@ -327,15 +323,30 @@ bool RazorAna::fillElectrons(){
     eleR9[nElectrons] = ele.r9();
     ele_dEta[nElectrons] = ele.deltaEtaSuperClusterTrackAtVtx();
     ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
-    ele_HoverE[nElectrons] = ele.hcalOverEcalBc();
+    ele_HoverE[nElectrons] = ele.hcalOverEcal();
     ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(PV.position());
     ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());
-    ele_sumChargedHadronPt[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
-    ele_sumNeutralHadronEt[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
-    ele_sumPhotonEt[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
+    ele_relIsoDBetaCorr[nElectrons] = ( ele.pfIsolationVariables().sumChargedHadronPt + ele.pfIsolationVariables().sumNeutralHadronEt +  ele.pfIsolationVariables().sumPhotonEt - 0.5*ele.pfIsolationVariables().sumPUPt ) / ele.pt();
     ele_MissHits[nElectrons] = ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
-    ele_ConvRejec[nElectrons] = ele.convFlags();
-    ele_OneOverEminusOneOverP[nElectrons] = 1./ele.correctedEcalEnergy()  -  1./ele.trackMomentumAtVtx().R();
+
+    //Conversion Veto
+    ele_PassConvVeto[nElectrons] = false;
+    if( beamSpot.isValid() && conversions.isValid() ) {
+      ele_PassConvVeto[nElectrons] = !ConversionTools::hasMatchedConversion(ele,conversions,
+									    beamSpot->position());
+    } else {
+      cout << "\n\nERROR!!! conversions not found!!!\n";
+    }
+  
+    // 1/E - 1/P
+    if( ele.ecalEnergy() == 0 ){
+      ele_OneOverEminusOneOverP[nElectrons] = 1e30;
+    } else if( !std::isfinite(ele.ecalEnergy())){
+      ele_OneOverEminusOneOverP[nElectrons] = 1e30;
+    } else {
+    ele_OneOverEminusOneOverP[nElectrons] = 1./ele.ecalEnergy()  -  ele.eSuperClusterOverP()/ele.ecalEnergy();    
+    }
+
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
     ele_CombineP4[nElectrons] = ele.ecalTrackRegressionEnergy();
     nElectrons++;
@@ -453,17 +464,20 @@ bool RazorAna::fillGenParticles(){
   std::vector<const reco::Candidate*> prunedV;//Allows easier comparison for mother finding
   //Fills selected gen particles
   for(size_t i=0; i<prunedGenParticles->size();i++){
-/*    if((abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6)
+    if(
+       (abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6 && (*prunedGenParticles)[i].status() < 30)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 11 && abs((*prunedGenParticles)[i].pdgId()) <= 16)
-       || (abs((*prunedGenParticles)[i].pdgId()) >= 21 && abs((*prunedGenParticles)[i].pdgId()) <= 25)
+       || (abs((*prunedGenParticles)[i].pdgId()) == 21 && (*prunedGenParticles)[i].status() < 30)
+       || (abs((*prunedGenParticles)[i].pdgId()) >= 22 && abs((*prunedGenParticles)[i].pdgId()) <= 25)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 32 && abs((*prunedGenParticles)[i].pdgId()) <= 42)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
        ){
       prunedV.push_back(&(*prunedGenParticles)[i]);
     }
-*/
-      prunedV.push_back(&(*prunedGenParticles)[i]); //keep all pruned particles
+    
+    //prunedV.push_back(&(*prunedGenParticles)[i]); //keep all pruned particles
   }
+
   //Total number of gen particles
   nGenParticle = prunedV.size();
   //Look for mother particle and Fill gen variables
@@ -474,20 +488,39 @@ bool RazorAna::fillGenParticles(){
     gParticlePt[i] = prunedV[i]->pt();
     gParticleEta[i] = prunedV[i]->eta();
     gParticlePhi[i] = prunedV[i]->phi();
-    if(prunedV[i]->numberOfMothers() == 0){
-      motherIndex[i] = -1;
+    gParticleMotherId[i] = 0;
+    if(prunedV[i]->numberOfMothers() > 0){
+      const reco::Candidate* firstMotherWithDifferentID = findFirstMotherWithDifferentID(prunedV[i]);
+      if (firstMotherWithDifferentID) {
+	gParticleMotherId[i] = firstMotherWithDifferentID->pdgId();
+      }
     }
-    else {
-        for(unsigned int j = 0; j < prunedV.size(); j++){
-            if(prunedV[j] == prunedV[i]->mother()){
-                motherIndex[i] = j;
-                break;
-            }
-        }   
-    }
+
   }
   return true;
 };
+
+
+const reco::Candidate* RazorAna::findFirstMotherWithDifferentID(const reco::Candidate *particle){
+
+  if( particle == 0 ){
+    printf("ERROR! null candidate pointer, this should never happen\n");
+    return 0;
+  }
+
+  // Is this the first parent with a different ID? If yes, return, otherwise
+  // go deeper into recursion
+  if (particle->numberOfMothers() > 0 && particle->pdgId() != 0) {
+    if (particle->pdgId() == particle->mother(0)->pdgId()) {
+      return findFirstMotherWithDifferentID(particle->mother(0));
+    } else {
+      return particle->mother(0);
+    }
+  }
+
+  return 0;
+}
+
 
 bool RazorAna::isAncestor(const reco::Candidate* ancestor, const reco::Candidate* particle){
   //particle is already the ancestor

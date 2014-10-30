@@ -41,6 +41,8 @@ public:
   bool fillGenParticles();
 
   bool isAncestor(const reco::Candidate*, const reco::Candidate*);
+  const reco::Candidate* findFirstMotherWithDifferentID(const reco::Candidate *particle);
+  
 
 protected:
   void beginJob() override;
@@ -80,11 +82,9 @@ protected:
   float ele_HoverE[99];
   float ele_d0[99];
   float ele_dZ[99];
-  float ele_sumChargedHadronPt[99];
-  float ele_sumNeutralHadronEt[99];
-  float ele_sumPhotonEt[99];
+  float ele_relIsoDBetaCorr[99];
   int ele_MissHits[99];
-  int ele_ConvRejec[99];
+  int ele_PassConvVeto[99];
   float ele_OneOverEminusOneOverP[99];
   float ele_RegressionE[99];
   float ele_CombineP4[99];
@@ -122,7 +122,7 @@ protected:
 
   //Gen Info
   unsigned int nGenParticle;
-  int motherIndex[99];
+  int gParticleMotherId[99];
   int gParticleId[99];
   int gParticleStatus[99];
   float gParticleE[99];
