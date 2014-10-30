@@ -378,6 +378,7 @@ bool RazorAna::fillPhotons(){
     phoSigmaIetaIeta[nPhotons] = pho.sigmaIetaIeta();
     phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();
     phoR9[nPhotons] = pho.r9();
+    pho_HoverE[nPhotons] = pho.hadronicOverEm();
     pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
     pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
     pho_sumPhotonEt[nPhotons] = pho.photonIso();
