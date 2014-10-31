@@ -6,7 +6,32 @@ Defines just constructor and destructor
 #include "RazorInhExa.hh"
 
 //Defines Constructor
-RazorAna::RazorAna(const edm::ParameterSet& iConfig) : RazorTuplizer(iConfig){};
+RazorAna::RazorAna(const edm::ParameterSet& iConfig) : RazorTuplizer(iConfig){
+
+  std::vector<std::string> myTrigWeights;
+  myTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EB_BDT.weights.xml");
+  myTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EE_BDT.weights.xml");
+
+  myMVATrig = new EGammaMvaEleEstimatorCSA14();
+  myMVATrig->initialize("BDT",
+			EGammaMvaEleEstimatorCSA14::kTrig,
+			true,
+			myTrigWeights);
+
+  std::vector<std::string> myNonTrigWeights;
+  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_5_25ns_BDT.weights.xml");
+  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_5_25ns_BDT.weights.xml");
+  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_10_25ns_BDT.weights.xml");
+  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_10_25ns_BDT.weights.xml");
+  
+  myMVANonTrig = new EGammaMvaEleEstimatorCSA14();
+  myMVANonTrig->initialize("BDT",
+			EGammaMvaEleEstimatorCSA14::kNonTrig,
+			true,
+			myNonTrigWeights);
+
+};
+
 //Defines Destructor
 RazorAna::~RazorAna(){};
 //Define custom analyzer
@@ -76,6 +101,8 @@ void RazorAna::resetBranches(){
     ele_MissHits[j] = -99;
     ele_PassConvVeto[j] = false;
     ele_OneOverEminusOneOverP[j] = -99.0;
+    ele_IDMVATrig[j] = -99.0;
+    ele_IDMVANonTrig[j] = -99.0;
     ele_RegressionE[j] = -99.0;
     ele_CombineP4[j] = -99.0;
 
@@ -187,6 +214,8 @@ void RazorAna::enableElectronBranches(){
   RazorEvents->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
   RazorEvents->Branch("ele_PassConvVeto", ele_PassConvVeto, "ele_PassConvVeto[nElectrons]/O");
   RazorEvents->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVATrig", ele_IDMVATrig, "ele_IDMVATrig[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVANonTrig", ele_IDMVANonTrig, "ele_IDMVANonTrig[nElectrons]/F");
   RazorEvents->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
   RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
 };
@@ -346,6 +375,10 @@ bool RazorAna::fillElectrons(){
     } else {
     ele_OneOverEminusOneOverP[nElectrons] = 1./ele.ecalEnergy()  -  ele.eSuperClusterOverP()/ele.ecalEnergy();    
     }
+
+    //ID MVA
+    ele_IDMVATrig[nElectrons] = myMVATrig->mvaValue(ele,false);
+    ele_IDMVANonTrig[nElectrons] = myMVANonTrig->mvaValue(ele,false);
 
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
     ele_CombineP4[nElectrons] = ele.ecalTrackRegressionEnergy();

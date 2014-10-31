@@ -48,6 +48,9 @@ protected:
   void beginJob() override;
   void analyze(const edm::Event&, const edm::EventSetup&);
   
+  EGammaMvaEleEstimatorCSA14* myMVATrig;
+  EGammaMvaEleEstimatorCSA14* myMVANonTrig;
+
   //PU
   int nBunchXing;
   int BunchXing[99];
@@ -86,6 +89,8 @@ protected:
   int ele_MissHits[99];
   int ele_PassConvVeto[99];
   float ele_OneOverEminusOneOverP[99];
+  float ele_IDMVATrig[99];
+  float ele_IDMVANonTrig[99];
   float ele_RegressionE[99];
   float ele_CombineP4[99];
   
