@@ -55,6 +55,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   
   //set up output tree
   RazorEvents = fs->make<TTree>("RazorEvents", "selected miniAOD information");
+  NEvents = fs->make<TH1F>("NEvents",";;NEvents;",1,-0.5,0.5);
+
   //setBranches();
 }
 
@@ -422,6 +424,8 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   resetBranches();
   loadEvent(iEvent); //loads objects and resets tree branches
   
+  NEvents->Fill(0); //increment event count
+
   //filler methods should fill relevant tree variables and return false if the event should be rejected
   bool isGoodEvent = 
     fillEventInfo(iEvent)

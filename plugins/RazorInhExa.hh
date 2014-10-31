@@ -128,6 +128,7 @@ protected:
   //Gen Info
   unsigned int nGenParticle;
   int gParticleMotherId[99];
+  int gParticleMotherIndex[99];
   int gParticleId[99];
   int gParticleStatus[99];
   float gParticleE[99];

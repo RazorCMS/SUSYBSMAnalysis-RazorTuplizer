@@ -8,10 +8,12 @@ Instructions for compiling in CMSSW
 
     cmsrel CMSSW_7_2_0_pre6
     cd CMSSW_7_2_0_pre6/src
+    git cms-merge-topic sixie:CMSSWTagsForRazorNtupler_V1.2
     git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
     scram b
     
 Use CMSSW_7_0_6_patch1 instead of CMSSW_7_2_0_pre6 for now, because 72X does not appear to be compatible with the 70X miniAOD samples.
+You must run the cms-merge-topic command before cloning the RazorTuplizer code, because it requires an empty CMSSW src directory to work.
 
 Running the BASE ntuplizer
 --------------

@@ -42,6 +42,8 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   resetBranches();
   loadEvent(iEvent); //loads objects and resets tree branches
 
+  NEvents->Fill(0); //increment event count
+
   bool isGoodEvent =
     fillEventInfo(iEvent)
     && fillPileUp()
@@ -140,6 +142,7 @@ void RazorAna::resetBranches(){
     //GenInfo
     nGenParticle = 0;
     gParticleMotherId[j] = -99999;
+    gParticleMotherIndex[j] = -99999;
     gParticleId[j] = -99999;
     gParticleStatus[j] = -99999;
     gParticleE[j] = -99999.0;
@@ -261,6 +264,7 @@ void RazorAna::enableRazorBranches(){
 void RazorAna::enableGenParticles(){
   RazorEvents->Branch("nGenParticle", &nGenParticle, "nGenParticle/s");
   RazorEvents->Branch("gParticleMotherId", gParticleMotherId, "gParticleMotherId[nGenParticle]/I");
+  RazorEvents->Branch("gParticleMotherIndex", gParticleMotherIndex, "gParticleMotherIndex[nGenParticle]/I");
   RazorEvents->Branch("gParticleId", gParticleId, "gParticleId[nGenParticle]/I");
   RazorEvents->Branch("gParticleStatus", gParticleStatus, "gParticleStatus[nGenParticle]/I");
   RazorEvents->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
@@ -499,10 +503,16 @@ bool RazorAna::fillGenParticles(){
   //Fills selected gen particles
   for(size_t i=0; i<prunedGenParticles->size();i++){
     if(
-       (abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6 && (*prunedGenParticles)[i].status() < 30)
+       (abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6 
+    	&& ( (*prunedGenParticles)[i].status() < 30 || ( (*prunedGenParticles)[i].status() >= 61 && (*prunedGenParticles)[i].status() <= 69) )
+    	)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 11 && abs((*prunedGenParticles)[i].pdgId()) <= 16)
-       || (abs((*prunedGenParticles)[i].pdgId()) == 21 && (*prunedGenParticles)[i].status() < 30)
-       || (abs((*prunedGenParticles)[i].pdgId()) >= 22 && abs((*prunedGenParticles)[i].pdgId()) <= 25)
+       || (abs((*prunedGenParticles)[i].pdgId()) == 21 
+    	   && (*prunedGenParticles)[i].status() < 30
+    	   )
+       || (abs((*prunedGenParticles)[i].pdgId()) >= 22 && abs((*prunedGenParticles)[i].pdgId()) <= 25
+	   && ( (*prunedGenParticles)[i].status() < 30  || ( (*prunedGenParticles)[i].status() >= 61 && (*prunedGenParticles)[i].status() <= 69 ) )
+	   )
        || (abs((*prunedGenParticles)[i].pdgId()) >= 32 && abs((*prunedGenParticles)[i].pdgId()) <= 42)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
        ){
@@ -523,13 +533,25 @@ bool RazorAna::fillGenParticles(){
     gParticleEta[i] = prunedV[i]->eta();
     gParticlePhi[i] = prunedV[i]->phi();
     gParticleMotherId[i] = 0;
+    gParticleMotherIndex[i] = -1;
     if(prunedV[i]->numberOfMothers() > 0){
+      
+      //find the ID of the first mother that has a different ID than the particle itself
       const reco::Candidate* firstMotherWithDifferentID = findFirstMotherWithDifferentID(prunedV[i]);
       if (firstMotherWithDifferentID) {
 	gParticleMotherId[i] = firstMotherWithDifferentID->pdgId();
       }
-    }
 
+      //find the index of the direct mother
+      for(unsigned int j = 0; j < prunedV.size(); j++){
+	if(prunedV[j] == prunedV[i]->mother()){
+	  gParticleMotherIndex[i] = j;
+	  break;
+	}
+      }
+    } else {
+      gParticleMotherIndex[i] = -1;
+    }
   }
   return true;
 };

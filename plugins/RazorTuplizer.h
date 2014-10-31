@@ -196,7 +196,8 @@ protected:
   
   //output tree
   TTree *RazorEvents;
-  
+  TH1F *NEvents;
+
   //------ Variables for tree ------//
 
   //Muons
