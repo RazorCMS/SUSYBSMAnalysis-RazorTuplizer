@@ -82,10 +82,8 @@ void RazorAna::resetBranches(){
     muon_ip3d[j] = -99.0;
     muon_ip3dSignificance[j] = -99.0;
     muonType[j] = 0;
-    muon_sumChargedHadronPt[j] = -99.0;
-    muon_sumChargedParticlePt[j] = -99.0;
-    muon_sumNeutralHadronEt[j] = -99.0;
-    muon_sumPhotonEt[j] = -99.0;
+    muonQuality[j] = 0;
+    muon_relIso04DBetaCorr[j] = -99.0;
     
     //Ele
     eleE_SC[j] = -99.0;
@@ -193,10 +191,8 @@ void RazorAna::enableMuonBranches(){
   RazorEvents->Branch("muon_ip3d", muon_ip3d, "muon_ip3d[nMuons]/F");
   RazorEvents->Branch("muon_ip3dSignificance", muon_ip3dSignificance, "muon_ip3dSignificance[nMuons]/F");
   RazorEvents->Branch("muonType", muonType, "muonType[nMuons]/s");
-  RazorEvents->Branch("muon_sumChargedHadronPt", muon_sumChargedHadronPt, "muon_sumChargedHadronPt[nMuons]/F");
-  RazorEvents->Branch("muon_sumChargedParticlePt", muon_sumChargedParticlePt, "muon_sumChargedParticlePt[nMuons]/F");
-  RazorEvents->Branch("muon_sumNeutralHadronEt", muon_sumNeutralHadronEt, "muon_sumNeutralHadronEt[nMuons]/F");
-  RazorEvents->Branch("muon_sumPhotonEt", muon_sumPhotonEt, "muon_sumPhotonEt[nMuons]/F");
+  RazorEvents->Branch("muonQuality", muonQuality, "muonQuality[nMuons]/i");
+  RazorEvents->Branch("muon_relIso04DBetaCorr", muon_relIso04DBetaCorr, "muon_relIso04DBetaCorr[nMuons]/F");
 };
 
 void RazorAna::enableElectronBranches(){
@@ -329,10 +325,33 @@ bool RazorAna::fillMuons(){
     muon_ip3dSignificance[nMuons] = mu.dB(pat::Muon::PV3D)/mu.edB(pat::Muon::PV3D);
     muonType[nMuons] = mu.isMuon() + mu.isGlobalMuon() + mu.isTrackerMuon() + mu.isStandAloneMuon()
       + mu.isCaloMuon() + mu.isPFMuon() + mu.isRPCMuon();
-    muon_sumChargedHadronPt[nMuons] = mu.pfIsolationR04().sumChargedHadronPt;
-    muon_sumChargedParticlePt[nMuons] = mu.pfIsolationR04().sumChargedParticlePt;
-    muon_sumNeutralHadronEt[nMuons] = mu.pfIsolationR04().sumNeutralHadronEt;
-    muon_sumPhotonEt[nMuons] =  mu.pfIsolationR04().sumPhotonEt;
+    muonQuality[nMuons] = 
+      muon::isGoodMuon(mu,muon::All)
+    + muon::isGoodMuon(mu,muon::AllGlobalMuons)
+    + muon::isGoodMuon(mu,muon::AllStandAloneMuons)
+    + muon::isGoodMuon(mu,muon::AllTrackerMuons)
+    + muon::isGoodMuon(mu,muon::TrackerMuonArbitrated)
+    + muon::isGoodMuon(mu,muon::AllArbitrated)      
+    + muon::isGoodMuon(mu,muon::GlobalMuonPromptTight)      
+    + muon::isGoodMuon(mu,muon::TMLastStationLoose)      
+    + muon::isGoodMuon(mu,muon::TMLastStationTight)      
+    + muon::isGoodMuon(mu,muon::TM2DCompatibilityLoose)      
+    + muon::isGoodMuon(mu,muon::TM2DCompatibilityTight)      
+    + muon::isGoodMuon(mu,muon::TMOneStationLoose)      
+    + muon::isGoodMuon(mu,muon::TMOneStationTight)      
+    + muon::isGoodMuon(mu,muon::TMLastStationOptimizedLowPtLoose)      
+    + muon::isGoodMuon(mu,muon::TMLastStationOptimizedLowPtTight)      
+    + muon::isGoodMuon(mu,muon::GMTkChiCompatibility)      
+    + muon::isGoodMuon(mu,muon::GMStaChiCompatibility)      
+    + muon::isGoodMuon(mu,muon::GMTkKinkTight)      
+    + muon::isGoodMuon(mu,muon::TMLastStationAngLoose)      
+    + muon::isGoodMuon(mu,muon::TMLastStationAngTight)      
+    + muon::isGoodMuon(mu,muon::TMOneStationAngLoose)      
+    + muon::isGoodMuon(mu,muon::TMOneStationAngTight)      
+    + muon::isGoodMuon(mu,muon::TMLastStationOptimizedBarrelLowPtLoose)      
+    + muon::isGoodMuon(mu,muon::TMLastStationOptimizedBarrelLowPtTight)
+    + muon::isGoodMuon(mu,muon::RPCMuLoose);       
+    muon_relIso04DBetaCorr[nMuons] = ( mu.pfIsolationR04().sumChargedHadronPt + fmax(0, mu.pfIsolationR04().sumNeutralHadronEt + mu.pfIsolationR04().sumPhotonEt - 0.5* mu.pfIsolationR04().sumPUPt) ) / mu.pt();
     nMuons++;
   }
 
@@ -359,7 +378,7 @@ bool RazorAna::fillElectrons(){
     ele_HoverE[nElectrons] = ele.hcalOverEcal();
     ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(PV.position());
     ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());
-    ele_relIsoDBetaCorr[nElectrons] = ( ele.pfIsolationVariables().sumChargedHadronPt + ele.pfIsolationVariables().sumNeutralHadronEt +  ele.pfIsolationVariables().sumPhotonEt - 0.5*ele.pfIsolationVariables().sumPUPt ) / ele.pt();
+    ele_relIsoDBetaCorr[nElectrons] = ( ele.pfIsolationVariables().sumChargedHadronPt + fmax(0,ele.pfIsolationVariables().sumNeutralHadronEt +  ele.pfIsolationVariables().sumPhotonEt - 0.5*ele.pfIsolationVariables().sumPUPt) ) / ele.pt();
     ele_MissHits[nElectrons] = ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
 
     //Conversion Veto

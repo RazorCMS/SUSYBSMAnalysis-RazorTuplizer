@@ -67,10 +67,8 @@ protected:
   float muon_ip3d[99];//3d impact paramenter
   float muon_ip3dSignificance[99];//3d impact paramenter/error
   unsigned int muonType[99];//muonTypeBit: global, tracker, standalone 
-  float muon_sumChargedHadronPt[99];//pfISO dr04
-  float muon_sumChargedParticlePt[99];//pfISO dr04
-  float muon_sumNeutralHadronEt[99];//pfISO dr04
-  float muon_sumPhotonEt[99];//pfISO dr04
+  UInt_t muonQuality[99];//muonID Quality Bits
+  float muon_relIso04DBetaCorr[99];//pfISO dr04
   
   //Ele
   float eleCharge[99];
