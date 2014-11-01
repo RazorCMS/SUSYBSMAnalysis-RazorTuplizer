@@ -504,14 +504,16 @@ bool RazorAna::fillGenParticles(){
   for(size_t i=0; i<prunedGenParticles->size();i++){
     if(
        (abs((*prunedGenParticles)[i].pdgId()) >= 1 && abs((*prunedGenParticles)[i].pdgId()) <= 6 
-    	&& ( (*prunedGenParticles)[i].status() < 30 || ( (*prunedGenParticles)[i].status() >= 61 && (*prunedGenParticles)[i].status() <= 69) )
-    	)
+    	&& ( (*prunedGenParticles)[i].status() < 30 	     
+	     )
+	)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 11 && abs((*prunedGenParticles)[i].pdgId()) <= 16)
        || (abs((*prunedGenParticles)[i].pdgId()) == 21 
     	   && (*prunedGenParticles)[i].status() < 30
     	   )
        || (abs((*prunedGenParticles)[i].pdgId()) >= 22 && abs((*prunedGenParticles)[i].pdgId()) <= 25
-	   && ( (*prunedGenParticles)[i].status() < 30  || ( (*prunedGenParticles)[i].status() >= 61 && (*prunedGenParticles)[i].status() <= 69 ) )
+    	   && ( (*prunedGenParticles)[i].status() < 30
+		)
 	   )
        || (abs((*prunedGenParticles)[i].pdgId()) >= 32 && abs((*prunedGenParticles)[i].pdgId()) <= 42)
        || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
@@ -519,7 +521,8 @@ bool RazorAna::fillGenParticles(){
       prunedV.push_back(&(*prunedGenParticles)[i]);
     }
     
-    //prunedV.push_back(&(*prunedGenParticles)[i]); //keep all pruned particles
+    //cout << i << " : " << (*prunedGenParticles)[i].pdgId() << " " << (*prunedGenParticles)[i].status() << " " << (*prunedGenParticles)[i].pt() << "\n";
+    //if (prunedV.size()<99) prunedV.push_back(&(*prunedGenParticles)[i]); //keep all pruned particles
   }
 
   //Total number of gen particles
@@ -542,9 +545,10 @@ bool RazorAna::fillGenParticles(){
 	gParticleMotherId[i] = firstMotherWithDifferentID->pdgId();
       }
 
-      //find the index of the direct mother
-      for(unsigned int j = 0; j < prunedV.size(); j++){
-	if(prunedV[j] == prunedV[i]->mother()){
+      //find the mother and keep going up the mother chain if the ID's are the same
+      const reco::Candidate* originalMotherWithSameID = findOriginalMotherWithSameID(prunedV[i]);
+      for(unsigned int j = 0; j < prunedV.size(); j++){	
+	if(prunedV[j] == originalMotherWithSameID){
 	  gParticleMotherIndex[i] = j;
 	  break;
 	}
@@ -574,6 +578,26 @@ const reco::Candidate* RazorAna::findFirstMotherWithDifferentID(const reco::Cand
     }
   }
 
+  return 0;
+}
+
+const reco::Candidate* RazorAna::findOriginalMotherWithSameID(const reco::Candidate *particle){
+
+  if( particle == 0 ){
+    printf("ERROR! null candidate pointer, this should never happen\n");
+    return 0;
+  }
+
+  // Is there another parent with the same ID? If yes, go deeper into recursion
+  if (particle->numberOfMothers() > 0 && particle->pdgId() != 0) {
+    if (particle->mother(0)->numberOfMothers() == 0 || 
+	(particle->mother(0)->numberOfMothers() > 0 && particle->mother(0)->mother(0)->pdgId() != particle->mother(0)->pdgId())
+	) {
+      return particle->mother(0);
+    } else {
+      return findOriginalMotherWithSameID(particle->mother(0));
+    }
+  }
   return 0;
 }
 

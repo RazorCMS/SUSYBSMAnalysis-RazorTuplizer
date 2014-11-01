@@ -42,6 +42,7 @@ public:
 
   bool isAncestor(const reco::Candidate*, const reco::Candidate*);
   const reco::Candidate* findFirstMotherWithDifferentID(const reco::Candidate *particle);
+  const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
   
 
 protected:
