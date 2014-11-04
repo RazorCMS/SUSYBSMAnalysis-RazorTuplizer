@@ -9,8 +9,8 @@ Defines just constructor and destructor
 RazorAna::RazorAna(const edm::ParameterSet& iConfig) : RazorTuplizer(iConfig){
 
   std::vector<std::string> myTrigWeights;
-  myTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EB_BDT.weights.xml");
-  myTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EE_BDT.weights.xml");
+  myTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EB_BDT.weights.xml").fullPath().c_str());
+  myTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EE_BDT.weights.xml").fullPath().c_str());
 
   myMVATrig = new EGammaMvaEleEstimatorCSA14();
   myMVATrig->initialize("BDT",
@@ -19,10 +19,10 @@ RazorAna::RazorAna(const edm::ParameterSet& iConfig) : RazorTuplizer(iConfig){
 			myTrigWeights);
 
   std::vector<std::string> myNonTrigWeights;
-  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_5_25ns_BDT.weights.xml");
-  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_5_25ns_BDT.weights.xml");
-  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_10_25ns_BDT.weights.xml");
-  myNonTrigWeights.push_back("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_10_25ns_BDT.weights.xml");
+  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_5_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_5_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_10_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_10_25ns_BDT.weights.xml").fullPath().c_str());
   
   myMVANonTrig = new EGammaMvaEleEstimatorCSA14();
   myMVANonTrig->initialize("BDT",
