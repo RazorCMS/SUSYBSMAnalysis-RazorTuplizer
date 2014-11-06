@@ -86,7 +86,7 @@ protected:
   float ele_dZ[99];
   float ele_relIsoDBetaCorr[99];
   int ele_MissHits[99];
-  int ele_PassConvVeto[99];
+  bool ele_PassConvVeto[99];
   float ele_OneOverEminusOneOverP[99];
   float ele_IDMVATrig[99];
   float ele_IDMVANonTrig[99];
