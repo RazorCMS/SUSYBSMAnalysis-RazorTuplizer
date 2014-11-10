@@ -107,7 +107,27 @@ void RazorAna::resetBranches(){
     ele_CombineP4[j] = -99.0;
 
     //Taus
-    
+    tau_IsLoose[j] = false;
+    tau_isMedium[j] = false;
+    tau_isTight[j] = false;
+    tau_passEleVetoLoose[j] = false;
+    tau_passEleVetoMedium[j] = false;
+    tau_passEleVetoTight[j] = false;
+    tau_passMuVetoLoose[j] = false;
+    tau_passMuVetoMedium[j] = false;
+    tau_passMuVetoTight[j] = false;
+    tau_ID[j] = 0;
+    tau_combinedIsoDeltaBetaCorr3Hits[j] = -99.0;
+    tau_eleVetoMVA[j] = -99.0;
+    tau_eleVetoCategory[j] = -1;
+    tau_muonVetoMVA[j] = -99.0;
+    tau_isoMVAnewDMwLT[j] = -99.0;
+    tau_isoMVAnewDMwoLT[j] = -99.0;
+    tau_leadCandPt[j] = -99.0;
+    tau_leadCandID[j] = 0;
+    tau_leadChargedHadrCandPt[j] = -99.0;
+    tau_leadChargedHadrCandID[j] = 0;
+
     //Photons
     phoSigmaIetaIeta[j] = -99.0;
     phoFull5x5SigmaIetaIeta[j] = -99.0;
@@ -221,6 +241,26 @@ void RazorAna::enableElectronBranches(){
 
 void RazorAna::enableTauBranches(){
   RazorTuplizer::enableTauBranches();
+  RazorEvents->Branch("tau_IsLoose", tau_IsLoose, "tau_IsLoose[nTaus]/O");
+  RazorEvents->Branch("tau_isMedium", tau_isMedium, "tau_isMedium[nTaus]/O");
+  RazorEvents->Branch("tau_isTight", tau_isTight, "tau_isTight[nTaus]/O");
+  RazorEvents->Branch("tau_passEleVetoLoose", tau_passEleVetoLoose, "tau_passEleVetoLoose[nTaus]/O");
+  RazorEvents->Branch("tau_passEleVetoMedium", tau_passEleVetoMedium, "tau_passEleVetoMedium[nTaus]/O");
+  RazorEvents->Branch("tau_passEleVetoTight", tau_passEleVetoTight, "tau_passEleVetoTight[nTaus]/O");
+  RazorEvents->Branch("tau_passMuVetoLoose", tau_passMuVetoLoose, "tau_passMuVetoLoose[nTaus]/O");
+  RazorEvents->Branch("tau_passMuVetoMedium", tau_passMuVetoMedium, "tau_passMuVetoMedium[nTaus]/O");
+  RazorEvents->Branch("tau_passMuVetoTight", tau_passMuVetoTight, "tau_passMuVetoTight[nTaus]/O");
+  RazorEvents->Branch("tau_ID", tau_ID, "tau_ID[nTaus]/i");
+  RazorEvents->Branch("tau_combinedIsoDeltaBetaCorr3Hits", tau_combinedIsoDeltaBetaCorr3Hits, "tau_combinedIsoDeltaBetaCorr3Hits[nTaus]/F");
+  RazorEvents->Branch("tau_eleVetoMVA", tau_eleVetoMVA, "tau_eleVetoMVA[nTaus]/F");
+  RazorEvents->Branch("tau_eleVetoCategory", tau_eleVetoCategory, "tau_eleVetoCategory[nTaus]/I");
+  RazorEvents->Branch("tau_muonVetoMVA", tau_muonVetoMVA, "tau_muonVetoMVA[nTaus]/F");
+  RazorEvents->Branch("tau_isoMVAnewDMwLT", tau_isoMVAnewDMwLT, "tau_isoMVAnewDMwLT[nTaus]/F");
+  RazorEvents->Branch("tau_isoMVAnewDMwoLT", tau_isoMVAnewDMwoLT, "tau_isoMVAnewDMwoLT[nTaus]/F");
+  RazorEvents->Branch("tau_leadCandPt", tau_leadCandPt, "tau_leadCandPt[nTaus]/F");
+  RazorEvents->Branch("tau_leadCandID", tau_leadCandID, "tau_leadCandID[nTaus]/I");
+  RazorEvents->Branch("tau_leadChargedHadrCandPt", tau_leadChargedHadrCandPt, "tau_leadChargedHadrCandPt[nTaus]/F");
+  RazorEvents->Branch("tau_leadChargedHadrCandID", tau_leadChargedHadrCandID, "tau_leadChargedHadrCandID[nTaus]/I"); 
 };
 
 void RazorAna::enablePhotonBranches(){
@@ -418,6 +458,60 @@ bool RazorAna::fillTaus(){
     tauPt[nTaus] = tau.pt();
     tauEta[nTaus] = tau.eta();
     tauPhi[nTaus] = tau.phi();
+    
+    tau_IsLoose[nTaus] = bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits"));
+    tau_isMedium[nTaus] = bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
+    tau_isTight[nTaus] = bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
+    tau_passEleVetoLoose[nTaus] = bool(tau.tauID("againstElectronLooseMVA5"));
+    tau_passEleVetoMedium[nTaus] = bool(tau.tauID("againstElectronMediumMVA5"));
+    tau_passEleVetoTight[nTaus] = bool(tau.tauID("againstElectronTightMVA5"));
+    tau_passMuVetoLoose[nTaus] = bool(tau.tauID("againstMuonLooseMVA"));
+    tau_passMuVetoMedium[nTaus] = bool(tau.tauID("againstMuonMediumMVA"));
+    tau_passMuVetoTight[nTaus] = bool(tau.tauID("againstMuonTightMVA") );  
+  
+    tau_combinedIsoDeltaBetaCorr3Hits[nTaus] = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits");
+    tau_eleVetoMVA[nTaus] = tau.tauID("againstElectronMVA5raw") ;
+    tau_eleVetoCategory[nTaus] = tau.tauID("againstElectronMVA5category");
+    tau_muonVetoMVA[nTaus] = tau.tauID("againstMuonMVAraw");
+    tau_isoMVAnewDMwLT[nTaus] = tau.tauID("byIsolationMVA3newDMwLTraw");
+    tau_isoMVAnewDMwoLT[nTaus] = tau.tauID("byIsolationMVA3newDMwoLTraw") ; 
+
+    tau_ID[nTaus] = 
+      bool(tau.tauID("decayModeFinding")) +
+      bool(tau.tauID("decayModeFindingNewDMs")) +
+      bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits")) +
+      bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits")) +
+      bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits")) +
+      bool(tau.tauID("againstElectronVLooseMVA5")) +
+      bool(tau.tauID("againstElectronLooseMVA5")) +
+      bool(tau.tauID("againstElectronMediumMVA5")) +
+      bool(tau.tauID("againstElectronTightMVA5")) +
+      bool(tau.tauID("againstElectronVTightMVA5")) +
+      bool(tau.tauID("againstMuonLoose3")) +
+      bool(tau.tauID("againstMuonTight3")) +
+      bool(tau.tauID("againstMuonLooseMVA")) +
+      bool(tau.tauID("againstMuonMediumMVA")) +
+      bool(tau.tauID("againstMuonTightMVA")) +
+      bool(tau.tauID("byVLooseIsolationMVA3newDMwLT")) +
+      bool(tau.tauID("byLooseIsolationMVA3newDMwLT")) +
+      bool(tau.tauID("byMediumIsolationMVA3newDMwLT")) +
+      bool(tau.tauID("byTightIsolationMVA3newDMwLT")) +
+      bool(tau.tauID("byVTightIsolationMVA3newDMwLT")) +
+      bool(tau.tauID("byVVTightIsolationMVA3newDMwLT"));
+
+    tau_leadCandPt[nTaus] = 0;
+    tau_leadCandID[nTaus] = 0;
+    tau_leadChargedHadrCandPt[nTaus] = 0;
+    tau_leadChargedHadrCandID[nTaus] = 0;
+    if (tau.leadCand().isNonnull()) {
+      tau_leadCandPt[nTaus] = tau.leadCand()->pt();
+      tau_leadCandID[nTaus] = tau.leadCand()->pdgId();
+    }
+    if (tau.leadChargedHadrCand().isNonnull()) { 
+      tau_leadChargedHadrCandPt[nTaus] = tau.leadChargedHadrCand()->pt();
+      tau_leadChargedHadrCandID[nTaus] = tau.leadChargedHadrCand()->pdgId();
+    }
+      
     nTaus++;
   }
 

@@ -94,6 +94,26 @@ protected:
   float ele_CombineP4[99];
   
   //Taus
+  bool tau_IsLoose[99];
+  bool tau_isMedium[99];
+  bool tau_isTight[99];
+  bool tau_passEleVetoLoose[99];
+  bool tau_passEleVetoMedium[99];
+  bool tau_passEleVetoTight[99];
+  bool tau_passMuVetoLoose[99];
+  bool tau_passMuVetoMedium[99];
+  bool tau_passMuVetoTight[99];  
+  UInt_t tau_ID[99];//tauID Bits
+  float tau_combinedIsoDeltaBetaCorr3Hits[99];
+  float tau_eleVetoMVA[99];
+  int tau_eleVetoCategory[99];
+  float tau_muonVetoMVA[99];
+  float tau_isoMVAnewDMwLT[99];
+  float tau_isoMVAnewDMwoLT[99]; 
+  float tau_leadCandPt[99];
+  int tau_leadCandID[99];
+  float tau_leadChargedHadrCandPt[99];
+  int tau_leadChargedHadrCandID[99];
 
   //Photons
   float phoSigmaIetaIeta[99];
