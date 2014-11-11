@@ -55,6 +55,7 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJetsAK8()
     && fillMet()
     && fillRazor()
+    && RazorTuplizer::fillTrigger(iEvent)
     && fillMC()
     && fillGenParticles();
 
@@ -181,6 +182,7 @@ void RazorAna::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
+  RazorTuplizer::enableTriggerBranches();
   enableMCBranches();
   enableGenParticles();
   

@@ -78,6 +78,7 @@ public:
   virtual void enableJetAK8Branches();
   virtual void enableMetBranches();
   virtual void enableRazorBranches();
+  virtual void enableTriggerBranches();
   virtual void enableMCBranches();
   
   //select objects and fill tree branches
@@ -90,6 +91,7 @@ public:
   virtual bool fillJetsAK8();//Fills AK5 Jet 4-momentum.
   virtual bool fillMet();//Fills MET(mag, phi)
   virtual bool fillRazor();//Fills MR and RSQ
+  virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
   
   //------ HELPER FUNCTIONS ------//
@@ -266,7 +268,10 @@ protected:
   int runNum;
   int lumiNum;
   int eventNum;
-  
+
+  //trigger info
+  vector<string>  *nameHLT;
+
 };
 
 #endif
