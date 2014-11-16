@@ -95,8 +95,8 @@ protected:
   
   //Taus
   bool tau_IsLoose[99];
-  bool tau_isMedium[99];
-  bool tau_isTight[99];
+  bool tau_IsMedium[99];
+  bool tau_IsTight[99];
   bool tau_passEleVetoLoose[99];
   bool tau_passEleVetoMedium[99];
   bool tau_passEleVetoTight[99];

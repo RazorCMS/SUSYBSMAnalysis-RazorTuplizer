@@ -108,8 +108,8 @@ void RazorAna::resetBranches(){
 
     //Taus
     tau_IsLoose[j] = false;
-    tau_isMedium[j] = false;
-    tau_isTight[j] = false;
+    tau_IsMedium[j] = false;
+    tau_IsTight[j] = false;
     tau_passEleVetoLoose[j] = false;
     tau_passEleVetoMedium[j] = false;
     tau_passEleVetoTight[j] = false;
@@ -242,8 +242,8 @@ void RazorAna::enableElectronBranches(){
 void RazorAna::enableTauBranches(){
   RazorTuplizer::enableTauBranches();
   RazorEvents->Branch("tau_IsLoose", tau_IsLoose, "tau_IsLoose[nTaus]/O");
-  RazorEvents->Branch("tau_isMedium", tau_isMedium, "tau_isMedium[nTaus]/O");
-  RazorEvents->Branch("tau_isTight", tau_isTight, "tau_isTight[nTaus]/O");
+  RazorEvents->Branch("tau_IsMedium", tau_IsMedium, "tau_IsMedium[nTaus]/O");
+  RazorEvents->Branch("tau_IsTight", tau_IsTight, "tau_IsTight[nTaus]/O");
   RazorEvents->Branch("tau_passEleVetoLoose", tau_passEleVetoLoose, "tau_passEleVetoLoose[nTaus]/O");
   RazorEvents->Branch("tau_passEleVetoMedium", tau_passEleVetoMedium, "tau_passEleVetoMedium[nTaus]/O");
   RazorEvents->Branch("tau_passEleVetoTight", tau_passEleVetoTight, "tau_passEleVetoTight[nTaus]/O");
@@ -460,8 +460,8 @@ bool RazorAna::fillTaus(){
     tauPhi[nTaus] = tau.phi();
     
     tau_IsLoose[nTaus] = bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits"));
-    tau_isMedium[nTaus] = bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
-    tau_isTight[nTaus] = bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
+    tau_IsMedium[nTaus] = bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
+    tau_IsTight[nTaus] = bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
     tau_passEleVetoLoose[nTaus] = bool(tau.tauID("againstElectronLooseMVA5"));
     tau_passEleVetoMedium[nTaus] = bool(tau.tauID("againstElectronMediumMVA5"));
     tau_passEleVetoTight[nTaus] = bool(tau.tauID("againstElectronTightMVA5"));
