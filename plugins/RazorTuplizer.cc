@@ -75,6 +75,7 @@ void RazorTuplizer::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
+  enableTriggerBranches();
   enableMCBranches();
 }
 
@@ -145,6 +146,11 @@ void RazorTuplizer::enableRazorBranches(){
   RazorEvents->Branch("RSQ", &RSQ, "RSQ/F");
 }
 
+void RazorTuplizer::enableTriggerBranches(){
+  nameHLT = new std::vector<std::string>; nameHLT->clear();
+  RazorEvents->Branch("nameHLT", "std::vector<std::string>",&nameHLT);
+}
+
 void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("nGenJets", &nGenJets, "nGenJets/I");
   RazorEvents->Branch("genJetE", genJetE, "genJetE[nGenJets]/F");
@@ -211,6 +217,8 @@ void RazorTuplizer::resetBranches(){
   nJets = 0;
   nFatJets = 0;
   nGenJets = 0;
+  
+  nameHLT->clear();
   
   for(int i = 0; i < 99; i++){
     muonE[i] = 0.0;
@@ -415,6 +423,27 @@ bool RazorTuplizer::fillRazor(){
   return true;
 }
 
+bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
+  //fill trigger information
+
+  const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+  //  std::cout << "\n === TRIGGER PATHS === " << std::endl;
+
+  for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
+    string hltPathNameReq = "HLT_";
+    if (triggerBits->accept(i)) 
+      if ((names.triggerName(i)).find(hltPathNameReq) != string::npos) 
+	nameHLT->push_back(names.triggerName(i));
+    //std::cout << "Trigger " << names.triggerName(i) << 
+    //  ", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
+    //  ": " << (triggerBits->accept(i) ? "PASS" : "fail (or not run)") 
+    //	      << std::endl;
+  }
+
+  return true;
+}
+
+
 //------ Method called for each event ------//
 
 void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
@@ -437,6 +466,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillJetsAK8()
     && fillMet()
     && fillRazor()
+    && fillTrigger(iEvent)
     && fillMC();
   
   //fill the tree if the event wasn't rejected

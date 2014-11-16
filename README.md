@@ -1,4 +1,4 @@
-B1;2cSUSYBSMAnalysis-RazorTuplizer
+SUSYBSMAnalysis-RazorTuplizer
 =============================
 
 Razor ntuplizer for running over LHC Run 2 miniAOD
