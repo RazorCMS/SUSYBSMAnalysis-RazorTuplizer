@@ -218,7 +218,7 @@ void RazorTuplizer::resetBranches(){
   nFatJets = 0;
   nGenJets = 0;
   
-  nameHLT->clear();
+  //nameHLT->clear();
   
   for(int i = 0; i < 99; i++){
     muonE[i] = 0.0;
@@ -419,6 +419,31 @@ bool RazorTuplizer::fillRazor(){
     MR = computeMR(hemispheres[0], hemispheres[1]);
     RSQ = computeR2(hemispheres[0], hemispheres[1], pfMet);
   }
+
+  //compute the razor variables using the selected jets and MET
+  if(goodJets.size() > 1){
+    vector<TLorentzVector> hemispheres = getHemispheres(goodJets);
+    TLorentzVector pfMet(Met.px(), Met.py(), 0.0, 0.0);
+    MR = computeMR(hemispheres[0], hemispheres[1]);
+    RSQ = computeR2(hemispheres[0], hemispheres[1], pfMet);
+  }
+                                
+  vector<TLorentzVector> goodJets_AK8;
+    for (const pat::Jet &j : *jetsAK8) {
+      if (j.pt() < 40) continue;
+      if (fabs(j.eta()) > 3.0) continue;
+      TLorentzVector newJet(j.px(), j.py(), j.pz(), j.energy());
+      goodJets_AK8.push_back(newJet);
+    }
+
+  //compute the razor variables using the selected jets and MET
+  if(goodJets.size() > 1){
+    vector<TLorentzVector> hemispheres = getHemispheres(goodJets);
+    TLorentzVector pfMet(Met.px(), Met.py(), 0.0, 0.0);
+    MR_AK8 = computeMR(hemispheres[0], hemispheres[1]);
+    RSQ_AK8 = computeR2(hemispheres[0], hemispheres[1], pfMet);
+  }
+
   
   return true;
 }

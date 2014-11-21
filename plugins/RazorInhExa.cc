@@ -54,9 +54,9 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJets()
     && fillJetsAK8()
     && fillMet()
-    && fillRazor()
+    && RazorTuplizer::fillRazor()
     && RazorTuplizer::fillTrigger(iEvent)
-    && fillMC()
+    && RazorTuplizer::fillMC()
     && fillGenParticles();
 
   //fill the tree if the event wasn't rejected
@@ -573,6 +573,9 @@ bool RazorAna::fillJetsAK8(){
     fatJetPt[nFatJets] = j.pt();
     fatJetEta[nFatJets] = j.eta();
     fatJetPhi[nFatJets] = j.phi();
+    fatJetPrunedM[nFatJets] = j.userFloat("ak8PFJetsCHSPrunedLinks");
+    fatJetTrimmedM[nFatJets] = j.userFloat("ak8PFJetsCHSTrimmedLinks");
+    fatJetFilteredM[nFatJets] = j.userFloat("ak8PFJetsCHSFilteredLinks");
     nFatJets++;
   }
 
@@ -586,30 +589,6 @@ bool RazorAna::fillMet(){
   sumMET = Met.sumEt();
   genMetPt = Met.genMET()->pt();
   genMetPhi = Met.genMET()->phi();
-  return true;
-};
-
-bool RazorAna::fillRazor(){
-  //get good jets for razor calculation                                  
-  vector<TLorentzVector> goodJets;
-  for (const pat::Jet &j : *jets) {
-    if (j.pt() < 40) continue;
-    if (fabs(j.eta()) > 3.0) continue;
-    //add to goodJets vector                                          
-    TLorentzVector newJet(j.px(), j.py(), j.pz(), j.energy());
-    goodJets.push_back(newJet);
-  }
-  //MET                                                                                                        
-  const pat::MET &Met = mets->front();
-  
-  //compute the razor variables using the selected jets and MET
-  if(goodJets.size() > 1){
-    vector<TLorentzVector> hemispheres = getHemispheres(goodJets);
-    TLorentzVector pfMet(Met.px(), Met.py(), 0.0, 0.0);
-    MR = computeMR(hemispheres[0], hemispheres[1]);
-    RSQ = computeR2(hemispheres[0], hemispheres[1], pfMet);
-  }
-
   return true;
 };
 

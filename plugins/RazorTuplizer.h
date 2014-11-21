@@ -88,7 +88,7 @@ public:
   virtual bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
   virtual bool fillPhotons();//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   virtual bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV 
-  virtual bool fillJetsAK8();//Fills AK5 Jet 4-momentum.
+  virtual bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
   virtual bool fillMet();//Fills MET(mag, phi)
   virtual bool fillRazor();//Fills MR and RSQ
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
@@ -262,6 +262,7 @@ protected:
   
   //razor variables
   float MR, RSQ;
+  float MR_AK8, RSQ_AK8;
   
   //event info
   int nPV;
