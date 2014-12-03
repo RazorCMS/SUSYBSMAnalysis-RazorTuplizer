@@ -55,9 +55,10 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJetsAK8()
     && fillMet()
     && RazorTuplizer::fillRazor()
-    && RazorTuplizer::fillTrigger(iEvent)
     && RazorTuplizer::fillMC()
     && fillGenParticles();
+
+  if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && RazorTuplizer::fillTrigger(iEvent));
 
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) RazorEvents->Fill();
@@ -182,7 +183,7 @@ void RazorAna::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
-  RazorTuplizer::enableTriggerBranches();
+  if (enableTriggerInfo_) RazorTuplizer::enableTriggerBranches();
   enableMCBranches();
   enableGenParticles();
   
@@ -421,7 +422,7 @@ bool RazorAna::fillElectrons(){
     ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(PV.position());
     ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());
     ele_relIsoDBetaCorr[nElectrons] = ( ele.pfIsolationVariables().sumChargedHadronPt + fmax(0,ele.pfIsolationVariables().sumNeutralHadronEt +  ele.pfIsolationVariables().sumPhotonEt - 0.5*ele.pfIsolationVariables().sumPUPt) ) / ele.pt();
-    ele_MissHits[nElectrons] = ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
+    ele_MissHits[nElectrons] = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
 
     //Conversion Veto
     ele_PassConvVeto[nElectrons] = false;
@@ -527,8 +528,8 @@ bool RazorAna::fillPhotons(){
     phoPt[nPhotons] = pho.pt();
     phoEta[nPhotons] = pho.eta();
     phoPhi[nPhotons] = pho.phi();
-    phoSigmaIetaIeta[nPhotons] = pho.sigmaIetaIeta();
-    phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();
+    phoSigmaIetaIeta[nPhotons] = pho.see();
+    phoFull5x5SigmaIetaIeta[nPhotons] = pho.see();
     phoR9[nPhotons] = pho.r9();
     pho_HoverE[nPhotons] = pho.hadronicOverEm();
     pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
