@@ -113,7 +113,10 @@ protected:
   virtual void endJob() override;
   
   //----- Member data ------//
-  
+
+  // Control Switches
+  bool enableTriggerInfo_;
+
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
   edm::EDGetTokenT<pat::MuonCollection> muonsToken_;

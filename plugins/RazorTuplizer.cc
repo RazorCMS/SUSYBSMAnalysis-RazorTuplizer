@@ -10,6 +10,7 @@
 //------ Constructors and destructor ------//
 RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig): 
   //get inputs from config file
+  enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
@@ -75,7 +76,7 @@ void RazorTuplizer::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
-  enableTriggerBranches();
+  if (enableTriggerInfo_) enableTriggerBranches();
   enableMCBranches();
 }
 
@@ -491,8 +492,9 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillJetsAK8()
     && fillMet()
     && fillRazor()
-    && fillTrigger(iEvent)
     && fillMC();
+
+  if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && fillTrigger(iEvent));
   
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) RazorEvents->Fill();
