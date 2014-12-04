@@ -8,6 +8,7 @@ Instructions for compiling in CMSSW
 
     cmsrel CMSSW_7_2_0
     cd CMSSW_7_2_0/src
+    cmsenv
     git cms-merge-topic sixie:CMSSWTagsForRazorNtupler_V1.3
     git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
     scram b
