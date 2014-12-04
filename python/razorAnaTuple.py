@@ -11,11 +11,12 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'root://xrootd-cms.infn.it//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root' #PU 20, 25 ns CSA14 TTJets sample
+        #'root://xrootd-cms.infn.it//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root' #PU 20, 25 ns CSA14 TTJets sample
+        #'root://eoscms//eos/cms/store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU40bx25_POSTLS170_V7-v2/00000/00800BE3-E826-E411-AD01-20CF3019DEE9.root' #PU 40, 25ns
+        'root://xrootd.unl.edu://store/mc/Phys14DR/BlackHole_BH1_MD2000_MBH3000_n4_13TeV_TuneZ2star-blackmax/MINIAODSIM/PU20bx25_tsg_PHYS14_25_V1-v1/00000/2E32617C-D56F-E411-9F23-003048D3CD92.root' #PHYS14 sample
     )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
-#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
 
 #TFileService for output 
 process.TFileService = cms.Service("TFileService", 
@@ -64,7 +65,8 @@ process.ntuples = cms.EDAnalyzer('RazorAna',
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
-    puInfo = cms.InputTag("addPileupInfo", "", "HLT"),
+    #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
+    puInfo = cms.InputTag("addPileupInfo", "", "HLT"), #uncomment if no pre-mixing
     hcalNoiseInfo = cms.InputTag("hcalnoise", "", "RECO"),
 
     secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "PAT"),

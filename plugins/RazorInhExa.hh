@@ -125,7 +125,10 @@ protected:
   float pho_sumPhotonEt[99];
   int pho_isConversion[99];
   float pho_RegressionE[99];
+  float pho_RegressionEUncertainty[99];
   float pho_IDMVA[99];
+  float pho_superClusterEta[99];
+  bool pho_hasPixelSeed[99];
   
   //Jets
   float jetMass[99];
@@ -137,6 +140,7 @@ protected:
   float pvX;
   float pvY;
   float pvZ;
+  float fixedGridRhoFastjetAll;
 
   //MET
   float sumMET;

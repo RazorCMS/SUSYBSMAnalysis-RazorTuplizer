@@ -139,7 +139,10 @@ void RazorAna::resetBranches(){
     pho_sumPhotonEt[j] = -99.0;
     pho_isConversion[j] = -99;
     pho_RegressionE[j] = -99.0;
+    pho_RegressionEUncertainty[j] = -99.0;
     pho_IDMVA[j] = -99.0;
+    pho_superClusterEta[j] = -99.0;
+    pho_hasPixelSeed[j] = false;
 
     //Jets
     jetMass[j] =  -99.0;
@@ -151,6 +154,7 @@ void RazorAna::resetBranches(){
     pvX = -99.0;
     pvY = -99.0;
     pvZ = -99.0;
+    fixedGridRhoFastjetAll = -99.0;
 
     //MET
     sumMET = -99.0;
@@ -194,6 +198,7 @@ void RazorAna::enableEventInfoBranches(){
   RazorEvents->Branch("pvX", &pvX, "pvX/F");
   RazorEvents->Branch("pvY", &pvY, "pvY/F");
   RazorEvents->Branch("pvZ", &pvZ, "pvZ/F");
+  RazorEvents->Branch("fixedGridRhoFastjetAll", &fixedGridRhoFastjetAll, "fixedGridRhoFastjetAll/F");
 };
 
 void RazorAna::enablePileUpBranches(){
@@ -276,7 +281,10 @@ void RazorAna::enablePhotonBranches(){
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
   RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/I");
   RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
+  RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
+  RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/F");
 };
 
 void RazorAna::enableJetBranches(){
@@ -334,6 +342,9 @@ bool RazorAna::fillEventInfo(const edm::Event& iEvent){
     if(vertices->at(i).isValid() && !vertices->at(i).isFake())nPV++;
   }
   if(nPV == 0)return false;
+
+  //get rho
+  fixedGridRhoFastjetAll = *rhoFastjetAll;
 
   return true;  
 };
@@ -522,7 +533,7 @@ bool RazorAna::fillTaus(){
 
 bool RazorAna::fillPhotons(){
   for (const pat::Photon &pho : *photons) {
-    if (pho.pt() < 20 or pho.chargedHadronIso()/pho.pt() > 0.3) continue;
+    if (pho.pt() < 20) continue;
     phoE[nPhotons] = pho.energy();
     phoPt[nPhotons] = pho.pt();
     phoEta[nPhotons] = pho.eta();
@@ -530,13 +541,16 @@ bool RazorAna::fillPhotons(){
     phoSigmaIetaIeta[nPhotons] = pho.sigmaIetaIeta();
     phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();
     phoR9[nPhotons] = pho.r9();
-    pho_HoverE[nPhotons] = pho.hadronicOverEm();
+    pho_HoverE[nPhotons] = pho.hadTowOverEm();
     pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
     pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
     pho_sumPhotonEt[nPhotons] = pho.photonIso();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
+    pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
     pho_IDMVA[nPhotons] = pho.pfMVA();
+    pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
+    pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
     /*
     const reco::Candidate* genPhoton = pho.genPhoton();
     if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<

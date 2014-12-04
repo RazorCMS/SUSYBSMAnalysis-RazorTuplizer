@@ -468,7 +468,8 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillRazor()
     && fillTrigger(iEvent)
     && fillMC();
-  
+  //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
+
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) RazorEvents->Fill();
 }
