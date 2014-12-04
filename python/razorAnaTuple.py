@@ -31,10 +31,10 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 
 #------ Declare the correct global tag ------#
 
-#global tag for CSA14 25ns 20 PU (asymptotic alignment and calibration) scenario
-process.GlobalTag.globaltag = 'PLS170_V7AN1::All'
-#global tag for CSA14 50ns 40 PU (more pessimistic alignment and calibration) scenario
-#process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
+#global tag for CSA14 25ns 20 PU scenario
+process.GlobalTag.globaltag = 'PHYS14_25_V1::All'
+#global tag for CSA14 50ns 40 PU scenario
+#process.GlobalTag.globaltag = 'PHYS14_50_V1::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -42,6 +42,8 @@ process.GlobalTag.globaltag = 'PLS170_V7AN1::All'
 
 #list input collections
 process.ntuples = cms.EDAnalyzer('RazorAna', 
+
+    enableTriggerInfo = cms.bool(False),
 
     vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
     

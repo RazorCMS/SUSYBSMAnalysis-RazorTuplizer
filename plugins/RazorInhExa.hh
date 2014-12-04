@@ -35,9 +35,8 @@ public:
   bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
   bool fillPhotons();//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   bool fillJets();//Fills AK4 Jet 4-momentum, CSV, and CISV. PT > 20GeV
-  bool fillJetsAK8();//Fills AK5 Jet 4-momentum.
+  bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
   bool fillMet();//Fills MET(mag, phi)
-  bool fillRazor();//Fills MR and RSQ
   bool fillGenParticles();
 
   bool isAncestor(const reco::Candidate*, const reco::Candidate*);
@@ -95,8 +94,8 @@ protected:
   
   //Taus
   bool tau_IsLoose[99];
-  bool tau_isMedium[99];
-  bool tau_isTight[99];
+  bool tau_IsMedium[99];
+  bool tau_IsTight[99];
   bool tau_passEleVetoLoose[99];
   bool tau_passEleVetoMedium[99];
   bool tau_passEleVetoTight[99];
@@ -136,6 +135,11 @@ protected:
   float jetPileupE[99];  
   float jetPileupId[99];
   
+  // AK8 Jets
+  float fatJetPrunedM[99];
+  float fatJetTrimmedM[99];
+  float fatJetFilteredM[99];
+
   //Event Info
   float pvX;
   float pvY;

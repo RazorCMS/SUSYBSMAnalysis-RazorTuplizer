@@ -10,6 +10,7 @@
 //------ Constructors and destructor ------//
 RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig): 
   //get inputs from config file
+  enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
@@ -75,7 +76,7 @@ void RazorTuplizer::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
-  enableTriggerBranches();
+  if (enableTriggerInfo_) enableTriggerBranches();
   enableMCBranches();
 }
 
@@ -218,7 +219,7 @@ void RazorTuplizer::resetBranches(){
   nFatJets = 0;
   nGenJets = 0;
   
-  nameHLT->clear();
+  //nameHLT->clear();
   
   for(int i = 0; i < 99; i++){
     muonE[i] = 0.0;
@@ -419,6 +420,31 @@ bool RazorTuplizer::fillRazor(){
     MR = computeMR(hemispheres[0], hemispheres[1]);
     RSQ = computeR2(hemispheres[0], hemispheres[1], pfMet);
   }
+
+  //compute the razor variables using the selected jets and MET
+  if(goodJets.size() > 1){
+    vector<TLorentzVector> hemispheres = getHemispheres(goodJets);
+    TLorentzVector pfMet(Met.px(), Met.py(), 0.0, 0.0);
+    MR = computeMR(hemispheres[0], hemispheres[1]);
+    RSQ = computeR2(hemispheres[0], hemispheres[1], pfMet);
+  }
+                                
+  vector<TLorentzVector> goodJets_AK8;
+    for (const pat::Jet &j : *jetsAK8) {
+      if (j.pt() < 40) continue;
+      if (fabs(j.eta()) > 3.0) continue;
+      TLorentzVector newJet(j.px(), j.py(), j.pz(), j.energy());
+      goodJets_AK8.push_back(newJet);
+    }
+
+  //compute the razor variables using the selected jets and MET
+  if(goodJets.size() > 1){
+    vector<TLorentzVector> hemispheres = getHemispheres(goodJets);
+    TLorentzVector pfMet(Met.px(), Met.py(), 0.0, 0.0);
+    MR_AK8 = computeMR(hemispheres[0], hemispheres[1]);
+    RSQ_AK8 = computeR2(hemispheres[0], hemispheres[1], pfMet);
+  }
+
   
   return true;
 }
@@ -466,10 +492,11 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillJetsAK8()
     && fillMet()
     && fillRazor()
-    && fillTrigger(iEvent)
     && fillMC();
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
 
+  if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && fillTrigger(iEvent));
+  
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) RazorEvents->Fill();
 }

@@ -54,10 +54,11 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillJets()
     && fillJetsAK8()
     && fillMet()
-    && fillRazor()
-    && RazorTuplizer::fillTrigger(iEvent)
-    && fillMC()
+    && RazorTuplizer::fillRazor()
+    && RazorTuplizer::fillMC()
     && fillGenParticles();
+
+  if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && RazorTuplizer::fillTrigger(iEvent));
 
   //fill the tree if the event wasn't rejected
   if(isGoodEvent) RazorEvents->Fill();
@@ -109,8 +110,8 @@ void RazorAna::resetBranches(){
 
     //Taus
     tau_IsLoose[j] = false;
-    tau_isMedium[j] = false;
-    tau_isTight[j] = false;
+    tau_IsMedium[j] = false;
+    tau_IsTight[j] = false;
     tau_passEleVetoLoose[j] = false;
     tau_passEleVetoMedium[j] = false;
     tau_passEleVetoTight[j] = false;
@@ -186,7 +187,7 @@ void RazorAna::setBranches(){
   enableJetAK8Branches();
   enableMetBranches();
   enableRazorBranches();
-  RazorTuplizer::enableTriggerBranches();
+  if (enableTriggerInfo_) RazorTuplizer::enableTriggerBranches();
   enableMCBranches();
   enableGenParticles();
   
@@ -249,8 +250,8 @@ void RazorAna::enableElectronBranches(){
 void RazorAna::enableTauBranches(){
   RazorTuplizer::enableTauBranches();
   RazorEvents->Branch("tau_IsLoose", tau_IsLoose, "tau_IsLoose[nTaus]/O");
-  RazorEvents->Branch("tau_isMedium", tau_isMedium, "tau_isMedium[nTaus]/O");
-  RazorEvents->Branch("tau_isTight", tau_isTight, "tau_isTight[nTaus]/O");
+  RazorEvents->Branch("tau_IsMedium", tau_IsMedium, "tau_IsMedium[nTaus]/O");
+  RazorEvents->Branch("tau_IsTight", tau_IsTight, "tau_IsTight[nTaus]/O");
   RazorEvents->Branch("tau_passEleVetoLoose", tau_passEleVetoLoose, "tau_passEleVetoLoose[nTaus]/O");
   RazorEvents->Branch("tau_passEleVetoMedium", tau_passEleVetoMedium, "tau_passEleVetoMedium[nTaus]/O");
   RazorEvents->Branch("tau_passEleVetoTight", tau_passEleVetoTight, "tau_passEleVetoTight[nTaus]/O");
@@ -432,7 +433,7 @@ bool RazorAna::fillElectrons(){
     ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(PV.position());
     ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());
     ele_relIsoDBetaCorr[nElectrons] = ( ele.pfIsolationVariables().sumChargedHadronPt + fmax(0,ele.pfIsolationVariables().sumNeutralHadronEt +  ele.pfIsolationVariables().sumPhotonEt - 0.5*ele.pfIsolationVariables().sumPUPt) ) / ele.pt();
-    ele_MissHits[nElectrons] = ele.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
+    ele_MissHits[nElectrons] = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
 
     //Conversion Veto
     ele_PassConvVeto[nElectrons] = false;
@@ -473,8 +474,8 @@ bool RazorAna::fillTaus(){
     tauPhi[nTaus] = tau.phi();
     
     tau_IsLoose[nTaus] = bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits"));
-    tau_isMedium[nTaus] = bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
-    tau_isTight[nTaus] = bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
+    tau_IsMedium[nTaus] = bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
+    tau_IsTight[nTaus] = bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
     tau_passEleVetoLoose[nTaus] = bool(tau.tauID("againstElectronLooseMVA5"));
     tau_passEleVetoMedium[nTaus] = bool(tau.tauID("againstElectronMediumMVA5"));
     tau_passEleVetoTight[nTaus] = bool(tau.tauID("againstElectronTightMVA5"));
@@ -538,8 +539,8 @@ bool RazorAna::fillPhotons(){
     phoPt[nPhotons] = pho.pt();
     phoEta[nPhotons] = pho.eta();
     phoPhi[nPhotons] = pho.phi();
-    phoSigmaIetaIeta[nPhotons] = pho.sigmaIetaIeta();
-    phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();
+    phoSigmaIetaIeta[nPhotons] = pho.see();
+    phoFull5x5SigmaIetaIeta[nPhotons] = pho.see();
     phoR9[nPhotons] = pho.r9();
     pho_HoverE[nPhotons] = pho.hadTowOverEm();
     pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
@@ -587,6 +588,9 @@ bool RazorAna::fillJetsAK8(){
     fatJetPt[nFatJets] = j.pt();
     fatJetEta[nFatJets] = j.eta();
     fatJetPhi[nFatJets] = j.phi();
+    fatJetPrunedM[nFatJets] = j.userFloat("ak8PFJetsCHSPrunedLinks");
+    fatJetTrimmedM[nFatJets] = j.userFloat("ak8PFJetsCHSTrimmedLinks");
+    fatJetFilteredM[nFatJets] = j.userFloat("ak8PFJetsCHSFilteredLinks");
     nFatJets++;
   }
 
@@ -600,30 +604,6 @@ bool RazorAna::fillMet(){
   sumMET = Met.sumEt();
   genMetPt = Met.genMET()->pt();
   genMetPhi = Met.genMET()->phi();
-  return true;
-};
-
-bool RazorAna::fillRazor(){
-  //get good jets for razor calculation                                  
-  vector<TLorentzVector> goodJets;
-  for (const pat::Jet &j : *jets) {
-    if (j.pt() < 40) continue;
-    if (fabs(j.eta()) > 3.0) continue;
-    //add to goodJets vector                                          
-    TLorentzVector newJet(j.px(), j.py(), j.pz(), j.energy());
-    goodJets.push_back(newJet);
-  }
-  //MET                                                                                                        
-  const pat::MET &Met = mets->front();
-  
-  //compute the razor variables using the selected jets and MET
-  if(goodJets.size() > 1){
-    vector<TLorentzVector> hemispheres = getHemispheres(goodJets);
-    TLorentzVector pfMet(Met.px(), Met.py(), 0.0, 0.0);
-    MR = computeMR(hemispheres[0], hemispheres[1]);
-    RSQ = computeR2(hemispheres[0], hemispheres[1], pfMet);
-  }
-
   return true;
 };
 
