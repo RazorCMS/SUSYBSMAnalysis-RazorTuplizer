@@ -157,8 +157,13 @@ void RazorAna::resetBranches(){
     pvX = -99.0;
     pvY = -99.0;
     pvZ = -99.0;
+    fixedGridRhoAll = -99.0;
     fixedGridRhoFastjetAll = -99.0;
-
+    fixedGridRhoFastjetAllCalo = -99.0;
+    fixedGridRhoFastjetCentralCalo = -99.0;
+    fixedGridRhoFastjetCentralChargedPileUp = -99.0;
+    fixedGridRhoFastjetCentralNeutral = -99.0;
+    
     //MET
     sumMET = -99.0;
     UncMETdpx = -99.0;
