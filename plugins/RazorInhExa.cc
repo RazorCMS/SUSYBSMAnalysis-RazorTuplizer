@@ -138,7 +138,7 @@ void RazorAna::resetBranches(){
     pho_sumChargedHadronPt[j] = -99.0;
     pho_sumNeutralHadronEt[j] = -99.0;
     pho_sumPhotonEt[j] = -99.0;
-    pho_isConversion[j] = -99;
+    pho_isConversion[j] = false;
     pho_RegressionE[j] = -99.0;
     pho_RegressionEUncertainty[j] = -99.0;
     pho_IDMVA[j] = -99.0;
@@ -150,6 +150,8 @@ void RazorAna::resetBranches(){
     jetJetArea[j] = -99.0;
     jetPileupE[j] = -99.0;
     jetPileupId[j] = -99.0;
+    jetPartonFlavor[j] = 0;
+    jetHadronFlavor[j] = 0;
 
     //Event Info
     pvX = -99.0;
@@ -199,7 +201,12 @@ void RazorAna::enableEventInfoBranches(){
   RazorEvents->Branch("pvX", &pvX, "pvX/F");
   RazorEvents->Branch("pvY", &pvY, "pvY/F");
   RazorEvents->Branch("pvZ", &pvZ, "pvZ/F");
+  RazorEvents->Branch("fixedGridRhoAll", &fixedGridRhoAll, "fixedGridRhoAll/F");
   RazorEvents->Branch("fixedGridRhoFastjetAll", &fixedGridRhoFastjetAll, "fixedGridRhoFastjetAll/F");
+  RazorEvents->Branch("fixedGridRhoFastjetAllCalo", &fixedGridRhoFastjetAllCalo, "fixedGridRhoFastjetAllCalo/F");
+  RazorEvents->Branch("fixedGridRhoFastjetCentralCalo", &fixedGridRhoFastjetCentralCalo, "fixedGridRhoFastjetCentralCalo/F");
+  RazorEvents->Branch("fixedGridRhoFastjetCentralChargedPileUp", &fixedGridRhoFastjetCentralChargedPileUp, "fixedGridRhoFastjetCentralChargedPileUp/F");
+  RazorEvents->Branch("fixedGridRhoFastjetCentralNeutral", &fixedGridRhoFastjetCentralNeutral, "fixedGridRhoFastjetCentralNeutral/F");
 };
 
 void RazorAna::enablePileUpBranches(){
@@ -280,7 +287,7 @@ void RazorAna::enablePhotonBranches(){
   RazorEvents->Branch("pho_sumChargedHadronPt", pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
-  RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/I");
+  RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/O");
   RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
@@ -294,6 +301,8 @@ void RazorAna::enableJetBranches(){
   RazorEvents->Branch("jetJetArea", jetJetArea, "jetJetArea[nJets]/F");
   RazorEvents->Branch("jetPileupE", jetPileupE, "jetPileupE[nJets]/F");
   RazorEvents->Branch("jetPileupId", jetPileupId, "jetPileupId[nJets]/F");
+  RazorEvents->Branch("jetPartonFlavor", jetPartonFlavor, "jetPartonFlavor[nJets]/I");
+  RazorEvents->Branch("jetHadronFlavor", jetHadronFlavor, "jetHadronFlavor[nJets]/I");
 };
 
 void RazorAna::enableJetAK8Branches(){
@@ -345,7 +354,12 @@ bool RazorAna::fillEventInfo(const edm::Event& iEvent){
   if(nPV == 0)return false;
 
   //get rho
+  fixedGridRhoAll = *rhoAll;
   fixedGridRhoFastjetAll = *rhoFastjetAll;
+  fixedGridRhoFastjetAllCalo = *rhoFastjetAllCalo;
+  fixedGridRhoFastjetCentralCalo = *rhoFastjetCentralCalo;
+  fixedGridRhoFastjetCentralChargedPileUp = *rhoFastjetCentralChargedPileUp;
+  fixedGridRhoFastjetCentralNeutral = *rhoFastjetCentralNeutral;
 
   return true;  
 };
@@ -576,6 +590,8 @@ bool RazorAna::fillJets(){
     jetJetArea[nJets] = j.jetArea();
     jetPileupE[nJets] = j.pileup();
     jetPileupId[nJets] = j.userFloat("pileupJetId:fullDiscriminant");
+    jetPartonFlavor[nJets] = j.partonFlavour();
+    jetHadronFlavor[nJets] = j.hadronFlavour();
     nJets++;
   }
 

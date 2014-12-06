@@ -122,7 +122,7 @@ protected:
   float pho_sumChargedHadronPt[99];
   float pho_sumNeutralHadronEt[99];
   float pho_sumPhotonEt[99];
-  int pho_isConversion[99];
+  bool  pho_isConversion[99];
   float pho_RegressionE[99];
   float pho_RegressionEUncertainty[99];
   float pho_IDMVA[99];
@@ -134,6 +134,8 @@ protected:
   float jetJetArea[99];
   float jetPileupE[99];  
   float jetPileupId[99];
+  int   jetPartonFlavor[99];
+  int   jetHadronFlavor[99];
   
   // AK8 Jets
   float fatJetPrunedM[99];
@@ -144,7 +146,12 @@ protected:
   float pvX;
   float pvY;
   float pvZ;
+  float fixedGridRhoAll;
   float fixedGridRhoFastjetAll;
+  float fixedGridRhoFastjetAllCalo;
+  float fixedGridRhoFastjetCentralCalo;
+  float fixedGridRhoFastjetCentralChargedPileUp;
+  float fixedGridRhoFastjetCentralNeutral;
 
   //MET
   float sumMET;
