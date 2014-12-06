@@ -356,8 +356,8 @@ bool RazorTuplizer::fillJets(){
     jetPt[nJets] = j.pt();
     jetEta[nJets] = j.eta();
     jetPhi[nJets] = j.phi();
-    jetCSV[nJets] = j.bDiscriminator("combinedSecondaryVertexBJetTags");
-    jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexBJetTags");
+    jetCSV[nJets] = j.bDiscriminator("pfCombinedSecondaryVertexBJetTags");
+    jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
     nJets++;
   }
   
@@ -376,7 +376,7 @@ bool RazorTuplizer::fillJetsAK8(){
   return true;
 }
 
-bool RazorTuplizer::fillMet(){
+bool RazorTuplizer::fillMet(){ 
   const pat::MET &Met = mets->front();
   metPt = Met.pt();
   metPhi = Met.phi();

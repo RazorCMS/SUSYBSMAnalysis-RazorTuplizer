@@ -285,7 +285,7 @@ void RazorAna::enablePhotonBranches(){
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
-  RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/F");
+  RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/O");
 };
 
 void RazorAna::enableJetBranches(){
@@ -570,8 +570,8 @@ bool RazorAna::fillJets(){
     jetPt[nJets] = j.pt();
     jetEta[nJets] = j.eta();
     jetPhi[nJets] = j.phi();
-    jetCSV[nJets] = j.bDiscriminator("combinedSecondaryVertexBJetTags");
-    jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexBJetTags");
+    jetCSV[nJets] = j.bDiscriminator("pfCombinedSecondaryVertexBJetTags");
+    jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
     jetMass[nJets] = j.mass();
     jetJetArea[nJets] = j.jetArea();
     jetPileupE[nJets] = j.pileup();
