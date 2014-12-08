@@ -285,7 +285,7 @@ void RazorAna::enablePhotonBranches(){
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
-  RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/F");
+  RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/O");
 };
 
 void RazorAna::enableJetBranches(){
@@ -533,6 +533,7 @@ bool RazorAna::fillTaus(){
 };
 
 bool RazorAna::fillPhotons(){
+  cout << endl;
   for (const pat::Photon &pho : *photons) {
     if (pho.pt() < 20) continue;
     phoE[nPhotons] = pho.energy();
@@ -552,6 +553,7 @@ bool RazorAna::fillPhotons(){
     pho_IDMVA[nPhotons] = pho.pfMVA();
     pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
     pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
+    cout << pho.hasPixelSeed() << endl;
     /*
     const reco::Candidate* genPhoton = pho.genPhoton();
     if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<
