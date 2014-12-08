@@ -50,6 +50,7 @@ void RazorAna::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
     && fillMuons()
     && fillElectrons()
     && fillTaus()
+    && fillIsoPFCandidates()
     && fillPhotons()
     && fillJets()
     && fillJetsAK8()
@@ -130,6 +131,15 @@ void RazorAna::resetBranches(){
     tau_leadChargedHadrCandPt[j] = -99.0;
     tau_leadChargedHadrCandID[j] = 0;
 
+    //IsoPFCandidates
+    nIsoPFCandidates = 0;
+    isoPFCandidatePt[j] = -99.0;
+    isoPFCandidateEta[j] = -99.0;
+    isoPFCandidatePhi[j] = -99.0;
+    isoPFCandidateIso04[j] = -99.0;
+    isoPFCandidateD0[j] = -99.0;
+    isoPFCandidatePdgId[j] = 0;
+
     //Photons
     phoSigmaIetaIeta[j] = -99.0;
     phoFull5x5SigmaIetaIeta[j] = -99.0;
@@ -139,6 +149,7 @@ void RazorAna::resetBranches(){
     pho_sumNeutralHadronEt[j] = -99.0;
     pho_sumPhotonEt[j] = -99.0;
     pho_isConversion[j] = false;
+    pho_passEleVeto[j] = false;    
     pho_RegressionE[j] = -99.0;
     pho_RegressionEUncertainty[j] = -99.0;
     pho_IDMVA[j] = -99.0;
@@ -189,6 +200,7 @@ void RazorAna::setBranches(){
   enableMuonBranches();
   enableElectronBranches();
   enableTauBranches();
+  enableIsoPFCandidateBranches();
   enablePhotonBranches();
   enableJetBranches();
   enableJetAK8Branches();
@@ -283,6 +295,18 @@ void RazorAna::enableTauBranches(){
   RazorEvents->Branch("tau_leadChargedHadrCandID", tau_leadChargedHadrCandID, "tau_leadChargedHadrCandID[nTaus]/I"); 
 };
 
+void RazorAna::enableIsoPFCandidateBranches(){
+  RazorEvents->Branch("nIsoPFCandidates", &nIsoPFCandidates, "nIsoPFCandidates/i");
+  RazorEvents->Branch("isoPFCandidatePt", isoPFCandidatePt, "isoPFCandidatePt[nIsoPFCandidates]/F");
+  RazorEvents->Branch("isoPFCandidateEta", isoPFCandidateEta, "isoPFCandidateEta[nIsoPFCandidates]/F");
+  RazorEvents->Branch("isoPFCandidatePhi", isoPFCandidatePhi, "isoPFCandidatePhi[nIsoPFCandidates]/F");
+  RazorEvents->Branch("isoPFCandidateIso04", isoPFCandidateIso04, "isoPFCandidateIso04[nIsoPFCandidates]/F");
+  RazorEvents->Branch("isoPFCandidateD0", isoPFCandidateD0, "isoPFCandidateD0[nIsoPFCandidates]/F");
+  RazorEvents->Branch("isoPFCandidatePdgId", isoPFCandidatePdgId, "isoPFCandidatePdgId[nIsoPFCandidates]/I");  
+}
+
+
+
 void RazorAna::enablePhotonBranches(){
   RazorTuplizer::enablePhotonBranches();
   RazorEvents->Branch("phoSigmaIetaIeta", phoSigmaIetaIeta, "phoSigmaIetaIeta[nPhotons]/F");
@@ -293,6 +317,7 @@ void RazorAna::enablePhotonBranches(){
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
   RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/O");
+  RazorEvents->Branch("pho_passEleVeto", pho_passEleVeto, "pho_passEleVeto[nPhotons]/O");
   RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
@@ -551,6 +576,63 @@ bool RazorAna::fillTaus(){
   return true;
 };
 
+bool RazorAna::fillIsoPFCandidates(){
+  for (const pat::PackedCandidate &candidate : *packedPFCands) {
+
+    if (candidate.charge() != 0 && candidate.pt() > 5 && candidate.fromPV() == 3 ) {
+      double tmpIsoPFNoPU = 0;
+      double tmpIsoPFPU = 0;
+      for (const pat::PackedCandidate &isoCandidate : *packedPFCands) {	
+	if ( (candidate.pdgId() != 1 && candidate.pdgId() != 2)
+	    && deltaR(candidate.eta(), candidate.phi(), isoCandidate.eta(), isoCandidate.phi()) < 0.4
+	     && !(candidate.eta() == isoCandidate.eta() && candidate.phi() == isoCandidate.phi())
+	    ) {
+	  if (candidate.fromPV() == 2 || candidate.fromPV() == 3) {
+	    tmpIsoPFNoPU += isoCandidate.pt();
+	  } else if (candidate.fromPV() == 0) {
+	    tmpIsoPFPU += isoCandidate.pt();
+	  }
+	}
+      }
+
+      if ( 
+	  (candidate.pt() > 50 ) ||
+	  (candidate.pt() > 20 && (tmpIsoPFNoPU - 0.5*tmpIsoPFPU)/candidate.pt() < 3.0) ||
+	  (candidate.pt() <= 20 && tmpIsoPFNoPU - 0.5*tmpIsoPFPU < 25)
+	   ) {
+
+	isoPFCandidatePt[nIsoPFCandidates] = candidate.pt();
+	isoPFCandidateEta[nIsoPFCandidates] = candidate.eta();
+	isoPFCandidatePhi[nIsoPFCandidates] = candidate.phi();
+	isoPFCandidateIso04[nIsoPFCandidates] = max(0.0, tmpIsoPFNoPU - 0.5*tmpIsoPFPU) ;
+	isoPFCandidateD0[nIsoPFCandidates] = candidate.dxy();
+	isoPFCandidatePdgId[nIsoPFCandidates] = candidate.pdgId();
+	
+
+	nIsoPFCandidates++;
+
+	//For Debugging
+	// cout << "\n";
+	// cout << candidate.charge() << " " << candidate.pdgId() << " " << candidate.pt() << " " << candidate.eta() << " " << candidate.phi() 
+	//      << " | " << candidate.fromPV() << " " << candidate.dz() ;
+	// cout << " | " << tmpIsoPFNoPU << " " <<tmpIsoPFPU <<  " " <<  tmpIsoPFNoPU - 0.5*tmpIsoPFPU << " " << (tmpIsoPFNoPU - 0.5*tmpIsoPFPU)/candidate.pt()  ;
+	// cout << "\n";
+	for (const pat::PackedCandidate &isoCandidate : *packedPFCands) {	
+	  if ( (candidate.pdgId() != 1 && candidate.pdgId() != 2)
+	       && deltaR(candidate.eta(), candidate.phi(), isoCandidate.eta(), isoCandidate.phi()) < 0.4
+	       && !(candidate.eta() == isoCandidate.eta() && candidate.phi() == isoCandidate.phi())
+	       ) {
+	    //cout << "isoCandidate " << isoCandidate.pdgId() << " " << isoCandidate.pt() << " " << isoCandidate.eta() << " " << isoCandidate.phi() << " | " << deltaR(candidate.eta(), candidate.phi(), isoCandidate.eta(), isoCandidate.phi()) << " " << candidate.fromPV() << "\n";	  
+	  }
+	}
+
+      } // if candidate passes isolation
+    }
+  }
+  return true;
+}
+
+
 bool RazorAna::fillPhotons(){
   for (const pat::Photon &pho : *photons) {
     if (pho.pt() < 20) continue;
@@ -566,6 +648,8 @@ bool RazorAna::fillPhotons(){
     pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
     pho_sumPhotonEt[nPhotons] = pho.photonIso();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
+    pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
+									   conversions, beamSpot->position());
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
     pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
     pho_IDMVA[nPhotons] = pho.pfMVA();
@@ -742,6 +826,37 @@ bool RazorAna::isAncestor(const reco::Candidate* ancestor, const reco::Candidate
   //if we did not return yet, then particle and ancestor are not relatives
   return false;
 };
+
+
+//A copy from RecoEgamma/EgammaTools/src/ConversionTools.cc
+//temporary solution because I'm not sure how to convert a PAT electron handle
+//to a GSF electron handle
+bool RazorAna::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+					const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
+					float lxyMin, float probMin, unsigned int nHitsBeforeVtxMax) {
+
+   //check if a given SuperCluster matches to at least one GsfElectron having zero expected inner hits
+   //and not matching any conversion in the collection passing the quality cuts
+ 
+   if (sc.isNull()) return false;
+   
+   for (std::vector<pat::Electron>::const_iterator it = eleCol->begin(); it!=eleCol->end(); ++it) {
+     //match electron to supercluster
+     if (it->superCluster()!=sc) continue;
+ 
+     //check expected inner hits
+     if (it->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS) > 0) continue;
+ 
+     //check if electron is matching to a conversion
+     if (ConversionTools::hasMatchedConversion(*it,convCol,beamspot,lxyMin,probMin,nHitsBeforeVtxMax)) continue;
+        
+     return true;
+   }
+   
+   return false;
+  
+}
+
 
 //------ Method called once each job just before starting event loop ------//
 void RazorAna::beginJob(){
