@@ -20,6 +20,7 @@ public:
   void enableMuonBranches();
   void enableElectronBranches();
   void enableTauBranches();
+  void enableIsoPFCandidateBranches();
   void enablePhotonBranches();
   void enableJetBranches();
   void enableJetAK8Branches();
@@ -33,6 +34,7 @@ public:
   bool fillMuons();//Fills muon 4-momentum only. PT > 5GeV
   bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
   bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
+  bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
   bool fillPhotons();//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   bool fillJets();//Fills AK4 Jet 4-momentum, CSV, and CISV. PT > 20GeV
   bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
@@ -42,7 +44,9 @@ public:
   bool isAncestor(const reco::Candidate*, const reco::Candidate*);
   const reco::Candidate* findFirstMotherWithDifferentID(const reco::Candidate *particle);
   const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
-  
+  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+				const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
+				float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
 
 protected:
   void beginJob() override;
@@ -114,6 +118,15 @@ protected:
   float tau_leadChargedHadrCandPt[99];
   int tau_leadChargedHadrCandID[99];
 
+  //IsolatedChargedPFCandidates
+  unsigned int nIsoPFCandidates;
+  float isoPFCandidatePt[99];
+  float isoPFCandidateEta[99];
+  float isoPFCandidatePhi[99];
+  float isoPFCandidateIso04[99];
+  float isoPFCandidateD0[99];
+  int   isoPFCandidatePdgId[99];
+
   //Photons
   float phoSigmaIetaIeta[99];
   float phoFull5x5SigmaIetaIeta[99];
@@ -122,7 +135,8 @@ protected:
   float pho_sumChargedHadronPt[99];
   float pho_sumNeutralHadronEt[99];
   float pho_sumPhotonEt[99];
-  int pho_isConversion[99];
+  bool  pho_isConversion[99];
+  bool  pho_passEleVeto[99];
   float pho_RegressionE[99];
   float pho_RegressionEUncertainty[99];
   float pho_IDMVA[99];
@@ -134,6 +148,8 @@ protected:
   float jetJetArea[99];
   float jetPileupE[99];  
   float jetPileupId[99];
+  int   jetPartonFlavor[99];
+  int   jetHadronFlavor[99];
   
   // AK8 Jets
   float fatJetPrunedM[99];
@@ -144,7 +160,12 @@ protected:
   float pvX;
   float pvY;
   float pvZ;
+  float fixedGridRhoAll;
   float fixedGridRhoFastjetAll;
+  float fixedGridRhoFastjetAllCalo;
+  float fixedGridRhoFastjetCentralCalo;
+  float fixedGridRhoFastjetCentralChargedPileUp;
+  float fixedGridRhoFastjetCentralNeutral;
 
   //MET
   float sumMET;

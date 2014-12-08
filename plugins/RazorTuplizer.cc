@@ -161,6 +161,9 @@ void RazorTuplizer::enableMCBranches(){
 
   RazorEvents->Branch("genMetPt", &genMetPt, "genMetPt/F");
   RazorEvents->Branch("genMetPhi", &genMetPhi, "genMetPhi/F");
+
+  RazorEvents->Branch("genVertexZ", &genVertexZ, "genVertexZ/F");
+
 }
 
 //------ Load the miniAOD objects and reset tree variables for each event ------//
@@ -356,8 +359,8 @@ bool RazorTuplizer::fillJets(){
     jetPt[nJets] = j.pt();
     jetEta[nJets] = j.eta();
     jetPhi[nJets] = j.phi();
-    jetCSV[nJets] = j.bDiscriminator("combinedSecondaryVertexBJetTags");
-    jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexBJetTags");
+    jetCSV[nJets] = j.bDiscriminator("pfCombinedSecondaryVertexBJetTags");
+    jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
     nJets++;
   }
   
@@ -376,7 +379,7 @@ bool RazorTuplizer::fillJetsAK8(){
   return true;
 }
 
-bool RazorTuplizer::fillMet(){
+bool RazorTuplizer::fillMet(){ 
   const pat::MET &Met = mets->front();
   metPt = Met.pt();
   metPhi = Met.phi();
@@ -397,6 +400,22 @@ bool RazorTuplizer::fillMC(){
     genMetPt = Met.genMET()->pt();
     genMetPhi = Met.genMET()->phi();
 
+    bool foundGenVertex = false;
+    for(size_t i=0; i<prunedGenParticles->size();i++){
+      if (!foundGenVertex) {
+	for (unsigned int j=0; j<(*prunedGenParticles)[i].numberOfDaughters(); ++j) {
+	  const reco::Candidate *dau = (*prunedGenParticles)[i].daughter(j);
+	  if (dau) {
+	    genVertexX = dau->vx();
+	    genVertexY = dau->vy();
+	    genVertexZ = dau->vz();
+	    foundGenVertex = true;
+	    break;
+	  }
+	}
+      }
+    }
+ 
     return true;
 }
 

@@ -262,6 +262,10 @@ protected:
 
   float genMetPt;
   float genMetPhi;
+
+  float genVertexX;
+  float genVertexY;
+  float genVertexZ;
   
   //razor variables
   float MR, RSQ;
