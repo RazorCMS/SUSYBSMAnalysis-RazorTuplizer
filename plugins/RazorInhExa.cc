@@ -154,6 +154,7 @@ void RazorAna::resetBranches(){
     pho_RegressionEUncertainty[j] = -99.0;
     pho_IDMVA[j] = -99.0;
     pho_superClusterEta[j] = -99.0;
+    pho_superClusterPhi[j] = -99.0;
     pho_hasPixelSeed[j] = false;
 
     //Jets
@@ -322,6 +323,7 @@ void RazorAna::enablePhotonBranches(){
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterPhi", pho_superClusterPhi, "pho_superClusterPhi[nPhotons]/F");
   RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/O");
 };
 
@@ -655,6 +657,7 @@ bool RazorAna::fillPhotons(){
     pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
     pho_IDMVA[nPhotons] = pho.pfMVA();
     pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
+    pho_superClusterPhi[nPhotons] = pho.superCluster()->phi();
     pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
     cout << pho.hasPixelSeed() << endl;
     /*

@@ -141,6 +141,7 @@ protected:
   float pho_RegressionEUncertainty[99];
   float pho_IDMVA[99];
   float pho_superClusterEta[99];
+  float pho_superClusterPhi[99];
   bool pho_hasPixelSeed[99];
   
   //Jets
