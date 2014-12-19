@@ -674,13 +674,13 @@ bool RazorAna::fillPhotons(){
 bool RazorAna::fillJets(){
   for (const pat::Jet &j : *jets) {
     if (j.pt() < 20) continue;
-    jetE[nJets] = j.energy();
-    jetPt[nJets] = j.pt();
-    jetEta[nJets] = j.eta();
-    jetPhi[nJets] = j.phi();
+    jetE[nJets] = j.correctedP4(0).E();
+    jetPt[nJets] = j.correctedP4(0).Pt();
+    jetEta[nJets] = j.correctedP4(0).Eta();
+    jetPhi[nJets] = j.correctedP4(0).Phi();
     jetCSV[nJets] = j.bDiscriminator("pfCombinedSecondaryVertexBJetTags");
     jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
-    jetMass[nJets] = j.mass();
+    jetMass[nJets] = j.correctedP4(0).M();
     jetJetArea[nJets] = j.jetArea();
     jetPileupE[nJets] = j.pileup();
     jetPileupId[nJets] = j.userFloat("pileupJetId:fullDiscriminant");
@@ -694,10 +694,10 @@ bool RazorAna::fillJets(){
 
 bool RazorAna::fillJetsAK8(){
   for (const pat::Jet &j : *jetsAK8) {
-    fatJetE[nFatJets] = j.energy();
-    fatJetPt[nFatJets] = j.pt();
-    fatJetEta[nFatJets] = j.eta();
-    fatJetPhi[nFatJets] = j.phi();
+    fatJetE[nFatJets] = j.correctedP4(0).E();
+    fatJetPt[nFatJets] = j.correctedP4(0).Pt();
+    fatJetEta[nFatJets] = j.correctedP4(0).Eta();
+    fatJetPhi[nFatJets] = j.correctedP4(0).Phi();
     fatJetPrunedM[nFatJets] = j.userFloat("ak8PFJetsCHSPrunedLinks");
     fatJetTrimmedM[nFatJets] = j.userFloat("ak8PFJetsCHSTrimmedLinks");
     fatJetFilteredM[nFatJets] = j.userFloat("ak8PFJetsCHSFilteredLinks");
