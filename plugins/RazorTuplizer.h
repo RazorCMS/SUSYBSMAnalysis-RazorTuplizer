@@ -248,7 +248,7 @@ protected:
   float fatJetPt[99];
   float fatJetEta[99];
   float fatJetPhi[99];
-  
+
   //MET 
   float metPt;
   float metPhi;

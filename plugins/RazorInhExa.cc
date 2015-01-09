@@ -165,6 +165,15 @@ void RazorAna::resetBranches(){
     jetPartonFlavor[j] = 0;
     jetHadronFlavor[j] = 0;
 
+    //FatJets
+    fatJetPrunedM[j] = 0.0;
+    fatJetTrimmedM[j] = 0.0;
+    fatJetFilteredM[j] = 0.0;
+    fatJetTau1[j] = 0.0;
+    fatJetTau2[j] = 0.0;
+    fatJetTau3[j] = 0.0;
+
+
     //Event Info
     pvX = -99.0;
     pvY = -99.0;
@@ -339,6 +348,12 @@ void RazorAna::enableJetBranches(){
 
 void RazorAna::enableJetAK8Branches(){
   RazorTuplizer::enableJetAK8Branches();
+  RazorEvents->Branch("fatJetPrunedM", fatJetPrunedM,"fatJetPrunedM[nFatJets]/F");
+  RazorEvents->Branch("fatJetTrimmedM", fatJetTrimmedM,"fatJetTrimmedM[nFatJets]/F");
+  RazorEvents->Branch("fatJetFilteredM", fatJetFilteredM,"fatJetFilteredM[nFatJets]/F");
+  RazorEvents->Branch("fatJetTau1", fatJetTau1,"fatJetTau1[nFatJets]/F");
+  RazorEvents->Branch("fatJetTau2", fatJetTau2,"fatJetTau2[nFatJets]/F");
+  RazorEvents->Branch("fatJetTau3", fatJetTau3,"fatJetTau3[nFatJets]/F");
 };
 
 void RazorAna::enableMetBranches(){
@@ -698,9 +713,12 @@ bool RazorAna::fillJetsAK8(){
     fatJetPt[nFatJets] = j.correctedP4(0).Pt();
     fatJetEta[nFatJets] = j.correctedP4(0).Eta();
     fatJetPhi[nFatJets] = j.correctedP4(0).Phi();
-    fatJetPrunedM[nFatJets] = j.userFloat("ak8PFJetsCHSPrunedLinks");
-    fatJetTrimmedM[nFatJets] = j.userFloat("ak8PFJetsCHSTrimmedLinks");
-    fatJetFilteredM[nFatJets] = j.userFloat("ak8PFJetsCHSFilteredLinks");
+    fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSPrunedLinks");
+    fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedLinks");
+    fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredLinks");
+    fatJetTau1[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau1");
+    fatJetTau2[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau2");
+    fatJetTau3[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau3");
     nFatJets++;
   }
 

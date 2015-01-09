@@ -145,6 +145,8 @@ void RazorTuplizer::enableMetBranches(){
 void RazorTuplizer::enableRazorBranches(){
   RazorEvents->Branch("MR", &MR, "MR/F");
   RazorEvents->Branch("RSQ", &RSQ, "RSQ/F");
+  RazorEvents->Branch("MR_AK8", &MR_AK8, "MR_AK8/F");
+  RazorEvents->Branch("RSQ_AK8", &RSQ_AK8, "RSQ_AK8/F");
 }
 
 void RazorTuplizer::enableTriggerBranches(){

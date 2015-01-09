@@ -153,9 +153,12 @@ protected:
   int   jetHadronFlavor[99];
   
   // AK8 Jets
-  float fatJetPrunedM[99];
   float fatJetTrimmedM[99];
+  float fatJetPrunedM[99];
   float fatJetFilteredM[99];
+  float fatJetTau1[99];
+  float fatJetTau2[99];
+  float fatJetTau3[99];
 
   //Event Info
   float pvX;
