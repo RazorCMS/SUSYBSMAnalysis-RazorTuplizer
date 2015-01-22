@@ -68,11 +68,13 @@ public:
   virtual void resetBranches();
   
   //enable desired output variables
-  virtual void enableEventInfoBranches();
   virtual void setBranches();
+  virtual void enableEventInfoBranches();
+  virtual void enablePileUpBranches();
   virtual void enableMuonBranches();
   virtual void enableElectronBranches();
   virtual void enableTauBranches();
+  virtual void enableIsoPFCandidateBranches();
   virtual void enablePhotonBranches();
   virtual void enableJetBranches();
   virtual void enableJetAK8Branches();
@@ -80,12 +82,15 @@ public:
   virtual void enableRazorBranches();
   virtual void enableTriggerBranches();
   virtual void enableMCBranches();
+  virtual void enableGenParticleBranches();
   
   //select objects and fill tree branches
   virtual bool fillEventInfo(const edm::Event& iEvent);
+  virtual bool fillPileUp();//Fill summary PU info
   virtual bool fillMuons();//Fills looseID muon 4-momentum only. PT > 5GeV
   virtual bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
   virtual bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
+  virtual bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
   virtual bool fillPhotons();//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   virtual bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV 
   virtual bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
@@ -93,6 +98,7 @@ public:
   virtual bool fillRazor();//Fills MR and RSQ
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
+  virtual bool fillGenParticles();
   
   //------ HELPER FUNCTIONS ------//
   
@@ -106,11 +112,23 @@ public:
   //returns true if particle 1 is an ancestor of particle 2, false otherwise
   //(takes two members of prunedGenParticles)
   bool isAncestor(const reco::Candidate* ancestor, const reco::Candidate * particle);
+  //follows the particle's ancestry back until finding a particle of different type
+  const reco::Candidate* findFirstMotherWithDifferentID(const reco::Candidate *particle);
+  //follows the particle's ancestry back and finds the "oldest" particle with the same ID
+  const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
+  //electron veto for photons (for use until an official recipe exists)
+  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+				const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
+				float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
 
 protected:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
+
+  //MVAs for triggering and non-triggering electron ID
+  EGammaMvaEleEstimatorCSA14* myMVATrig;
+  EGammaMvaEleEstimatorCSA14* myMVANonTrig;
   
   //----- Member data ------//
 
@@ -205,34 +223,115 @@ protected:
 
   //------ Variables for tree ------//
 
+  //PU
+  int nBunchXing;
+  int BunchXing[99];
+  int nPU[99];
+  float nPUmean[99];
+
   //Muons
   int nMuons;
   float muonE[99];
   float muonPt[99];
   float muonEta[99];
   float muonPhi[99];
-  
+  int muonCharge[99];//muon charge
+  bool muonIsLoose[99];
+  bool muonIsTight[99];
+  float muon_d0[99];//transverse impact paramenter
+  float muon_dZ[99];//impact parameter
+  float muon_ip3d[99];//3d impact paramenter
+  float muon_ip3dSignificance[99];//3d impact paramenter/error
+  unsigned int muonType[99];//muonTypeBit: global, tracker, standalone 
+  UInt_t muonQuality[99];//muonID Quality Bits
+  float muon_relIso04DBetaCorr[99];//pfISO dr04
+
   //Electrons
   int nElectrons;
   float eleE[99];
   float elePt[99];
   float eleEta[99];
   float elePhi[99];
-  
+  float eleCharge[99];
+  float eleE_SC[99];
+  //float SC_ElePt[99]; 
+  float eleEta_SC[99];
+  float elePhi_SC[99];
+  float eleSigmaIetaIeta[99];
+  float eleFull5x5SigmaIetaIeta[99];
+  float eleR9[99];
+  float ele_dEta[99];
+  float ele_dPhi[99];
+  float ele_HoverE[99];
+  float ele_d0[99];
+  float ele_dZ[99];
+  float ele_relIsoDBetaCorr[99];
+  int ele_MissHits[99];
+  bool ele_PassConvVeto[99];
+  float ele_OneOverEminusOneOverP[99];
+  float ele_IDMVATrig[99];
+  float ele_IDMVANonTrig[99];
+  float ele_RegressionE[99];
+  float ele_CombineP4[99];
+
   //Taus
   int nTaus;
   float tauE[99];
   float tauPt[99];
   float tauEta[99];
   float tauPhi[99];
-  
+  bool tau_IsLoose[99];
+  bool tau_IsMedium[99];
+  bool tau_IsTight[99];
+  bool tau_passEleVetoLoose[99];
+  bool tau_passEleVetoMedium[99];
+  bool tau_passEleVetoTight[99];
+  bool tau_passMuVetoLoose[99];
+  bool tau_passMuVetoMedium[99];
+  bool tau_passMuVetoTight[99];  
+  UInt_t tau_ID[99];//tauID Bits
+  float tau_combinedIsoDeltaBetaCorr3Hits[99];
+  float tau_eleVetoMVA[99];
+  int tau_eleVetoCategory[99];
+  float tau_muonVetoMVA[99];
+  float tau_isoMVAnewDMwLT[99];
+  float tau_isoMVAnewDMwoLT[99]; 
+  float tau_leadCandPt[99];
+  int tau_leadCandID[99];
+  float tau_leadChargedHadrCandPt[99];
+  int tau_leadChargedHadrCandID[99];
+
+  //IsolatedChargedPFCandidates
+  unsigned int nIsoPFCandidates;
+  float isoPFCandidatePt[99];
+  float isoPFCandidateEta[99];
+  float isoPFCandidatePhi[99];
+  float isoPFCandidateIso04[99];
+  float isoPFCandidateD0[99];
+  int   isoPFCandidatePdgId[99];
+
   //Photons
   int nPhotons;
   float phoE[99];
   float phoPt[99];
   float phoEta[99];
   float phoPhi[99];
-  
+  float phoSigmaIetaIeta[99];
+  float phoFull5x5SigmaIetaIeta[99];
+  float phoR9[99];
+  float pho_HoverE[99];
+  float pho_sumChargedHadronPt[99];
+  float pho_sumNeutralHadronEt[99];
+  float pho_sumPhotonEt[99];
+  bool  pho_isConversion[99];
+  bool  pho_passEleVeto[99];
+  float pho_RegressionE[99];
+  float pho_RegressionEUncertainty[99];
+  float pho_IDMVA[99];
+  float pho_superClusterEta[99];
+  float pho_superClusterPhi[99];
+  bool pho_hasPixelSeed[99];
+
   //AK4 Jets
   int nJets;
   float jetE[99];
@@ -241,17 +340,33 @@ protected:
   float jetPhi[99];
   float jetCSV[99];
   float jetCISV[99];
-  
+  float jetMass[99];
+  float jetJetArea[99];
+  float jetPileupE[99];  
+  float jetPileupId[99];
+  int   jetPartonFlavor[99];
+  int   jetHadronFlavor[99];
+
   //AK8 Jets
   int nFatJets;
   float fatJetE[99];
   float fatJetPt[99];
   float fatJetEta[99];
   float fatJetPhi[99];
+  float fatJetTrimmedM[99];
+  float fatJetPrunedM[99];
+  float fatJetFilteredM[99];
+  float fatJetTau1[99];
+  float fatJetTau2[99];
+  float fatJetTau3[99];
 
   //MET 
   float metPt;
   float metPhi;
+  float sumMET;
+  float UncMETdpx;
+  float UncMETdpy;
+  float UncMETdSumEt;
 
   //MC
   int nGenJets;
@@ -266,7 +381,18 @@ protected:
   float genVertexX;
   float genVertexY;
   float genVertexZ;
-  
+
+  //gen info
+  unsigned int nGenParticle;
+  int gParticleMotherId[500];
+  int gParticleMotherIndex[500];
+  int gParticleId[500];
+  int gParticleStatus[500];
+  float gParticleE[500];
+  float gParticlePt[500];
+  float gParticleEta[500];
+  float gParticlePhi[500];
+
   //razor variables
   float MR, RSQ;
   float MR_AK8, RSQ_AK8;
@@ -276,6 +402,15 @@ protected:
   int runNum;
   int lumiNum;
   int eventNum;
+  float pvX;
+  float pvY;
+  float pvZ;
+  float fixedGridRhoAll;
+  float fixedGridRhoFastjetAll;
+  float fixedGridRhoFastjetAllCalo;
+  float fixedGridRhoFastjetCentralCalo;
+  float fixedGridRhoFastjetCentralChargedPileUp;
+  float fixedGridRhoFastjetCentralNeutral;
 
   //trigger info
   vector<string>  *nameHLT;

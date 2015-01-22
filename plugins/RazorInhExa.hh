@@ -177,7 +177,7 @@ protected:
   float UncMETdpy;
   float UncMETdSumEt;
 
-  //Gen Info
+  //gen info
   unsigned int nGenParticle;
   int gParticleMotherId[99];
   int gParticleMotherIndex[99];

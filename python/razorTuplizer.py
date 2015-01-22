@@ -11,7 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'root://xrootd-cms.infn.it//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root' #PU 20, 25 ns CSA14 TTJets sample
+        'root://xrootd.unl.edu://store/mc/Phys14DR/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/00C90EFC-3074-E411-A845-002590DB9262.root' #PU 20, 25 ns PHYS14 TTJets sample
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -32,7 +32,9 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 #global tag for CSA14 25ns 20 PU (asymptotic alignment and calibration) scenario
 #process.GlobalTag.globaltag = 'PLS170_V7AN1::All'
 #global tag for CSA14 50ns 40 PU (more pessimistic alignment and calibration) scenario
-process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
+#process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
+#global tag for PHYS14 asymptotic 25ns scenario
+process.GlobalTag.globaltag = 'PHYS14_25_V3::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -40,6 +42,8 @@ process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
 
 #list input collections
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
+
+    enableTriggerInfo = cms.bool(False),
 
     vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
     
@@ -63,7 +67,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
-    puInfo = cms.InputTag("addPileupInfo", "", "HLT"),
+    puInfo = cms.InputTag("addPileupInfo", "", "HLT"), #uncomment if no pre-mixing
+    #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
     hcalNoiseInfo = cms.InputTag("hcalnoise", "", "RECO"),
 
     secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "PAT"),
