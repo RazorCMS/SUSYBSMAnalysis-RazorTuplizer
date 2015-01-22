@@ -7,8 +7,8 @@ config.General.workArea = 'crab'
 
 config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = 'python/razorAnaTuple.py'
-config.JobType.outputFiles = ['razorNtupleAna.root']
+config.JobType.psetName = 'python/razorTuplizer.py'
+config.JobType.outputFiles = ['razorNtuple.root']
 
 config.section_("Data")
 #25ns CSA14 scenario (20 PU, processed with CMSSW_7_0_6_patch1)
