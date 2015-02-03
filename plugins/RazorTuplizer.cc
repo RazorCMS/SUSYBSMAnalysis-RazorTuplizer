@@ -268,6 +268,19 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metPt", &metPt, "metPt/F");
   RazorEvents->Branch("metPhi", &metPhi, "metPhi/F");
   RazorEvents->Branch("sumMET", &sumMET, "sumMET/F");
+  RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
+  RazorEvents->Branch("Flag_CSCTightHaloFilter", &Flag_CSCTightHaloFilter, "Flag_CSCTightHaloFilter/O");
+  RazorEvents->Branch("Flag_hcalLaserEventFilter", &Flag_hcalLaserEventFilter, "Flag_hcalLaserEventFilter/O");
+  RazorEvents->Branch("Flag_EcalDeadCellTriggerPrimitiveFilter", &Flag_EcalDeadCellTriggerPrimitiveFilter, "Flag_EcalDeadCellTriggerPrimitiveFilter/O");
+  RazorEvents->Branch("Flag_goodVertices", &Flag_goodVertices, "Flag_goodVertices/O");
+  RazorEvents->Branch("Flag_trackingFailureFilter", &Flag_trackingFailureFilter, "Flag_trackingFailureFilter/O");
+  RazorEvents->Branch("Flag_eeBadScFilter", &Flag_eeBadScFilter, "Flag_eeBadScFilter/O");
+  RazorEvents->Branch("Flag_ecalLaserCorrFilter", &Flag_ecalLaserCorrFilter, "Flag_ecalLaserCorrFilter/O");
+  RazorEvents->Branch("Flag_trkPOGFilters", &Flag_trkPOGFilters, "Flag_trkPOGFilters/O");
+  RazorEvents->Branch("Flag_trkPOG_manystripclus53X", &Flag_trkPOG_manystripclus53X, "Flag_trkPOG_manystripclus53X/O");
+  RazorEvents->Branch("Flag_trkPOG_toomanystripclus53X", &Flag_trkPOG_toomanystripclus53X, "Flag_trkPOG_toomanystripclus53X/O");
+  RazorEvents->Branch("Flag_trkPOG_logErrorTooManyClusters", &Flag_trkPOG_logErrorTooManyClusters, "Flag_trkPOG_logErrorTooManyClusters/O");
+  RazorEvents->Branch("Flag_METFilters", &Flag_METFilters, "Flag_METFilters/O");  
 }
 
 void RazorTuplizer::enableRazorBranches(){
@@ -892,11 +905,43 @@ bool RazorTuplizer::fillJetsAK8(){
   return true;
 };
 
-bool RazorTuplizer::fillMet(){
+bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   const pat::MET &Met = mets->front();
   metPt = Met.pt();
   metPhi = Met.phi();
   sumMET = Met.sumEt();
+
+  //MET filters
+  const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
+  for(unsigned int i = 0, n = metFilterBits->size(); i < n; ++i){
+    if(strcmp(metNames.triggerName(i).c_str(), "Flag_trackingFailureFilter") == 0)
+      Flag_trackingFailureFilter = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_goodVertices") == 0)
+      Flag_goodVertices = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_CSCTightHaloFilter") == 0)
+      Flag_CSCTightHaloFilter = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOGFilters") == 0)
+      Flag_trkPOGFilters = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_logErrorTooManyClusters") == 0)
+      Flag_trkPOG_logErrorTooManyClusters = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_EcalDeadCellTriggerPrimitiveFilter") == 0)
+      Flag_EcalDeadCellTriggerPrimitiveFilter = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_ecalLaserCorrFilter") == 0)
+      Flag_ecalLaserCorrFilter = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_manystripclus53X") == 0)
+      Flag_trkPOG_manystripclus53X = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_eeBadScFilter") == 0)
+      Flag_eeBadScFilter = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_METFilters") == 0)
+      Flag_METFilters = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
+      Flag_HBHENoiseFilter = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
+      Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
+    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
+      Flag_hcalLaserEventFilter = metFilterBits->accept(i);
+  }
+  
   return true;
 };
 
@@ -1086,7 +1131,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillPhotons()
     && fillJets()
     && fillJetsAK8()
-    && fillMet()
+    && fillMet(iEvent)
     && fillRazor()
     && fillMC()
     && fillGenParticles();

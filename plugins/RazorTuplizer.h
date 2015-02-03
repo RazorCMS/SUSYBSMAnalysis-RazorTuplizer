@@ -94,7 +94,7 @@ public:
   virtual bool fillPhotons();//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   virtual bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV 
   virtual bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
-  virtual bool fillMet();//Fills MET(mag, phi)
+  virtual bool fillMet(const edm::Event& iEvent);//Fills MET(mag, phi)
   virtual bool fillRazor();//Fills MR and RSQ
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
@@ -367,6 +367,20 @@ protected:
   float UncMETdpx;
   float UncMETdpy;
   float UncMETdSumEt;
+  bool Flag_HBHENoiseFilter;
+  bool Flag_CSCTightHaloFilter;
+  bool Flag_hcalLaserEventFilter;
+  bool Flag_EcalDeadCellTriggerPrimitiveFilter;
+  bool Flag_goodVertices;
+  bool Flag_trackingFailureFilter;
+  bool Flag_eeBadScFilter;
+  bool Flag_ecalLaserCorrFilter;
+  bool Flag_trkPOGFilters;  
+  bool Flag_trkPOG_manystripclus53X;
+  bool Flag_trkPOG_toomanystripclus53X;
+  bool Flag_trkPOG_logErrorTooManyClusters;
+  bool Flag_METFilters;
+ 
 
   //MC
   int nGenJets;
