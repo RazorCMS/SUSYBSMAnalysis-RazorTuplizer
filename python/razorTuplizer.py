@@ -43,7 +43,8 @@ process.GlobalTag.globaltag = 'PHYS14_25_V3::All'
 #list input collections
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
 
-    enableTriggerInfo = cms.bool(False),
+    enableTriggerInfo = cms.bool(True),                                 
+    triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
 
     vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
     

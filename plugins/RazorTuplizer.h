@@ -134,6 +134,9 @@ protected:
 
   // Control Switches
   bool enableTriggerInfo_;
+  
+  // Input file containing the mapping of the HLT Triggers
+  string triggerPathNamesFile_;
 
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
@@ -428,6 +431,9 @@ protected:
 
   //trigger info
   vector<string>  *nameHLT;
+  static const int NTriggersMAX = 50;
+  string triggerPathNames[NTriggersMAX];
+  bool triggerDecision[NTriggersMAX];
 
 };
 

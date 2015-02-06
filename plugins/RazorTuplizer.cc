@@ -11,6 +11,7 @@
 RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig): 
   //get inputs from config file
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
+  triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
@@ -80,6 +81,38 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 			EGammaMvaEleEstimatorCSA14::kNonTrig,
 			true,
 			myNonTrigWeights);
+
+
+  //Read in HLT Trigger Path List from config file
+  for (int i = 0; i<NTriggersMAX; ++i) triggerPathNames[i] = "";
+  ifstream myfile (edm::FileInPath(triggerPathNamesFile_.c_str()).fullPath().c_str()) ;
+  if (myfile.is_open()) {
+    string line;
+    int index;
+    string hltpathname;
+
+    while(myfile>>index>>hltpathname) {
+      // loop only eneterd if both c_tmp AND gamma_tmp
+      // can be retrieved from the file.
+      if (index < NTriggersMAX) {
+	triggerPathNames[index] = hltpathname;
+      }    
+    }    
+    myfile.close();
+  } else {
+    cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(triggerPathNamesFile_.c_str()).fullPath().c_str() << "\n";
+  }
+  
+  if(enableTriggerInfo_) {
+    cout << "\n";
+    cout << "****************** Trigger Paths Defined For Razor Ntuple ******************\n";    
+    for (int i = 0; i<NTriggersMAX; ++i) {
+      if (triggerPathNames[i] != "") cout << "Trigger " << i << " " << triggerPathNames[i] << "\n";
+    }
+    cout << "****************************************************************************\n";    
+    cout << "\n";
+  }
+
 }
 
 RazorTuplizer::~RazorTuplizer()
@@ -292,7 +325,8 @@ void RazorTuplizer::enableRazorBranches(){
 
 void RazorTuplizer::enableTriggerBranches(){
   nameHLT = new std::vector<std::string>; nameHLT->clear();
-  RazorEvents->Branch("nameHLT", "std::vector<std::string>",&nameHLT);
+  //RazorEvents->Branch("nameHLT", "std::vector<std::string>",&nameHLT);
+  RazorEvents->Branch("HLTDecision", &triggerDecision, ("HLTDecision[" + std::to_string(NTriggersMAX) +  "]/O").c_str());
 }
 
 void RazorTuplizer::enableMCBranches(){
@@ -854,7 +888,6 @@ bool RazorTuplizer::fillPhotons(){
     pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
     pho_superClusterPhi[nPhotons] = pho.superCluster()->phi();
     pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
-    cout << pho.hasPixelSeed() << endl;
     /*
     const reco::Candidate* genPhoton = pho.genPhoton();
     if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<
@@ -1092,19 +1125,43 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
   //fill trigger information
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-  //  std::cout << "\n === TRIGGER PATHS === " << std::endl;
+  //std::cout << "\n === TRIGGER PATHS === " << std::endl;
 
+  // //********************************************************************
+  // //Option to save all HLT path names in the ntuple per event
+  // //Expensive option in terms of ntuple size
+  // //********************************************************************
+  // for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
+  //   string hltPathNameReq = "HLT_";   
+  //   if (triggerBits->accept(i)) 
+  //     if ((names.triggerName(i)).find(hltPathNameReq) != string::npos) 
+  // 	nameHLT->push_back(names.triggerName(i));
+
+  //   std::cout << "Trigger " << names.triggerName(i) << 
+  //     ", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
+  //     ": " << (triggerBits->accept(i) ? "PASS" : "fail (or not run)") 
+  //   	      << std::endl;
+  // }
+
+  //********************************************************************
+  // Save trigger decisions in array of booleans
+  //********************************************************************
   for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
-    string hltPathNameReq = "HLT_";
-    if (triggerBits->accept(i)) 
-      if ((names.triggerName(i)).find(hltPathNameReq) != string::npos) 
-	nameHLT->push_back(names.triggerName(i));
-    //std::cout << "Trigger " << names.triggerName(i) << 
-    //  ", prescale " << triggerPrescales->getPrescaleForIndex(i) <<
-    //  ": " << (triggerBits->accept(i) ? "PASS" : "fail (or not run)") 
-    //	      << std::endl;
+    string hltPathNameReq = "HLT_";   
+    
+    if ((names.triggerName(i)).find(hltPathNameReq) == string::npos) continue;
+    if ((names.triggerName(i)).find_last_of("_") == string::npos) continue;
+    int lastUnderscorePos = (names.triggerName(i)).find_last_of("_");
+    string hltPathNameWithoutVersionNumber = (names.triggerName(i)).substr(0,lastUnderscorePos);
+    
+    for (unsigned int j = 0; j < NTriggersMAX; ++j) {
+      if (triggerPathNames[j] == "") continue;
+      if (hltPathNameWithoutVersionNumber == triggerPathNames[j]) {
+	triggerDecision[j] = triggerBits->accept(i);
+      }
+    }    
   }
-
+    
   return true;
 }
 
