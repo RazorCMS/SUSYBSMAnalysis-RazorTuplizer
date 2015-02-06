@@ -246,7 +246,7 @@ protected:
   float muon_ip3d[99];//3d impact paramenter
   float muon_ip3dSignificance[99];//3d impact paramenter/error
   unsigned int muonType[99];//muonTypeBit: global, tracker, standalone 
-  UInt_t muonQuality[99];//muonID Quality Bits
+  unsigned int muonQuality[99];//muonID Quality Bits
   float muon_relIso04DBetaCorr[99];//pfISO dr04
 
   //Electrons
@@ -305,7 +305,7 @@ protected:
   int tau_leadChargedHadrCandID[99];
 
   //IsolatedChargedPFCandidates
-  unsigned int nIsoPFCandidates;
+  int nIsoPFCandidates;
   float isoPFCandidatePt[99];
   float isoPFCandidateEta[99];
   float isoPFCandidatePhi[99];
@@ -391,16 +391,19 @@ protected:
   float genJetPt[99];
   float genJetEta[99];
   float genJetPhi[99];
-
   float genMetPt;
   float genMetPhi;
-
   float genVertexX;
   float genVertexY;
   float genVertexZ;
+  float genWeight;
+  unsigned int genSignalProcessID;
+  float genQScale;
+  float genAlphaQCD;
+  float genAlphaQED;
 
   //gen info
-  unsigned int nGenParticle;
+  int nGenParticle;
   int gParticleMotherId[500];
   int gParticleMotherIndex[500];
   int gParticleId[500];

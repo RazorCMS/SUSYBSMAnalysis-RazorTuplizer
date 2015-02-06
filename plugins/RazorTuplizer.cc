@@ -173,7 +173,7 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_dZ", muon_dZ, "muon_dZ[nMuons]/F");
   RazorEvents->Branch("muon_ip3d", muon_ip3d, "muon_ip3d[nMuons]/F");
   RazorEvents->Branch("muon_ip3dSignificance", muon_ip3dSignificance, "muon_ip3dSignificance[nMuons]/F");
-  RazorEvents->Branch("muonType", muonType, "muonType[nMuons]/s");
+  RazorEvents->Branch("muonType", muonType, "muonType[nMuons]/i");
   RazorEvents->Branch("muonQuality", muonQuality, "muonQuality[nMuons]/i");
   RazorEvents->Branch("muon_relIso04DBetaCorr", muon_relIso04DBetaCorr, "muon_relIso04DBetaCorr[nMuons]/F");
 }
@@ -284,7 +284,7 @@ void RazorTuplizer::enableJetBranches(){
 }
 
 void RazorTuplizer::enableJetAK8Branches(){
-  RazorEvents->Branch("nFatJets", &nFatJets,"nFatJets/I");
+  RazorEvents->Branch("nFatJets", &nFatJets,"nFatJets/i");
   RazorEvents->Branch("fatJetE", fatJetE,"fatJetE[nFatJets]/F");
   RazorEvents->Branch("fatJetPt", fatJetPt,"fatJetPt[nFatJets]/F");
   RazorEvents->Branch("fatJetEta", fatJetEta,"fatJetEta[nFatJets]/F");
@@ -335,12 +335,14 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genJetPt", genJetPt, "genJetPt[nGenJets]/F");
   RazorEvents->Branch("genJetEta", genJetEta, "genJetEta[nGenJets]/F");
   RazorEvents->Branch("genJetPhi", genJetPhi, "genJetPhi[nGenJets]/F");
-
   RazorEvents->Branch("genMetPt", &genMetPt, "genMetPt/F");
   RazorEvents->Branch("genMetPhi", &genMetPhi, "genMetPhi/F");
-
   RazorEvents->Branch("genVertexZ", &genVertexZ, "genVertexZ/F");
-
+  RazorEvents->Branch("genWeight", &genWeight, "genWeight/F");
+  RazorEvents->Branch("genSignalProcessID", &genSignalProcessID, "genSignalProcessID/i");
+  RazorEvents->Branch("genQScale", &genQScale, "genQScale/F");
+  RazorEvents->Branch("genAlphaQCD", &genAlphaQCD, "genAlphaQCD/F");
+  RazorEvents->Branch("genAlphaQED", &genAlphaQED, "genAlphaQED/F");
 }
 
 void RazorTuplizer::enableGenParticleBranches(){
@@ -1007,6 +1009,12 @@ bool RazorTuplizer::fillMC(){
       }
     }
  
+    genWeight = genInfo->weight();
+    genSignalProcessID = genInfo->signalProcessID();
+    genQScale = genInfo->qScale();
+    genAlphaQCD = genInfo->alphaQCD();
+    genAlphaQED = genInfo->alphaQED();
+
     return true;
 }
 
