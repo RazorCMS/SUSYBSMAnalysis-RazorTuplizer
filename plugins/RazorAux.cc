@@ -150,3 +150,134 @@ bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, co
   
 }
 
+double RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
+					 const reco::Candidate* ptcl,
+					 double r_iso_min, double r_iso_max, double kt_scale,
+					 bool use_pfweight, bool charged_only) {
+  
+  if (ptcl->pt()<5.) return 99999.;
+  double deadcone_nh(0.), deadcone_ch(0.), deadcone_ph(0.), deadcone_pu(0.);
+  if(ptcl->isElectron()) {
+    if (fabs(ptcl->eta())>1.479) {deadcone_ch = 0.015; deadcone_pu = 0.015; deadcone_ph = 0.08;}
+  } else if(ptcl->isMuon()) {
+    deadcone_ch = 0.0001; deadcone_pu = 0.01; deadcone_ph = 0.01;deadcone_nh = 0.01;
+  } else {
+    //deadcone_ch = 0.0001; deadcone_pu = 0.01; deadcone_ph = 0.01;deadcone_nh = 0.01; // maybe use muon cones??
+  }
+  double iso_nh(0.); double iso_ch(0.);
+  double iso_ph(0.); double iso_pu(0.);
+  double ptThresh(0.5);
+  if(ptcl->isElectron()) ptThresh = 0;
+  double r_iso = max(r_iso_min,min(r_iso_max, kt_scale/ptcl->pt()));
+  for (const pat::PackedCandidate &pfc : *pfcands) {
+    if (abs(pfc.pdgId())<7) continue;
+    double dr = deltaR(pfc, *ptcl);
+    if (dr > r_iso) continue;
+    ////////////////// NEUTRALS /////////////////////////
+    if (pfc.charge()==0){
+      if (pfc.pt()>ptThresh) {
+	double wpf(1.);
+	if (use_pfweight){
+	  double wpv(0.), wpu(0.);
+	  for (const pat::PackedCandidate &jpfc : *pfcands) {
+	    double jdr = deltaR(pfc, jpfc);
+	    if (pfc.charge()!=0 || jdr<0.00001) continue;
+	    double jpt = jpfc.pt();
+	    if (pfc.fromPV()>1) wpv *= jpt/jdr;
+	    else wpu *= jpt/jdr;
+	  }
+	  wpv = log(wpv);
+	  wpu = log(wpu);
+	  wpf = wpv/(wpv+wpu);
+	}
+	/////////// PHOTONS ////////////
+	if (abs(pfc.pdgId())==22) {
+	  if(dr < deadcone_ph) continue;
+	  iso_ph += wpf*pfc.pt();
+	  /////////// NEUTRAL HADRONS ////////////
+	} else if (abs(pfc.pdgId())==130) {
+	  if(dr < deadcone_nh) continue;
+	  iso_nh += wpf*pfc.pt();
+	}
+      }
+      ////////////////// CHARGED from PV /////////////////////////
+    } else if (pfc.fromPV()>1){
+      if (abs(pfc.pdgId())==211) {
+	if(dr < deadcone_ch) continue;
+	iso_ch += pfc.pt();
+      }
+      ////////////////// CHARGED from PU /////////////////////////
+    } else {
+      if (pfc.pt()>ptThresh){
+	if(dr < deadcone_pu) continue;
+	iso_pu += pfc.pt();
+      }
+    }
+  }
+  double iso(0.);
+  if (charged_only){
+    iso = iso_ch;
+  } else {
+    iso = iso_ph + iso_nh;
+    if (!use_pfweight) iso -= 0.5*iso_pu;
+    if (iso>0) iso += iso_ch;
+    else iso = iso_ch;
+  }
+  iso = iso/ptcl->pt();
+  return iso;
+}
+
+
+//**************************************************************
+//Compute ptRel for leptons
+//1) find closest jet
+//2) subtract lepton from jet
+//3) project lepton momentum perpendicular to closest jet
+//**************************************************************
+double RazorTuplizer::getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const reco::Candidate* lepton) {
+
+    const pat::Jet *closestJet = 0;
+    double minDR = 9999;
+    for (const pat::Jet &j : *jets) {
+      if (j.pt() < 20) continue;
+      double tmpDR = deltaR(j.eta(),j.phi(),lepton->eta(),lepton->phi());
+      if (tmpDR < minDR) {
+	minDR = tmpDR;
+	closestJet = &j;
+      }
+    }
+    TLorentzVector closestJetFourVector(closestJet->px(),closestJet->py(),closestJet->pz(),closestJet->energy());    
+
+    for (unsigned int i = 0, n = closestJet->numberOfSourceCandidatePtrs(); i < n; ++i) {
+      const pat::PackedCandidate &candidate = dynamic_cast<const pat::PackedCandidate &>(*(closestJet->sourceCandidatePtr(i)));
+      bool isPartOfLepton = false;
+
+      if (lepton->isMuon()) {
+	// muon candidate pointers to the PF candidate is null in miniAOD. 
+	// we will match by relative pt difference and deltaR. thresholds at 0.1% and 0.001 in DR were tuned by eye
+	if (abs(candidate.pdgId()) == 13 
+	    && fabs(candidate.pt() - lepton->pt()) / lepton->pt() < 0.001
+	    && deltaR(candidate.eta() , candidate.phi(), lepton->eta() , lepton->phi()) < 0.001
+	    ) isPartOfLepton = true;
+      }
+      if (lepton->isElectron()) {
+	for (auto itr : ((pat::Electron*)lepton)->associatedPackedPFCandidates()) {
+	  if ( &(*itr) == &candidate) {
+	    isPartOfLepton = true;
+	    break;	  
+	  }	
+	}
+      }
+
+      //if the PF candidate is part of the muon, subtract its momentum from the jet momentum
+      if (isPartOfLepton) {
+	closestJetFourVector.SetPxPyPzE( closestJetFourVector.Px() - candidate.px(), 
+					 closestJetFourVector.Py() - candidate.py(),
+					 closestJetFourVector.Pz() - candidate.pz(),
+					 closestJetFourVector.E() - candidate.energy());
+      }
+    }
+
+    TLorentzVector lepFourVector(lepton->px(),lepton->py(),lepton->pz(),lepton->energy());    
+    return lepFourVector.Perp(closestJetFourVector.Vect());
+}

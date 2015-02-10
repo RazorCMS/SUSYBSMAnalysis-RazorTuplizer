@@ -180,6 +180,7 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_photonIso", muon_photonIso, "muon_photonIso[nMuons]/F");
   RazorEvents->Branch("muon_neutralHadIso", muon_neutralHadIso, "muon_neutralHadIso[nMuons]/F");
   RazorEvents->Branch("muon_ptrel", muon_ptrel, "muon_ptrel[nMuons]/F");
+  RazorEvents->Branch("muon_miniiso", muon_miniiso, "muon_miniiso[nMuons]/F");
 }
 
 void RazorTuplizer::enableElectronBranches(){
@@ -212,6 +213,7 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
   RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
   RazorEvents->Branch("ele_ptrel", ele_ptrel, "ele_ptrel[nElectrons]/F");
+  RazorEvents->Branch("ele_miniiso", ele_miniiso, "ele_miniiso[nElectrons]/F");
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -450,6 +452,7 @@ void RazorTuplizer::resetBranches(){
         muon_photonIso[i] = -99.0;
         muon_neutralHadIso[i] = -99.0;
 	muon_ptrel[i] = -99.0;
+	muon_miniiso[i] = -99.0;
 
         //Electron
         eleE[i] = 0.0;
@@ -479,6 +482,7 @@ void RazorTuplizer::resetBranches(){
         ele_RegressionE[i] = -99.0;
         ele_CombineP4[i] = -99.0;
 	ele_ptrel[i] = -99.0;
+	ele_miniiso[i] = -99.0;
 
         //Tau
         tauE[i] = 0.0;
@@ -704,53 +708,8 @@ bool RazorTuplizer::fillMuons(){
     muon_chargedIso[nMuons] = mu.pfIsolationR04().sumChargedHadronPt;
     muon_photonIso[nMuons] = mu.pfIsolationR04().sumPhotonEt;
     muon_neutralHadIso[nMuons] = mu.pfIsolationR04().sumNeutralHadronEt;
-
-    //**************************************************************
-    //ptRel
-    //1) find closest jet
-    //2) subtract lepton from jet
-    //3) project lepton momentum perpendicular to closest jet
-    //**************************************************************
-    cout << "Muon : " << mu.pt() << " " << mu.eta() << " " << mu.phi() << "\n";
-    if (mu.pfCandidateRef().isNonnull()) {
-      cout << "muon pf candidate: " << mu.pfCandidateRef()->pt() << " " << mu.pfCandidateRef()->eta() << " " << mu.pfCandidateRef()->phi() << "\n";
-    }
-
-    const pat::Jet *closestJet = 0;
-    double minDR = 9999;
-    for (const pat::Jet &j : *jets) {
-      if (j.pt() < 20) continue;
-      double tmpDR = deltaR(j.eta(),j.phi(),mu.eta(),mu.phi());
-      if (tmpDR < minDR) {
-	minDR = tmpDR;
-	closestJet = &j;
-      }
-    }
-    TLorentzVector closestJetFourVector(closestJet->px(),closestJet->py(),closestJet->pz(),closestJet->energy());    
-    cout << "Closest Jet: " << closestJet->pt() << " " << closestJet->eta() << " " << closestJet->phi() << "\n";
-    for (unsigned int i = 0, n = closestJet->numberOfSourceCandidatePtrs(); i < n; ++i) {
-      const pat::PackedCandidate &candidate = dynamic_cast<const pat::PackedCandidate &>(*(closestJet->sourceCandidatePtr(i)));
-      bool isPartOfMuon = false;
-
-      // muon candidate pointers to the PF candidate is null in miniAOD. 
-      // we will match by relative pt difference and deltaR. thresholds at 0.1% and 0.001 in DR were tuned by eye
-      if (abs(candidate.pdgId()) == 13 
-	  && fabs(candidate.pt() - mu.pt()) / mu.pt() < 0.001
-	  && deltaR(candidate.eta() , candidate.phi(), mu.eta() , mu.phi()) < 0.001
-	  ) isPartOfMuon = true;
-      
-      //if the PF candidate is part of the muon, subtract its momentum from the jet momentum
-      if (isPartOfMuon) {
-	cout << "part of muon : " << candidate.pt() << " " << candidate.eta() << " " << candidate.phi() << " : " << candidate.pdgId() << "\n";
-	closestJetFourVector.SetPxPyPzE( closestJetFourVector.Px() - candidate.px(), 
-					 closestJetFourVector.Py() - candidate.py(),
-					 closestJetFourVector.Pz() - candidate.pz(),
-					 closestJetFourVector.E() - candidate.energy());
-      }
-    }
-    TLorentzVector muFourVector(mu.px(),mu.py(),mu.pz(),mu.energy());
-    muon_ptrel[nMuons] = muFourVector.Perp(closestJetFourVector.Vect());
-
+    muon_ptrel[nMuons] = getLeptonPtRel( jets, &mu );
+    muon_miniiso[nMuons] = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.05, 0.2, 10., false, false);
 
     nMuons++;
   }
@@ -808,44 +767,8 @@ bool RazorTuplizer::fillElectrons(){
 
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
     ele_CombineP4[nElectrons] = ele.ecalTrackRegressionEnergy();
-
-    //**************************************************************
-    //ptRel
-    //1) find closest jet
-    //2) subtract lepton from jet
-    //3) project lepton momentum perpendicular to closest jet
-    //**************************************************************
-    const pat::Jet *closestJet = 0;
-    double minDR = 9999;
-    for (const pat::Jet &j : *jets) {
-      if (j.pt() < 20) continue;
-      double tmpDR = deltaR(j.eta(),j.phi(),ele.eta(),ele.phi());
-      if (tmpDR < minDR) {
-	minDR = tmpDR;
-	closestJet = &j;
-      }
-    }
-    TLorentzVector closestJetFourVector(closestJet->px(),closestJet->py(),closestJet->pz(),closestJet->energy());    
-    for (unsigned int i = 0, n = closestJet->numberOfSourceCandidatePtrs(); i < n; ++i) {
-      const pat::PackedCandidate &candidate = dynamic_cast<const pat::PackedCandidate &>(*(closestJet->sourceCandidatePtr(i)));
-      bool isPartOfElectron = false;
-      for (auto itr : ele.associatedPackedPFCandidates()) {
-	if ( &(*itr) == &candidate) {
-	  isPartOfElectron = true;
-	  break;	  
-	}	
-      }
-      
-      //if the PF candidate is part of the electron, subtract its momentum from the jet momentum
-      if (isPartOfElectron) {
-	closestJetFourVector.SetPxPyPzE( closestJetFourVector.Px() - candidate.px(), 
-					 closestJetFourVector.Py() - candidate.py(),
-					 closestJetFourVector.Pz() - candidate.pz(),
-					 closestJetFourVector.E() - candidate.energy());
-      }
-    }
-    TLorentzVector eleFourVector(ele.px(),ele.py(),ele.pz(),ele.energy());
-    ele_ptrel[nElectrons] = eleFourVector.Perp(closestJetFourVector.Vect());
+    ele_ptrel[nElectrons] = getLeptonPtRel( jets, &ele );
+    ele_miniiso[nElectrons] = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
 
     nElectrons++;
   }

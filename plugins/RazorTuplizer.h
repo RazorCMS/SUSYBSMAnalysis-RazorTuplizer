@@ -121,7 +121,14 @@ public:
   bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
 				const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
 				float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
+  
+  double getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const reco::Candidate* lepton);
 
+  double getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
+			    const reco::Candidate* ptcl,
+			    double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0,
+			    bool use_pfweight = false, bool charged_only = false);  
+  
 protected:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -253,6 +260,7 @@ protected:
   float muon_photonIso[99];
   float muon_neutralHadIso[99];
   float muon_ptrel[99];
+  float muon_miniiso[99];
 
   //Electrons
   int nElectrons;
@@ -285,6 +293,7 @@ protected:
   float ele_RegressionE[99];
   float ele_CombineP4[99];
   float ele_ptrel[99];
+  float ele_miniiso[99];
 
   //Taus
   int nTaus;
