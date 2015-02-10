@@ -50,6 +50,7 @@ using namespace std;
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimatorCSA14.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 //ROOT includes
 #include "TTree.h"
@@ -91,7 +92,7 @@ public:
   virtual bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
   virtual bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
   virtual bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
-  virtual bool fillPhotons();//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
+  virtual bool fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup);//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   virtual bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV 
   virtual bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
   virtual bool fillMet(const edm::Event& iEvent);//Fills MET(mag, phi)
@@ -247,7 +248,11 @@ protected:
   float muon_ip3dSignificance[99];//3d impact paramenter/error
   unsigned int muonType[99];//muonTypeBit: global, tracker, standalone 
   unsigned int muonQuality[99];//muonID Quality Bits
-  float muon_relIso04DBetaCorr[99];//pfISO dr04
+  float muon_pileupIso[99];
+  float muon_chargedIso[99];
+  float muon_photonIso[99];
+  float muon_neutralHadIso[99];
+  float muon_ptrel[99];
 
   //Electrons
   int nElectrons;
@@ -268,7 +273,10 @@ protected:
   float ele_HoverE[99];
   float ele_d0[99];
   float ele_dZ[99];
-  float ele_relIsoDBetaCorr[99];
+  float ele_pileupIso[99];
+  float ele_chargedIso[99];
+  float ele_photonIso[99];
+  float ele_neutralHadIso[99];
   int ele_MissHits[99];
   bool ele_PassConvVeto[99];
   float ele_OneOverEminusOneOverP[99];
@@ -276,6 +284,7 @@ protected:
   float ele_IDMVANonTrig[99];
   float ele_RegressionE[99];
   float ele_CombineP4[99];
+  float ele_ptrel[99];
 
   //Taus
   int nTaus;

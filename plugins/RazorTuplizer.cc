@@ -175,7 +175,11 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_ip3dSignificance", muon_ip3dSignificance, "muon_ip3dSignificance[nMuons]/F");
   RazorEvents->Branch("muonType", muonType, "muonType[nMuons]/i");
   RazorEvents->Branch("muonQuality", muonQuality, "muonQuality[nMuons]/i");
-  RazorEvents->Branch("muon_relIso04DBetaCorr", muon_relIso04DBetaCorr, "muon_relIso04DBetaCorr[nMuons]/F");
+  RazorEvents->Branch("muon_pileupIso", muon_pileupIso, "muon_pileupIso[nMuons]/F");
+  RazorEvents->Branch("muon_chargedIso", muon_chargedIso, "muon_chargedIso[nMuons]/F");
+  RazorEvents->Branch("muon_photonIso", muon_photonIso, "muon_photonIso[nMuons]/F");
+  RazorEvents->Branch("muon_neutralHadIso", muon_neutralHadIso, "muon_neutralHadIso[nMuons]/F");
+  RazorEvents->Branch("muon_ptrel", muon_ptrel, "muon_ptrel[nMuons]/F");
 }
 
 void RazorTuplizer::enableElectronBranches(){
@@ -196,7 +200,10 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_HoverE", ele_HoverE, "ele_HoverE[nElectrons]/F");
   RazorEvents->Branch("ele_d0", ele_d0, "ele_d0[nElectrons]/F");
   RazorEvents->Branch("ele_dZ", ele_dZ, "ele_dZ[nElectrons]/F");
-  RazorEvents->Branch("ele_relIsoDBetaCorr", ele_relIsoDBetaCorr, "ele_relIsoDBetaCorr[nElectrons]/F");
+  RazorEvents->Branch("ele_pileupIso", ele_pileupIso, "ele_pileupIso[nElectrons]/F");
+  RazorEvents->Branch("ele_chargedIso", ele_chargedIso, "ele_chargedIso[nElectrons]/F");
+  RazorEvents->Branch("ele_photonIso", ele_photonIso, "ele_photonIso[nElectrons]/F");
+  RazorEvents->Branch("ele_neutralHadIso", ele_neutralHadIso, "ele_neutralHadIso[nElectrons]/F");
   RazorEvents->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
   RazorEvents->Branch("ele_PassConvVeto", ele_PassConvVeto, "ele_PassConvVeto[nElectrons]/O");
   RazorEvents->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
@@ -204,6 +211,7 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_IDMVANonTrig", ele_IDMVANonTrig, "ele_IDMVANonTrig[nElectrons]/F");
   RazorEvents->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
   RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
+  RazorEvents->Branch("ele_ptrel", ele_ptrel, "ele_ptrel[nElectrons]/F");
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -437,7 +445,11 @@ void RazorTuplizer::resetBranches(){
         muon_ip3dSignificance[i] = -99.0;
         muonType[i] = 0;
         muonQuality[i] = 0;
-        muon_relIso04DBetaCorr[i] = -99.0;
+        muon_pileupIso[i] = -99.0;
+        muon_chargedIso[i] = -99.0;
+        muon_photonIso[i] = -99.0;
+        muon_neutralHadIso[i] = -99.0;
+	muon_ptrel[i] = -99.0;
 
         //Electron
         eleE[i] = 0.0;
@@ -455,14 +467,18 @@ void RazorTuplizer::resetBranches(){
         ele_HoverE[i] = -99;
         ele_d0[i] = -99;
         ele_dZ[i] = -99;
-        ele_relIsoDBetaCorr[i] = -99.0;
-        ele_MissHits[i] = -99;
+	ele_pileupIso[i] = -99.0;
+        ele_chargedIso[i] = -99.0;
+        ele_photonIso[i] = -99.0;
+        ele_neutralHadIso[i] = -99.0;
+	ele_MissHits[i] = -99;
         ele_PassConvVeto[i] = false;
         ele_OneOverEminusOneOverP[i] = -99.0;
         ele_IDMVATrig[i] = -99.0;
         ele_IDMVANonTrig[i] = -99.0;
         ele_RegressionE[i] = -99.0;
         ele_CombineP4[i] = -99.0;
+	ele_ptrel[i] = -99.0;
 
         //Tau
         tauE[i] = 0.0;
@@ -684,7 +700,58 @@ bool RazorTuplizer::fillMuons(){
     + muon::isGoodMuon(mu,muon::TMLastStationOptimizedBarrelLowPtLoose)      
     + muon::isGoodMuon(mu,muon::TMLastStationOptimizedBarrelLowPtTight)
     + muon::isGoodMuon(mu,muon::RPCMuLoose);       
-    muon_relIso04DBetaCorr[nMuons] = ( mu.pfIsolationR04().sumChargedHadronPt + fmax(0, mu.pfIsolationR04().sumNeutralHadronEt + mu.pfIsolationR04().sumPhotonEt - 0.5* mu.pfIsolationR04().sumPUPt) ) / mu.pt();
+    muon_pileupIso[nMuons] = mu.pfIsolationR04().sumPUPt;
+    muon_chargedIso[nMuons] = mu.pfIsolationR04().sumChargedHadronPt;
+    muon_photonIso[nMuons] = mu.pfIsolationR04().sumPhotonEt;
+    muon_neutralHadIso[nMuons] = mu.pfIsolationR04().sumNeutralHadronEt;
+
+    //**************************************************************
+    //ptRel
+    //1) find closest jet
+    //2) subtract lepton from jet
+    //3) project lepton momentum perpendicular to closest jet
+    //**************************************************************
+    cout << "Muon : " << mu.pt() << " " << mu.eta() << " " << mu.phi() << "\n";
+    if (mu.pfCandidateRef().isNonnull()) {
+      cout << "muon pf candidate: " << mu.pfCandidateRef()->pt() << " " << mu.pfCandidateRef()->eta() << " " << mu.pfCandidateRef()->phi() << "\n";
+    }
+
+    const pat::Jet *closestJet = 0;
+    double minDR = 9999;
+    for (const pat::Jet &j : *jets) {
+      if (j.pt() < 20) continue;
+      double tmpDR = deltaR(j.eta(),j.phi(),mu.eta(),mu.phi());
+      if (tmpDR < minDR) {
+	minDR = tmpDR;
+	closestJet = &j;
+      }
+    }
+    TLorentzVector closestJetFourVector(closestJet->px(),closestJet->py(),closestJet->pz(),closestJet->energy());    
+    cout << "Closest Jet: " << closestJet->pt() << " " << closestJet->eta() << " " << closestJet->phi() << "\n";
+    for (unsigned int i = 0, n = closestJet->numberOfSourceCandidatePtrs(); i < n; ++i) {
+      const pat::PackedCandidate &candidate = dynamic_cast<const pat::PackedCandidate &>(*(closestJet->sourceCandidatePtr(i)));
+      bool isPartOfMuon = false;
+
+      // muon candidate pointers to the PF candidate is null in miniAOD. 
+      // we will match by relative pt difference and deltaR. thresholds at 0.1% and 0.001 in DR were tuned by eye
+      if (abs(candidate.pdgId()) == 13 
+	  && fabs(candidate.pt() - mu.pt()) / mu.pt() < 0.001
+	  && deltaR(candidate.eta() , candidate.phi(), mu.eta() , mu.phi()) < 0.001
+	  ) isPartOfMuon = true;
+      
+      //if the PF candidate is part of the muon, subtract its momentum from the jet momentum
+      if (isPartOfMuon) {
+	cout << "part of muon : " << candidate.pt() << " " << candidate.eta() << " " << candidate.phi() << " : " << candidate.pdgId() << "\n";
+	closestJetFourVector.SetPxPyPzE( closestJetFourVector.Px() - candidate.px(), 
+					 closestJetFourVector.Py() - candidate.py(),
+					 closestJetFourVector.Pz() - candidate.pz(),
+					 closestJetFourVector.E() - candidate.energy());
+      }
+    }
+    TLorentzVector muFourVector(mu.px(),mu.py(),mu.pz(),mu.energy());
+    muon_ptrel[nMuons] = muFourVector.Perp(closestJetFourVector.Vect());
+
+
     nMuons++;
   }
 
@@ -710,8 +777,11 @@ bool RazorTuplizer::fillElectrons(){
     ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
     ele_HoverE[nElectrons] = ele.hcalOverEcal();
     ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(PV.position());
-    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());
-    ele_relIsoDBetaCorr[nElectrons] = ( ele.pfIsolationVariables().sumChargedHadronPt + fmax(0,ele.pfIsolationVariables().sumNeutralHadronEt +  ele.pfIsolationVariables().sumPhotonEt - 0.5*ele.pfIsolationVariables().sumPUPt) ) / ele.pt();
+    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());    
+    ele_pileupIso[nElectrons] = ele.pfIsolationVariables().sumPUPt;
+    ele_chargedIso[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
+    ele_photonIso[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
+    ele_neutralHadIso[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
     ele_MissHits[nElectrons] = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
 
     //Conversion Veto
@@ -738,6 +808,45 @@ bool RazorTuplizer::fillElectrons(){
 
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
     ele_CombineP4[nElectrons] = ele.ecalTrackRegressionEnergy();
+
+    //**************************************************************
+    //ptRel
+    //1) find closest jet
+    //2) subtract lepton from jet
+    //3) project lepton momentum perpendicular to closest jet
+    //**************************************************************
+    const pat::Jet *closestJet = 0;
+    double minDR = 9999;
+    for (const pat::Jet &j : *jets) {
+      if (j.pt() < 20) continue;
+      double tmpDR = deltaR(j.eta(),j.phi(),ele.eta(),ele.phi());
+      if (tmpDR < minDR) {
+	minDR = tmpDR;
+	closestJet = &j;
+      }
+    }
+    TLorentzVector closestJetFourVector(closestJet->px(),closestJet->py(),closestJet->pz(),closestJet->energy());    
+    for (unsigned int i = 0, n = closestJet->numberOfSourceCandidatePtrs(); i < n; ++i) {
+      const pat::PackedCandidate &candidate = dynamic_cast<const pat::PackedCandidate &>(*(closestJet->sourceCandidatePtr(i)));
+      bool isPartOfElectron = false;
+      for (auto itr : ele.associatedPackedPFCandidates()) {
+	if ( &(*itr) == &candidate) {
+	  isPartOfElectron = true;
+	  break;	  
+	}	
+      }
+      
+      //if the PF candidate is part of the electron, subtract its momentum from the jet momentum
+      if (isPartOfElectron) {
+	closestJetFourVector.SetPxPyPzE( closestJetFourVector.Px() - candidate.px(), 
+					 closestJetFourVector.Py() - candidate.py(),
+					 closestJetFourVector.Pz() - candidate.pz(),
+					 closestJetFourVector.E() - candidate.energy());
+      }
+    }
+    TLorentzVector eleFourVector(ele.px(),ele.py(),ele.pz(),ele.energy());
+    ele_ptrel[nElectrons] = eleFourVector.Perp(closestJetFourVector.Vect());
+
     nElectrons++;
   }
   
@@ -867,29 +976,116 @@ bool RazorTuplizer::fillIsoPFCandidates(){
   return true;
 }
 
-bool RazorTuplizer::fillPhotons(){
+bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+    noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
+    // const auto& theseed = *(pho.superCluster()->seed());
+    // std::vector<float> vCov = lazyToolnoZS->localCovariances( theseed );
+    // double see = (isnan(vCov[0]) ? 0. : sqrt(vCov[0]));
+    
   for (const pat::Photon &pho : *photons) {
     if (pho.pt() < 20) continue;
+
+    std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
+
     phoE[nPhotons] = pho.energy();
     phoPt[nPhotons] = pho.pt();
     phoEta[nPhotons] = pho.eta();
     phoPhi[nPhotons] = pho.phi();
     phoSigmaIetaIeta[nPhotons] = pho.see();
-    phoFull5x5SigmaIetaIeta[nPhotons] = pho.see();
-    phoR9[nPhotons] = pho.r9();
+    phoFull5x5SigmaIetaIeta[nPhotons] = (isnan(vCov[0]) ? 0. : sqrt(vCov[0]));
+
+    //phoR9[nPhotons] = pho.r9();
+    //Use the noZS version of this according to Emanuele
+    phoR9[nPhotons] = lazyToolnoZS->e3x3( *(pho.superCluster()->seed()) ) / pho.superCluster()->rawEnergy();
+
     pho_HoverE[nPhotons] = pho.hadTowOverEm();
-    pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
-    pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
-    pho_sumPhotonEt[nPhotons] = pho.photonIso();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
     pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
 									   conversions, beamSpot->position());
+
+    //Don't use default miniAOD quantities for now
+    // pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
+    // pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
+    // pho_sumPhotonEt[nPhotons] = pho.photonIso();
+
+    //**********************************************************
+    //Compute PF isolation
+    //absolute uncorrected isolations with footprint removal
+    //**********************************************************
+    const float coneSizeDR = 0.3;
+    const float dxyMax = 0.1;
+    const float dzMax = 0.2;
+    float chargedIsoSum = 0;
+    float neutralHadronIsoSum = 0;
+    float photonIsoSum = 0;
+
+    // First, find photon direction with respect to the good PV
+    const reco::Vertex &pv = vertices->front();
+    math::XYZVector photon_directionWrtVtx(pho.superCluster()->x() - pv.x(),
+					   pho.superCluster()->y() - pv.y(),
+					   pho.superCluster()->z() - pv.z());
+    // Loop over all PF candidates
+    for (const pat::PackedCandidate &candidate : *packedPFCands) {
+
+     // Check if this candidate is within the isolation cone
+      float dR=deltaR(photon_directionWrtVtx.Eta(),photon_directionWrtVtx.Phi(),
+		      candidate.eta(), candidate.phi());
+      if( dR > coneSizeDR ) continue;
+
+      // Check if this candidate is not in the footprint
+      bool inFootprint = false;      
+      for (auto itr : pho.associatedPackedPFCandidates()) {	
+	if ( &(*itr) == &candidate) {
+	  inFootprint = true;
+	}
+      }     
+      if( inFootprint ) continue;
+
+
+      // Find candidate type
+      reco::PFCandidate::ParticleType thisCandidateType = reco::PFCandidate::X;
+
+      // the neutral hadrons and charged hadrons can be of pdgId types
+      // only 130 (K0L) and +-211 (pi+-) in packed candidates
+      const int pdgId = candidate.pdgId();
+      if( pdgId == 22 )
+	thisCandidateType = reco::PFCandidate::gamma;
+      else if( abs(pdgId) == 130) // PDG ID for K0L
+	thisCandidateType = reco::PFCandidate::h0;
+      else if( abs(pdgId) == 211) // PDG ID for pi+-
+	thisCandidateType = reco::PFCandidate::h;
+      
+
+      // Increment the appropriate isolation sum
+      if( thisCandidateType == reco::PFCandidate::h ){
+	// for charged hadrons, additionally check consistency
+	// with the PV
+	float dxy = -999, dz = -999;
+	dz = candidate.pseudoTrack().dz(pv.position());
+	dxy =candidate.pseudoTrack().dxy(pv.position());
+	if (fabs(dz) > dzMax) continue;
+	if(fabs(dxy) > dxyMax) continue;
+	// The candidate is eligible, increment the isolaiton
+	chargedIsoSum += candidate.pt();
+      }
+      if( thisCandidateType == reco::PFCandidate::h0 )
+	neutralHadronIsoSum += candidate.pt();
+      if( thisCandidateType == reco::PFCandidate::gamma )
+	photonIsoSum += candidate.pt();
+    }
+    pho_sumChargedHadronPt[nPhotons] = chargedIsoSum;
+    pho_sumNeutralHadronEt[nPhotons] = neutralHadronIsoSum;
+    pho_sumPhotonEt[nPhotons] = photonIsoSum;
+    
+
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
     pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
     pho_IDMVA[nPhotons] = pho.pfMVA();
     pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
     pho_superClusterPhi[nPhotons] = pho.superCluster()->phi();
     pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
+
     /*
     const reco::Candidate* genPhoton = pho.genPhoton();
     if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<
@@ -1193,7 +1389,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillElectrons()
     && fillTaus()
     && fillIsoPFCandidates()
-    && fillPhotons()
+    && fillPhotons(iEvent,iSetup)
     && fillJets()
     && fillJetsAK8()
     && fillMet(iEvent)

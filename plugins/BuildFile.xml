@@ -6,5 +6,5 @@
 <use name="PhysicsTools/UtilAlgos"/>
 <use name="RecoEgamma/EgammaTools"/>
 <use name="EgammaAnalysis/ElectronTools"/>
-
+<use name="RecoEcal/EgammaCoreTools"/>
 <flags EDM_PLUGIN="1"/>
