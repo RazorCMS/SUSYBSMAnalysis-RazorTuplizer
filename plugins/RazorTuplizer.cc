@@ -901,10 +901,7 @@ bool RazorTuplizer::fillIsoPFCandidates(){
 
 bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
-    noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
-    // const auto& theseed = *(pho.superCluster()->seed());
-    // std::vector<float> vCov = lazyToolnoZS->localCovariances( theseed );
-    // double see = (isnan(vCov[0]) ? 0. : sqrt(vCov[0]));
+  noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
     
   for (const pat::Photon &pho : *photons) {
     if (pho.pt() < 20) continue;
@@ -1017,6 +1014,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     nPhotons++;
   }
 
+  delete lazyToolnoZS;
   return true;
 };
 
