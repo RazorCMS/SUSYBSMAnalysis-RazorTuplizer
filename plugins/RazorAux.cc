@@ -246,9 +246,13 @@ double RazorTuplizer::getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const
 	closestJet = &j;
       }
     }
-    TLorentzVector closestJetFourVector(closestJet->px(),closestJet->py(),closestJet->pz(),closestJet->energy());    
 
+    //if no jet was found nearby, return some large default value
+    if (!closestJet) return 9999;
+
+    TLorentzVector closestJetFourVector(closestJet->px(),closestJet->py(),closestJet->pz(),closestJet->energy());    
     for (unsigned int i = 0, n = closestJet->numberOfSourceCandidatePtrs(); i < n; ++i) {
+      
       const pat::PackedCandidate &candidate = dynamic_cast<const pat::PackedCandidate &>(*(closestJet->sourceCandidatePtr(i)));
       bool isPartOfLepton = false;
 
@@ -268,7 +272,6 @@ double RazorTuplizer::getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const
 	  }	
 	}
       }
-
       //if the PF candidate is part of the muon, subtract its momentum from the jet momentum
       if (isPartOfLepton) {
 	closestJetFourVector.SetPxPyPzE( closestJetFourVector.Px() - candidate.px(), 
@@ -277,7 +280,6 @@ double RazorTuplizer::getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const
 					 closestJetFourVector.E() - candidate.energy());
       }
     }
-
     TLorentzVector lepFourVector(lepton->px(),lepton->py(),lepton->pz(),lepton->energy());    
     return lepFourVector.Perp(closestJetFourVector.Vect());
 }
