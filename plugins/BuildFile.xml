@@ -7,4 +7,5 @@
 <use name="RecoEgamma/EgammaTools"/>
 <use name="EgammaAnalysis/ElectronTools"/>
 <use name="RecoEcal/EgammaCoreTools"/>
+<use name="SUSYBSMAnalysis/RazorTuplizer"/>
 <flags EDM_PLUGIN="1"/>

@@ -82,6 +82,19 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 			true,
 			myNonTrigWeights);
 
+  //set up photon MVA ID
+  std::vector<std::string> myPhotonMVAWeights;
+  myPhotonMVAWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/PhotonIDMVA_PHYS14_EB.weights.xml").fullPath().c_str());
+  myPhotonMVAWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/PhotonIDMVA_PHYS14_EE.weights.xml").fullPath().c_str());
+  std::vector<std::string> myPhotonMVAMethodNames;
+  myPhotonMVAMethodNames.push_back("BDTG photons barrel");
+  myPhotonMVAMethodNames.push_back("BDTG photons endcap");
+
+  myPhotonMVA = new EGammaMvaPhotonEstimator();
+  myPhotonMVA->initialize(myPhotonMVAMethodNames,myPhotonMVAWeights,
+			  EGammaMvaPhotonEstimator::kPhotonMVATypeDefault);
+
+
 
   //Read in HLT Trigger Path List from config file
   for (int i = 0; i<NTriggersMAX; ++i) triggerPathNames[i] = "";
@@ -999,9 +1012,66 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_sumPhotonEt[nPhotons] = photonIsoSum;
     
 
+    //*****************************************************************
+    //Computer Worst Isolation Looping over all vertices
+    //*****************************************************************
+    const double ptMin = 0.0;
+    const float dRvetoBarrel = 0.0;
+    const float dRvetoEndcap = 0.0;    
+    float dRveto = 0;
+    if (pho.isEB()) dRveto = dRvetoBarrel;
+    else dRveto = dRvetoEndcap;
+    
+    float worstIsolation = 999;
+    std::vector<float> allIsolations;
+    for(unsigned int ivtx=0; ivtx<vertices->size(); ++ivtx) {
+    
+      // Shift the photon according to the vertex
+      reco::VertexRef vtx(vertices, ivtx);
+      math::XYZVector photon_directionWrtVtx(pho.superCluster()->x() - vtx->x(),
+					     pho.superCluster()->y() - vtx->y(),
+					     pho.superCluster()->z() - vtx->z());
+    
+      float sum = 0;
+      // Loop over all PF candidates
+      for (const pat::PackedCandidate &candidate : *packedPFCands) {
+		
+	//require that PFCandidate is a charged hadron
+	const int pdgId = candidate.pdgId();
+	if( abs(pdgId) != 211) continue;
+
+	if (candidate.pt() < ptMin)
+	  continue;
+      
+	float dxy = -999, dz = -999;
+	dz = candidate.pseudoTrack().dz(pv.position());
+	dxy =candidate.pseudoTrack().dxy(pv.position());
+	if( fabs(dxy) > dxyMax) continue;     
+	if ( fabs(dz) > dzMax) continue;
+	
+	float dR = deltaR(photon_directionWrtVtx.Eta(), photon_directionWrtVtx.Phi(), 
+			  candidate.eta(),      candidate.phi());
+	if(dR > coneSizeDR || dR < dRveto) continue;
+	
+	sum += candidate.pt();
+      }
+      
+      allIsolations.push_back(sum);
+    }
+
+    if( allIsolations.size()>0 )
+      worstIsolation = * std::max_element( allIsolations.begin(), allIsolations.end() );
+    
+
+    //*****************************************************************
+    //Photon ID MVA variable
+    //*****************************************************************
+    pho_IDMVA[nPhotons] = myPhotonMVA->mvaValue( pho,  *rhoAll, photonIsoSum, chargedIsoSum, worstIsolation,
+						 lazyToolnoZS, false);
+				       
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
     pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
-    pho_IDMVA[nPhotons] = pho.pfMVA();
+    
     pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
     pho_superClusterPhi[nPhotons] = pho.superCluster()->phi();
     pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();

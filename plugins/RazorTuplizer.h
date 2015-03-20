@@ -51,6 +51,7 @@ using namespace std;
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimatorCSA14.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+#include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
 
 //ROOT includes
 #include "TTree.h"
@@ -137,6 +138,7 @@ protected:
   //MVAs for triggering and non-triggering electron ID
   EGammaMvaEleEstimatorCSA14* myMVATrig;
   EGammaMvaEleEstimatorCSA14* myMVANonTrig;
+  EGammaMvaPhotonEstimator* myPhotonMVA;
   
   //----- Member data ------//
 
