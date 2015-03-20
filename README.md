@@ -17,7 +17,7 @@ For tags corresponding to V1.2 or earlier, you must use CMSSW_7_0_6_patch1. For 
 
 You must run the cms-merge-topic command before cloning the RazorTuplizer code, because it requires an empty CMSSW src directory to work.
 
-Running the BASE ntuplizer
+Running the ntuplizer
 --------------
 
     cmsRun python/razorTuplizer.py
@@ -28,8 +28,3 @@ To run using CRAB3:
 
     source /cvmfs/cms.cern.ch/crab3/crab.sh
     crab submit -c crabConfigRazorTuplizer.py
-
-Running custom ntuplizer Example
---------------
-
-    cmsRun python/razorAnaTuple.py
