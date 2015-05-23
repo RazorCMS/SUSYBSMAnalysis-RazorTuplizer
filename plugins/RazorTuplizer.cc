@@ -63,8 +63,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 
   //set up electron MVA ID
   std::vector<std::string> myTrigWeights;
-  myTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EB_BDT.weights.xml").fullPath().c_str());
-  myTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_25ns_EE_BDT.weights.xml").fullPath().c_str());
+  myTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/TrigIDMVA_25ns_EB_BDT.weights.xml").fullPath().c_str());
+  myTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/TrigIDMVA_25ns_EE_BDT.weights.xml").fullPath().c_str());
 
   myMVATrig = new EGammaMvaEleEstimatorCSA14();
   myMVATrig->initialize("BDT",
@@ -73,10 +73,10 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 			myTrigWeights);
 
   std::vector<std::string> myNonTrigWeights;
-  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_5_25ns_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_5_25ns_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EB_10_25ns_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("EgammaAnalysis/ElectronTools/data/CSA14/EIDmva_EE_10_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB_5_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_5_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB_10_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_10_25ns_BDT.weights.xml").fullPath().c_str());
   
   myMVANonTrig = new EGammaMvaEleEstimatorCSA14();
   myMVANonTrig->initialize("BDT",
@@ -826,6 +826,7 @@ bool RazorTuplizer::fillElectrons(){
 
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
     ele_CombineP4[nElectrons] = ele.ecalTrackRegressionEnergy();
+
     ele_ptrel[nElectrons] = getLeptonPtRel( jets, &ele );
     ele_miniiso[nElectrons] = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
 
@@ -967,7 +968,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
 
-    phoE[nPhotons] = pho.energy();
+    phoE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::ecal_standard);
     phoPt[nPhotons] = pho.pt();
     //phoEta[nPhotons] = pho.eta(); //correct this for the vertex
     //phoPhi[nPhotons] = pho.phi(); //correct this for the vertex
@@ -1118,7 +1119,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 				       
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
     pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
-    
+   
     //compute photon corrected 4-mometum 
     TVector3 phoPos( pho.superCluster()->x(), pho.superCluster()->y(), pho.superCluster()->z() );
     TVector3 vtxPos( pvX, pvY, pvZ );
