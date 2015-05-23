@@ -11,10 +11,11 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'root://xrootd.unl.edu://store/mc/Phys14DR/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/00C90EFC-3074-E411-A845-002590DB9262.root' #PU 20, 25 ns PHYS14 TTJets sample
+        'file:/tmp/sixie/0085B55B-01FF-E411-9785-0025905A609E.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
 process.TFileService = cms.Service("TFileService", 
@@ -34,7 +35,7 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 #global tag for CSA14 50ns 40 PU (more pessimistic alignment and calibration) scenario
 #process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
 #global tag for PHYS14 asymptotic 25ns scenario
-process.GlobalTag.globaltag = 'PHYS14_25_V3::All'
+process.GlobalTag.globaltag = 'MCRUN2_74_V9A::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -42,7 +43,8 @@ process.GlobalTag.globaltag = 'PHYS14_25_V3::All'
 
 #list input collections
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
-
+    isData = cms.bool(False),    
+    useGen = cms.bool(True),
     enableTriggerInfo = cms.bool(True),                                 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
 

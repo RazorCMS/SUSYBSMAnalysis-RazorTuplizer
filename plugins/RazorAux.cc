@@ -283,3 +283,13 @@ double RazorTuplizer::getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const
     TLorentzVector lepFourVector(lepton->px(),lepton->py(),lepton->pz(),lepton->energy());    
     return lepFourVector.Perp(closestJetFourVector.Vect());
 }
+
+TLorentzVector RazorTuplizer::photonP4FromVtx( TVector3 vtx, TVector3 phoPos, double E )
+{
+  TVector3 p_hat;//Corrected photon direction
+  p_hat = phoPos - vtx;
+  TVector3 phoP3 = p_hat.Unit()*E;
+  TLorentzVector phoP4;
+  phoP4.SetVectM( phoP3, .0 );
+  return phoP4;
+};

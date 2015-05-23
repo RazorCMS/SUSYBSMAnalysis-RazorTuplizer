@@ -58,6 +58,10 @@ using namespace std;
 #include "TFile.h"
 #include "TLorentzVector.h"
 
+//------ Array Size Constants ------//
+#define OBJECTARRAYSIZE 99
+#define GENPARTICLEARRAYSIZE 500
+
 //------ Class declaration ------//
 
 class RazorTuplizer : public edm::EDAnalyzer {
@@ -129,7 +133,9 @@ public:
 			    const reco::Candidate* ptcl,
 			    double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0,
 			    bool use_pfweight = false, bool charged_only = false);  
-  
+
+  TLorentzVector photonP4FromVtx( TVector3 vtx, TVector3 phoPos, double E );
+
 protected:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
@@ -143,6 +149,8 @@ protected:
   //----- Member data ------//
 
   // Control Switches
+  bool    isData_;
+  bool    useGen_;
   bool enableTriggerInfo_;
   
   // Input file containing the mapping of the HLT Triggers
@@ -229,7 +237,8 @@ protected:
   edm::Handle<vector<reco::PhotonCore> > gedPhotonCores;
   edm::Handle<vector<reco::SuperCluster> > superClusters;
   edm::Handle<vector<pat::PackedCandidate> > lostTracks;
-  
+  const reco::Vertex *myPV;
+
   //output tree
   TTree *RazorEvents;
   TH1F *NEvents;
@@ -238,150 +247,156 @@ protected:
 
   //PU
   int nBunchXing;
-  int BunchXing[99];
-  int nPU[99];
-  float nPUmean[99];
+  int BunchXing[OBJECTARRAYSIZE];
+  int nPU[OBJECTARRAYSIZE];
+  float nPUmean[OBJECTARRAYSIZE];
 
   //Muons
   int nMuons;
-  float muonE[99];
-  float muonPt[99];
-  float muonEta[99];
-  float muonPhi[99];
-  int muonCharge[99];//muon charge
-  bool muonIsLoose[99];
-  bool muonIsTight[99];
-  float muon_d0[99];//transverse impact paramenter
-  float muon_dZ[99];//impact parameter
-  float muon_ip3d[99];//3d impact paramenter
-  float muon_ip3dSignificance[99];//3d impact paramenter/error
-  unsigned int muonType[99];//muonTypeBit: global, tracker, standalone 
-  unsigned int muonQuality[99];//muonID Quality Bits
-  float muon_pileupIso[99];
-  float muon_chargedIso[99];
-  float muon_photonIso[99];
-  float muon_neutralHadIso[99];
-  float muon_ptrel[99];
-  float muon_miniiso[99];
+  float muonE[OBJECTARRAYSIZE];
+  float muonPt[OBJECTARRAYSIZE];
+  float muonEta[OBJECTARRAYSIZE];
+  float muonPhi[OBJECTARRAYSIZE];
+  int muonCharge[OBJECTARRAYSIZE];//muon charge
+  bool muonIsLoose[OBJECTARRAYSIZE];
+  bool muonIsTight[OBJECTARRAYSIZE];
+  float muon_d0[OBJECTARRAYSIZE];//transverse impact paramenter
+  float muon_dZ[OBJECTARRAYSIZE];//impact parameter
+  float muon_ip3d[OBJECTARRAYSIZE];//3d impact paramenter
+  float muon_ip3dSignificance[OBJECTARRAYSIZE];//3d impact paramenter/error
+  unsigned int muonType[OBJECTARRAYSIZE];//muonTypeBit: global, tracker, standalone 
+  unsigned int muonQuality[OBJECTARRAYSIZE];//muonID Quality Bits
+  float muon_pileupIso[OBJECTARRAYSIZE];
+  float muon_chargedIso[OBJECTARRAYSIZE];
+  float muon_photonIso[OBJECTARRAYSIZE];
+  float muon_neutralHadIso[OBJECTARRAYSIZE];
+  float muon_ptrel[OBJECTARRAYSIZE];
+  float muon_miniiso[OBJECTARRAYSIZE];
 
   //Electrons
   int nElectrons;
-  float eleE[99];
-  float elePt[99];
-  float eleEta[99];
-  float elePhi[99];
-  float eleCharge[99];
-  float eleE_SC[99];
-  //float SC_ElePt[99]; 
-  float eleEta_SC[99];
-  float elePhi_SC[99];
-  float eleSigmaIetaIeta[99];
-  float eleFull5x5SigmaIetaIeta[99];
-  float eleR9[99];
-  float ele_dEta[99];
-  float ele_dPhi[99];
-  float ele_HoverE[99];
-  float ele_d0[99];
-  float ele_dZ[99];
-  float ele_pileupIso[99];
-  float ele_chargedIso[99];
-  float ele_photonIso[99];
-  float ele_neutralHadIso[99];
-  int ele_MissHits[99];
-  bool ele_PassConvVeto[99];
-  float ele_OneOverEminusOneOverP[99];
-  float ele_IDMVATrig[99];
-  float ele_IDMVANonTrig[99];
-  float ele_RegressionE[99];
-  float ele_CombineP4[99];
-  float ele_ptrel[99];
-  float ele_miniiso[99];
+  float eleE[OBJECTARRAYSIZE];
+  float elePt[OBJECTARRAYSIZE];
+  float eleEta[OBJECTARRAYSIZE];
+  float elePhi[OBJECTARRAYSIZE];
+  float eleCharge[OBJECTARRAYSIZE];
+  float eleE_SC[OBJECTARRAYSIZE];
+  //float SC_ElePt[OBJECTARRAYSIZE]; 
+  float eleEta_SC[OBJECTARRAYSIZE];
+  float elePhi_SC[OBJECTARRAYSIZE];
+  float eleSigmaIetaIeta[OBJECTARRAYSIZE];
+  float eleFull5x5SigmaIetaIeta[OBJECTARRAYSIZE];
+  float eleR9[OBJECTARRAYSIZE];
+  float ele_dEta[OBJECTARRAYSIZE];
+  float ele_dPhi[OBJECTARRAYSIZE];
+  float ele_HoverE[OBJECTARRAYSIZE];
+  float ele_d0[OBJECTARRAYSIZE];
+  float ele_dZ[OBJECTARRAYSIZE];
+  float ele_pileupIso[OBJECTARRAYSIZE];
+  float ele_chargedIso[OBJECTARRAYSIZE];
+  float ele_photonIso[OBJECTARRAYSIZE];
+  float ele_neutralHadIso[OBJECTARRAYSIZE];
+  int ele_MissHits[OBJECTARRAYSIZE];
+  bool ele_PassConvVeto[OBJECTARRAYSIZE];
+  float ele_OneOverEminusOneOverP[OBJECTARRAYSIZE];
+  float ele_IDMVATrig[OBJECTARRAYSIZE];
+  float ele_IDMVANonTrig[OBJECTARRAYSIZE];
+  float ele_RegressionE[OBJECTARRAYSIZE];
+  float ele_CombineP4[OBJECTARRAYSIZE];
+  float ele_ptrel[OBJECTARRAYSIZE];
+  float ele_miniiso[OBJECTARRAYSIZE];
 
   //Taus
   int nTaus;
-  float tauE[99];
-  float tauPt[99];
-  float tauEta[99];
-  float tauPhi[99];
-  bool tau_IsLoose[99];
-  bool tau_IsMedium[99];
-  bool tau_IsTight[99];
-  bool tau_passEleVetoLoose[99];
-  bool tau_passEleVetoMedium[99];
-  bool tau_passEleVetoTight[99];
-  bool tau_passMuVetoLoose[99];
-  bool tau_passMuVetoMedium[99];
-  bool tau_passMuVetoTight[99];  
-  UInt_t tau_ID[99];//tauID Bits
-  float tau_combinedIsoDeltaBetaCorr3Hits[99];
-  float tau_eleVetoMVA[99];
-  int tau_eleVetoCategory[99];
-  float tau_muonVetoMVA[99];
-  float tau_isoMVAnewDMwLT[99];
-  float tau_isoMVAnewDMwoLT[99]; 
-  float tau_leadCandPt[99];
-  int tau_leadCandID[99];
-  float tau_leadChargedHadrCandPt[99];
-  int tau_leadChargedHadrCandID[99];
+  float tauE[OBJECTARRAYSIZE];
+  float tauPt[OBJECTARRAYSIZE];
+  float tauEta[OBJECTARRAYSIZE];
+  float tauPhi[OBJECTARRAYSIZE];
+  bool tau_IsLoose[OBJECTARRAYSIZE];
+  bool tau_IsMedium[OBJECTARRAYSIZE];
+  bool tau_IsTight[OBJECTARRAYSIZE];
+  bool tau_passEleVetoLoose[OBJECTARRAYSIZE];
+  bool tau_passEleVetoMedium[OBJECTARRAYSIZE];
+  bool tau_passEleVetoTight[OBJECTARRAYSIZE];
+  bool tau_passMuVetoLoose[OBJECTARRAYSIZE];
+  bool tau_passMuVetoMedium[OBJECTARRAYSIZE];
+  bool tau_passMuVetoTight[OBJECTARRAYSIZE];  
+  UInt_t tau_ID[OBJECTARRAYSIZE];//tauID Bits
+  float tau_combinedIsoDeltaBetaCorr3Hits[OBJECTARRAYSIZE];
+  float tau_eleVetoMVA[OBJECTARRAYSIZE];
+  int tau_eleVetoCategory[OBJECTARRAYSIZE];
+  float tau_muonVetoMVA[OBJECTARRAYSIZE];
+  float tau_isoMVAnewDMwLT[OBJECTARRAYSIZE];
+  float tau_isoMVAnewDMwoLT[OBJECTARRAYSIZE]; 
+  float tau_leadCandPt[OBJECTARRAYSIZE];
+  int tau_leadCandID[OBJECTARRAYSIZE];
+  float tau_leadChargedHadrCandPt[OBJECTARRAYSIZE];
+  int tau_leadChargedHadrCandID[OBJECTARRAYSIZE];
 
   //IsolatedChargedPFCandidates
   int nIsoPFCandidates;
-  float isoPFCandidatePt[99];
-  float isoPFCandidateEta[99];
-  float isoPFCandidatePhi[99];
-  float isoPFCandidateIso04[99];
-  float isoPFCandidateD0[99];
-  int   isoPFCandidatePdgId[99];
+  float isoPFCandidatePt[OBJECTARRAYSIZE];
+  float isoPFCandidateEta[OBJECTARRAYSIZE];
+  float isoPFCandidatePhi[OBJECTARRAYSIZE];
+  float isoPFCandidateIso04[OBJECTARRAYSIZE];
+  float isoPFCandidateD0[OBJECTARRAYSIZE];
+  int   isoPFCandidatePdgId[OBJECTARRAYSIZE];
 
   //Photons
   int nPhotons;
-  float phoE[99];
-  float phoPt[99];
-  float phoEta[99];
-  float phoPhi[99];
-  float phoSigmaIetaIeta[99];
-  float phoFull5x5SigmaIetaIeta[99];
-  float phoR9[99];
-  float pho_HoverE[99];
-  float pho_sumChargedHadronPt[99];
-  float pho_sumNeutralHadronEt[99];
-  float pho_sumPhotonEt[99];
-  bool  pho_isConversion[99];
-  bool  pho_passEleVeto[99];
-  float pho_RegressionE[99];
-  float pho_RegressionEUncertainty[99];
-  float pho_IDMVA[99];
-  float pho_superClusterEta[99];
-  float pho_superClusterPhi[99];
-  bool pho_hasPixelSeed[99];
+  float phoE[OBJECTARRAYSIZE];
+  float phoPt[OBJECTARRAYSIZE];
+  float phoEta[OBJECTARRAYSIZE];
+  float phoPhi[OBJECTARRAYSIZE];
+  float phoSigmaIetaIeta[OBJECTARRAYSIZE];
+  float phoFull5x5SigmaIetaIeta[OBJECTARRAYSIZE];
+  float phoR9[OBJECTARRAYSIZE];
+  float pho_HoverE[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt[OBJECTARRAYSIZE];
+  float pho_sumNeutralHadronEt[OBJECTARRAYSIZE];
+  float pho_sumPhotonEt[OBJECTARRAYSIZE];
+  float pho_sumWorstVertexChargedHadronPt[OBJECTARRAYSIZE];
+  bool  pho_isConversion[OBJECTARRAYSIZE];
+  bool  pho_passEleVeto[OBJECTARRAYSIZE];
+  float pho_RegressionE[OBJECTARRAYSIZE];
+  float pho_RegressionEUncertainty[OBJECTARRAYSIZE];
+  float pho_IDMVA[OBJECTARRAYSIZE];
+  float pho_superClusterEta[OBJECTARRAYSIZE];
+  float pho_superClusterPhi[OBJECTARRAYSIZE];
+  bool pho_hasPixelSeed[OBJECTARRAYSIZE];
 
   //AK4 Jets
   int nJets;
-  float jetE[99];
-  float jetPt[99];
-  float jetEta[99];
-  float jetPhi[99];
-  float jetCSV[99];
-  float jetCISV[99];
-  float jetMass[99];
-  float jetJetArea[99];
-  float jetPileupE[99];  
-  float jetPileupId[99];
-  int   jetPartonFlavor[99];
-  int   jetHadronFlavor[99];
+  float jetE[OBJECTARRAYSIZE];
+  float jetPt[OBJECTARRAYSIZE];
+  float jetEta[OBJECTARRAYSIZE];
+  float jetPhi[OBJECTARRAYSIZE];
+  float jetCSV[OBJECTARRAYSIZE];
+  float jetCISV[OBJECTARRAYSIZE];
+  float jetMass[OBJECTARRAYSIZE];
+  float jetJetArea[OBJECTARRAYSIZE];
+  float jetPileupE[OBJECTARRAYSIZE];  
+  float jetPileupId[OBJECTARRAYSIZE];
+  int   jetPileupIdFlag[OBJECTARRAYSIZE];
+  bool  jetPassIDLoose[OBJECTARRAYSIZE];
+  bool  jetPassIDTight[OBJECTARRAYSIZE];
+  bool  jetPassMuFrac[OBJECTARRAYSIZE];
+  bool  jetPassEleFrac[OBJECTARRAYSIZE];  
+  int   jetPartonFlavor[OBJECTARRAYSIZE];
+  int   jetHadronFlavor[OBJECTARRAYSIZE];
 
   //AK8 Jets
   int nFatJets;
-  float fatJetE[99];
-  float fatJetPt[99];
-  float fatJetEta[99];
-  float fatJetPhi[99];
-  float fatJetTrimmedM[99];
-  float fatJetPrunedM[99];
-  float fatJetFilteredM[99];
-  float fatJetTau1[99];
-  float fatJetTau2[99];
-  float fatJetTau3[99];
+  float fatJetE[OBJECTARRAYSIZE];
+  float fatJetPt[OBJECTARRAYSIZE];
+  float fatJetEta[OBJECTARRAYSIZE];
+  float fatJetPhi[OBJECTARRAYSIZE];
+  float fatJetTrimmedM[OBJECTARRAYSIZE];
+  float fatJetPrunedM[OBJECTARRAYSIZE];
+  float fatJetFilteredM[OBJECTARRAYSIZE];
+  float fatJetTau1[OBJECTARRAYSIZE];
+  float fatJetTau2[OBJECTARRAYSIZE];
+  float fatJetTau3[OBJECTARRAYSIZE];
 
   //MET 
   float metPt;
@@ -390,6 +405,12 @@ protected:
   float UncMETdpx;
   float UncMETdpy;
   float UncMETdSumEt;
+  float metType0Pt;
+  float metType0Phi;
+  float metType1Pt;
+  float metType1Phi;
+  float metType0Plus1Pt;
+  float metType0Plus1Phi;
   bool Flag_HBHENoiseFilter;
   bool Flag_CSCTightHaloFilter;
   bool Flag_hcalLaserEventFilter;
@@ -407,10 +428,10 @@ protected:
 
   //MC
   int nGenJets;
-  float genJetE[99];
-  float genJetPt[99];
-  float genJetEta[99];
-  float genJetPhi[99];
+  float genJetE[OBJECTARRAYSIZE];
+  float genJetPt[OBJECTARRAYSIZE];
+  float genJetEta[OBJECTARRAYSIZE];
+  float genJetPhi[OBJECTARRAYSIZE];
   float genMetPt;
   float genMetPhi;
   float genVertexX;
@@ -424,20 +445,21 @@ protected:
 
   //gen info
   int nGenParticle;
-  int gParticleMotherId[500];
-  int gParticleMotherIndex[500];
-  int gParticleId[500];
-  int gParticleStatus[500];
-  float gParticleE[500];
-  float gParticlePt[500];
-  float gParticleEta[500];
-  float gParticlePhi[500];
+  int gParticleMotherId[GENPARTICLEARRAYSIZE];
+  int gParticleMotherIndex[GENPARTICLEARRAYSIZE];
+  int gParticleId[GENPARTICLEARRAYSIZE];
+  int gParticleStatus[GENPARTICLEARRAYSIZE];
+  float gParticleE[GENPARTICLEARRAYSIZE];
+  float gParticlePt[GENPARTICLEARRAYSIZE];
+  float gParticleEta[GENPARTICLEARRAYSIZE];
+  float gParticlePhi[GENPARTICLEARRAYSIZE];
 
   //razor variables
   float MR, RSQ;
   float MR_AK8, RSQ_AK8;
   
   //event info
+  bool isData;
   int nPV;
   int runNum;
   int lumiNum;
@@ -454,7 +476,7 @@ protected:
 
   //trigger info
   vector<string>  *nameHLT;
-  static const int NTriggersMAX = 50;
+  static const int NTriggersMAX = 100;
   string triggerPathNames[NTriggersMAX];
   bool triggerDecision[NTriggersMAX];
 

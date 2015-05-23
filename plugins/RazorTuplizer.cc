@@ -10,6 +10,8 @@
 //------ Constructors and destructor ------//
 RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig): 
   //get inputs from config file
+  isData_(iConfig.getParameter<bool> ("isData")),
+  useGen_(iConfig.getParameter<bool> ("useGen")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
@@ -144,13 +146,14 @@ void RazorTuplizer::setBranches(){
   enableJetBranches();
   enableJetAK8Branches();
   enableMetBranches();
-  enableRazorBranches();
+  
   if (enableTriggerInfo_) enableTriggerBranches();
   enableMCBranches();
   enableGenParticleBranches();
 }
 
 void RazorTuplizer::enableEventInfoBranches(){
+  RazorEvents->Branch("isData", &isData, "isData/O");
   RazorEvents->Branch("nPV", &nPV, "nPV/I");
   RazorEvents->Branch("runNum", &runNum, "runNum/I");
   RazorEvents->Branch("lumiNum", &lumiNum, "lumiNum/I");
@@ -280,6 +283,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_sumChargedHadronPt", pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
+  RazorEvents->Branch("pho_sumWorstVertexChargedHadronPt", pho_sumWorstVertexChargedHadronPt, "pho_sumWorstVertexChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/O");
   RazorEvents->Branch("pho_passEleVeto", pho_passEleVeto, "pho_passEleVeto[nPhotons]/O");
   RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
@@ -302,6 +306,11 @@ void RazorTuplizer::enableJetBranches(){
   RazorEvents->Branch("jetJetArea", jetJetArea, "jetJetArea[nJets]/F");
   RazorEvents->Branch("jetPileupE", jetPileupE, "jetPileupE[nJets]/F");
   RazorEvents->Branch("jetPileupId", jetPileupId, "jetPileupId[nJets]/F");
+  RazorEvents->Branch("jetPileupIdFlag", jetPileupIdFlag, "jetPileupIdFlag[nJets]/I");
+  RazorEvents->Branch("jetPassIDLoose", jetPassIDLoose, "jetPassIDLoose[nJets]/O");
+  RazorEvents->Branch("jetPassIDTight", jetPassIDTight, "jetPassIDTight[nJets]/O");
+  RazorEvents->Branch("jetPassMuFrac", jetPassMuFrac, "jetPassMuFrac[nJets]/O");
+  RazorEvents->Branch("jetPassEleFrac", jetPassEleFrac, "jetPassEleFrac[nJets]/O");
   RazorEvents->Branch("jetPartonFlavor", jetPartonFlavor, "jetPartonFlavor[nJets]/I");
   RazorEvents->Branch("jetHadronFlavor", jetHadronFlavor, "jetHadronFlavor[nJets]/I");
 }
@@ -324,6 +333,12 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metPt", &metPt, "metPt/F");
   RazorEvents->Branch("metPhi", &metPhi, "metPhi/F");
   RazorEvents->Branch("sumMET", &sumMET, "sumMET/F");
+  RazorEvents->Branch("metType0Pt", &metType0Pt, "metType0Pt/F");
+  RazorEvents->Branch("metType0Phi", &metType0Phi, "metType0Phi/F");
+  RazorEvents->Branch("metType1Pt", &metType1Pt, "metType1Pt/F");
+  RazorEvents->Branch("metType1Phi", &metType1Phi, "metType1Phi/F");
+  RazorEvents->Branch("metType0Plus1Pt", &metType0Plus1Pt, "metType0Plus1Pt/F");
+  RazorEvents->Branch("metType0Plus1Phi", &metType0Plus1Phi, "metType0Plus1Phi/F");
   RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
   RazorEvents->Branch("Flag_CSCTightHaloFilter", &Flag_CSCTightHaloFilter, "Flag_CSCTightHaloFilter/O");
   RazorEvents->Branch("Flag_hcalLaserEventFilter", &Flag_hcalLaserEventFilter, "Flag_hcalLaserEventFilter/O");
@@ -544,7 +559,8 @@ void RazorTuplizer::resetBranches(){
         pho_sumChargedHadronPt[i] = -99.0;
         pho_sumNeutralHadronEt[i] = -99.0;
         pho_sumPhotonEt[i] = -99.0;
-        pho_isConversion[i] = false;
+	pho_sumWorstVertexChargedHadronPt[i] = -99.0;
+	pho_isConversion[i] = false;
         pho_passEleVeto[i] = false;    
         pho_RegressionE[i] = -99.0;
         pho_RegressionEUncertainty[i] = -99.0;
@@ -564,6 +580,11 @@ void RazorTuplizer::resetBranches(){
         jetJetArea[i] = -99.0;
         jetPileupE[i] = -99.0;
         jetPileupId[i] = -99.0;
+	jetPileupIdFlag[i] = -1;
+	jetPassIDLoose[i] = false;
+	jetPassIDTight[i] = false;
+	jetPassMuFrac[i] = false;
+	jetPassEleFrac[i] = false;
         jetPartonFlavor[i] = 0;
         jetHadronFlavor[i] = 0;
 
@@ -605,6 +626,25 @@ void RazorTuplizer::resetBranches(){
     UncMETdpx = -99.0;
     UncMETdpy = -99.0;
     UncMETdSumEt = -99.0;
+    metType0Pt = -99.0;
+    metType0Phi = -99.0;
+    metType1Pt = -99.0;
+    metType1Phi = -99.0;
+    metType0Plus1Pt = -99.0;
+    metType0Plus1Phi = -99.0;
+    Flag_HBHENoiseFilter = false;
+    Flag_CSCTightHaloFilter = false;
+    Flag_hcalLaserEventFilter = false;
+    Flag_EcalDeadCellTriggerPrimitiveFilter = false;
+    Flag_goodVertices = false;
+    Flag_trackingFailureFilter = false;
+    Flag_eeBadScFilter = false;
+    Flag_ecalLaserCorrFilter = false;
+    Flag_trkPOGFilters = false;  
+    Flag_trkPOG_manystripclus53X = false;
+    Flag_trkPOG_toomanystripclus53X = false;
+    Flag_trkPOG_logErrorTooManyClusters = false;
+    Flag_METFilters = false;
 
     genMetPt = -999;
     genMetPhi = -999;
@@ -633,23 +673,32 @@ void RazorTuplizer::resetBranches(){
 
 bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   //store basic event info
+  isData = isData_;
   runNum = iEvent.id().run();
   lumiNum = iEvent.luminosityBlock();
   eventNum = iEvent.id().event();
   
   //select the primary vertex, if any
-  if (vertices->empty()) return false; // skip the event if no PV found
-  const reco::Vertex &PV = vertices->front();
-  pvX = PV.x();
-  pvY = PV.y();
-  pvZ= PV.z();
-
   nPV = 0;
-  //Check for good vertices
+  bool foundPV = false;
   for(unsigned int i = 0; i < vertices->size(); i++){
-    if(vertices->at(i).isValid() && !vertices->at(i).isFake())nPV++;
+    if(vertices->at(i).isValid() && !vertices->at(i).isFake()){
+      if (!foundPV) {
+	myPV = &(vertices->at(i));
+	foundPV = true;
+      }
+      nPV++;
+    }
   }
+
   if(nPV == 0)return false;
+  if (foundPV) {
+    pvX = myPV->x();
+    pvY = myPV->y();
+    pvZ = myPV->z();
+  } else {
+    return false;
+  }
 
   //get rho
   fixedGridRhoAll = *rhoAll;
@@ -673,9 +722,7 @@ bool RazorTuplizer::fillPileUp(){
   return true;
 };
 
-bool RazorTuplizer::fillMuons(){
-  //PV required for Tight working point
-  const reco::Vertex &PV = vertices->front();
+bool RazorTuplizer::fillMuons(){   
   for(const pat::Muon &mu : *muons){
     if(mu.pt() < 5) continue;
     muonE[nMuons] = mu.energy();
@@ -684,9 +731,9 @@ bool RazorTuplizer::fillMuons(){
     muonPhi[nMuons] = mu.phi();
     muonCharge[nMuons] = mu.charge();
     muonIsLoose[nMuons] = mu.isLooseMuon();
-    muonIsTight[nMuons] = mu.isTightMuon(PV);
-    muon_d0[nMuons] = -mu.muonBestTrack()->dxy(PV.position());
-    muon_dZ[nMuons] = mu.muonBestTrack()->dz(PV.position());
+    muonIsTight[nMuons] = mu.isTightMuon(*myPV);
+    muon_d0[nMuons] = -mu.muonBestTrack()->dxy(myPV->position());
+    muon_dZ[nMuons] = mu.muonBestTrack()->dz(myPV->position());
     muon_ip3d[nMuons] = mu.dB(pat::Muon::PV3D);
     muon_ip3dSignificance[nMuons] = mu.dB(pat::Muon::PV3D)/mu.edB(pat::Muon::PV3D);
     muonType[nMuons] = mu.isMuon() + mu.isGlobalMuon() + mu.isTrackerMuon() + mu.isStandAloneMuon()
@@ -731,7 +778,6 @@ bool RazorTuplizer::fillMuons(){
 };
 
 bool RazorTuplizer::fillElectrons(){
-  const reco::Vertex &PV = vertices->front();
   for(const pat::Electron &ele : *electrons){
     if(ele.pt() < 5) continue;
     eleE[nElectrons] = ele.energy();
@@ -748,8 +794,8 @@ bool RazorTuplizer::fillElectrons(){
     ele_dEta[nElectrons] = ele.deltaEtaSuperClusterTrackAtVtx();
     ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
     ele_HoverE[nElectrons] = ele.hcalOverEcal();
-    ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(PV.position());
-    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(PV.position());    
+    ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(myPV->position());
+    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(myPV->position());    
     ele_pileupIso[nElectrons] = ele.pfIsolationVariables().sumPUPt;
     ele_chargedIso[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
     ele_photonIso[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
@@ -923,8 +969,9 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
     phoE[nPhotons] = pho.energy();
     phoPt[nPhotons] = pho.pt();
-    phoEta[nPhotons] = pho.eta();
-    phoPhi[nPhotons] = pho.phi();
+    //phoEta[nPhotons] = pho.eta(); //correct this for the vertex
+    //phoPhi[nPhotons] = pho.phi(); //correct this for the vertex
+
     phoSigmaIetaIeta[nPhotons] = pho.see();
     phoFull5x5SigmaIetaIeta[nPhotons] = (isnan(vCov[0]) ? 0. : sqrt(vCov[0]));
 
@@ -954,10 +1001,9 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     float photonIsoSum = 0;
 
     // First, find photon direction with respect to the good PV
-    const reco::Vertex &pv = vertices->front();
-    math::XYZVector photon_directionWrtVtx(pho.superCluster()->x() - pv.x(),
-					   pho.superCluster()->y() - pv.y(),
-					   pho.superCluster()->z() - pv.z());
+    math::XYZVector photon_directionWrtVtx(pho.superCluster()->x() - myPV->x(),
+					   pho.superCluster()->y() - myPV->y(),
+					   pho.superCluster()->z() - myPV->z());
     // Loop over all PF candidates
     for (const pat::PackedCandidate &candidate : *packedPFCands) {
 
@@ -995,8 +1041,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	// for charged hadrons, additionally check consistency
 	// with the PV
 	float dxy = -999, dz = -999;
-	dz = candidate.pseudoTrack().dz(pv.position());
-	dxy =candidate.pseudoTrack().dxy(pv.position());
+	dz = candidate.pseudoTrack().dz(myPV->position());
+	dxy =candidate.pseudoTrack().dxy(myPV->position());
 	if (fabs(dz) > dzMax) continue;
 	if(fabs(dxy) > dxyMax) continue;
 	// The candidate is eligible, increment the isolaiton
@@ -1013,7 +1059,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     
 
     //*****************************************************************
-    //Computer Worst Isolation Looping over all vertices
+    //Compute Worst Isolation Looping over all vertices
     //*****************************************************************
     const double ptMin = 0.0;
     const float dRvetoBarrel = 0.0;
@@ -1044,8 +1090,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	  continue;
       
 	float dxy = -999, dz = -999;
-	dz = candidate.pseudoTrack().dz(pv.position());
-	dxy =candidate.pseudoTrack().dxy(pv.position());
+	dz = candidate.pseudoTrack().dz(myPV->position());
+	dxy =candidate.pseudoTrack().dxy(myPV->position());
 	if( fabs(dxy) > dxyMax) continue;     
 	if ( fabs(dz) > dzMax) continue;
 	
@@ -1062,6 +1108,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     if( allIsolations.size()>0 )
       worstIsolation = * std::max_element( allIsolations.begin(), allIsolations.end() );
     
+    pho_sumWorstVertexChargedHadronPt[nPhotons] = worstIsolation;
 
     //*****************************************************************
     //Photon ID MVA variable
@@ -1072,6 +1119,13 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
     pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
     
+    //compute photon corrected 4-mometum 
+    TVector3 phoPos( pho.superCluster()->x(), pho.superCluster()->y(), pho.superCluster()->z() );
+    TVector3 vtxPos( pvX, pvY, pvZ );
+    TLorentzVector phoP4 = photonP4FromVtx( vtxPos, phoPos, pho_RegressionE[nPhotons] );
+    phoEta[nPhotons] = phoP4.Eta();
+    phoPhi[nPhotons] = phoP4.Phi();
+
     pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
     pho_superClusterPhi[nPhotons] = pho.superCluster()->phi();
     pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
@@ -1096,11 +1150,16 @@ bool RazorTuplizer::fillJets(){
     jetEta[nJets] = j.correctedP4(0).Eta();
     jetPhi[nJets] = j.correctedP4(0).Phi();
     jetCSV[nJets] = j.bDiscriminator("pfCombinedSecondaryVertexBJetTags");
-    jetCISV[nJets] = j.bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+    jetCISV[nJets] = j.bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
     jetMass[nJets] = j.correctedP4(0).M();
     jetJetArea[nJets] = j.jetArea();
     jetPileupE[nJets] = j.pileup();
     jetPileupId[nJets] = j.userFloat("pileupJetId:fullDiscriminant");
+    jetPileupIdFlag[nJets] = 0;
+    jetPassIDLoose[nJets] = true;
+    jetPassIDTight[nJets] = true;
+    jetPassMuFrac[nJets]  = ( j.muonEnergyFraction() < 0.80 );
+    jetPassEleFrac[nJets]  = ( j.electronEnergyFraction() < 0.90 );
     jetPartonFlavor[nJets] = j.partonFlavour();
     jetHadronFlavor[nJets] = j.hadronFlavour();
     nJets++;
@@ -1129,9 +1188,15 @@ bool RazorTuplizer::fillJetsAK8(){
 
 bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   const pat::MET &Met = mets->front();
-  metPt = Met.pt();
-  metPhi = Met.phi();
+  metPt = Met.uncorrectedPt();
+  metPhi = Met.uncorrectedPhi();
   sumMET = Met.sumEt();
+  metType0Pt = 0;
+  metType0Phi = 0;
+  metType1Pt = Met.pt();
+  metType1Phi = Met.phi();
+  metType0Plus1Pt = 0;
+  metType0Plus1Phi = 0;
 
   //MET filters
   const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
@@ -1384,7 +1449,6 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillJets()
     && fillJetsAK8()
     && fillMet(iEvent)
-    && fillRazor()
     && fillMC()
     && fillGenParticles();
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
