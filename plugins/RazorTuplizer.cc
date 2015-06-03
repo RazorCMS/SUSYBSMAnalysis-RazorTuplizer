@@ -155,9 +155,9 @@ void RazorTuplizer::setBranches(){
 void RazorTuplizer::enableEventInfoBranches(){
   RazorEvents->Branch("isData", &isData, "isData/O");
   RazorEvents->Branch("nPV", &nPV, "nPV/I");
-  RazorEvents->Branch("runNum", &runNum, "runNum/I");
-  RazorEvents->Branch("lumiNum", &lumiNum, "lumiNum/I");
-  RazorEvents->Branch("eventNum", &eventNum, "eventNum/I");
+  RazorEvents->Branch("runNum", &runNum, "runNum/i");
+  RazorEvents->Branch("lumiNum", &lumiNum, "lumiNum/i");
+  RazorEvents->Branch("eventNum", &eventNum, "eventNum/i");
   RazorEvents->Branch("pvX", &pvX, "pvX/F");
   RazorEvents->Branch("pvY", &pvY, "pvY/F");
   RazorEvents->Branch("pvZ", &pvZ, "pvZ/F");

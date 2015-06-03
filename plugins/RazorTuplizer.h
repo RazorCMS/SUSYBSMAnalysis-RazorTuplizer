@@ -461,9 +461,9 @@ protected:
   //event info
   bool isData;
   int nPV;
-  int runNum;
-  int lumiNum;
-  int eventNum;
+  uint runNum;
+  uint lumiNum;
+  uint eventNum;
   float pvX;
   float pvY;
   float pvZ;
