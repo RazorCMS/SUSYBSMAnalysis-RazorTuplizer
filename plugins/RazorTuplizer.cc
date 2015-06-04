@@ -217,6 +217,8 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_HoverE", ele_HoverE, "ele_HoverE[nElectrons]/F");
   RazorEvents->Branch("ele_d0", ele_d0, "ele_d0[nElectrons]/F");
   RazorEvents->Branch("ele_dZ", ele_dZ, "ele_dZ[nElectrons]/F");
+  RazorEvents->Branch("ele_ip3d", ele_ip3d, "ele_ip3d[nElectrons]/F");
+  RazorEvents->Branch("ele_ip3dSignificance", ele_ip3dSignificance, "ele_ip3dSignificance[nElectrons]/F");
   RazorEvents->Branch("ele_pileupIso", ele_pileupIso, "ele_pileupIso[nElectrons]/F");
   RazorEvents->Branch("ele_chargedIso", ele_chargedIso, "ele_chargedIso[nElectrons]/F");
   RazorEvents->Branch("ele_photonIso", ele_photonIso, "ele_photonIso[nElectrons]/F");
@@ -795,7 +797,9 @@ bool RazorTuplizer::fillElectrons(){
     ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
     ele_HoverE[nElectrons] = ele.hcalOverEcal();
     ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(myPV->position());
-    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(myPV->position());    
+    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(myPV->position());
+    ele_ip3d[nElectrons] = ele.dB(pat::Electron::PV3D);
+    ele_ip3dSignificance[nElectrons] = ele.dB(pat::Electron::PV3D)/ele.edB(pat::Electron::PV3D);   
     ele_pileupIso[nElectrons] = ele.pfIsolationVariables().sumPUPt;
     ele_chargedIso[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
     ele_photonIso[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
@@ -974,11 +978,11 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     //phoPhi[nPhotons] = pho.phi(); //correct this for the vertex
 
     phoSigmaIetaIeta[nPhotons] = pho.see();
-    phoFull5x5SigmaIetaIeta[nPhotons] = (isnan(vCov[0]) ? 0. : sqrt(vCov[0]));
+    phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();    
 
     //phoR9[nPhotons] = pho.r9();
     //Use the noZS version of this according to Emanuele
-    phoR9[nPhotons] = lazyToolnoZS->e3x3( *(pho.superCluster()->seed()) ) / pho.superCluster()->rawEnergy();
+    phoR9[nPhotons] = pho.full5x5_r9();
 
     pho_HoverE[nPhotons] = pho.hadTowOverEm();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();

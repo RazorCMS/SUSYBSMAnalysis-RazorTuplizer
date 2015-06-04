@@ -292,6 +292,8 @@ protected:
   float ele_HoverE[OBJECTARRAYSIZE];
   float ele_d0[OBJECTARRAYSIZE];
   float ele_dZ[OBJECTARRAYSIZE];
+  float ele_ip3d[OBJECTARRAYSIZE]; 
+  float ele_ip3dSignificance[OBJECTARRAYSIZE];
   float ele_pileupIso[OBJECTARRAYSIZE];
   float ele_chargedIso[OBJECTARRAYSIZE];
   float ele_photonIso[OBJECTARRAYSIZE];
