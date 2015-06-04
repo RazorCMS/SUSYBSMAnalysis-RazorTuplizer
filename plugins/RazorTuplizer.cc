@@ -500,6 +500,8 @@ void RazorTuplizer::resetBranches(){
         ele_HoverE[i] = -99;
         ele_d0[i] = -99;
         ele_dZ[i] = -99;
+	ele_ip3d[i] = -99;
+	ele_ip3dSignificance[i] = -99;
 	ele_pileupIso[i] = -99.0;
         ele_chargedIso[i] = -99.0;
         ele_photonIso[i] = -99.0;
