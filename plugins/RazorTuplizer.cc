@@ -365,7 +365,6 @@ void RazorTuplizer::enableRazorBranches(){
 
 void RazorTuplizer::enableTriggerBranches(){
   nameHLT = new std::vector<std::string>; nameHLT->clear();
-  //RazorEvents->Branch("nameHLT", "std::vector<std::string>",&nameHLT);
   RazorEvents->Branch("HLTDecision", &triggerDecision, ("HLTDecision[" + std::to_string(NTriggersMAX) +  "]/O").c_str());
 }
 
@@ -413,12 +412,6 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(jetsToken_, jets);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
-  iEvent.getByToken(prunedGenParticlesToken_,prunedGenParticles);
-  iEvent.getByToken(packedGenParticlesToken_,packedGenParticles);
-  iEvent.getByToken(genJetsToken_,genJets);
-  iEvent.getByToken(lheInfoToken_, lheInfo);
-  iEvent.getByToken(genInfoToken_,genInfo);
-  iEvent.getByToken(puInfoToken_,puInfo);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
   iEvent.getByToken(rhoAllToken_,rhoAll);
@@ -439,7 +432,17 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(gedPhotonCoresToken_, gedPhotonCores);
   iEvent.getByToken(superClustersToken_,superClusters);
   iEvent.getByToken(lostTracksToken_,lostTracks);
+
+  if (useGen_) {
+    iEvent.getByToken(prunedGenParticlesToken_,prunedGenParticles);
+    iEvent.getByToken(packedGenParticlesToken_,packedGenParticles);
+    iEvent.getByToken(genJetsToken_,genJets);
+    iEvent.getByToken(lheInfoToken_, lheInfo);
+    iEvent.getByToken(genInfoToken_,genInfo);
+    iEvent.getByToken(puInfoToken_,puInfo);
+  }
   
+
 }   
 
 //called by the loadEvent() method
@@ -454,8 +457,6 @@ void RazorTuplizer::resetBranches(){
     nFatJets = 0;
     nGenJets = 0;
     nGenParticle = 0;
-
-    //nameHLT->clear();
 
     for(int i = 0; i < 99; i++){
         //PU
@@ -1167,8 +1168,13 @@ bool RazorTuplizer::fillJets(){
     jetPassIDTight[nJets] = true;
     jetPassMuFrac[nJets]  = ( j.muonEnergyFraction() < 0.80 );
     jetPassEleFrac[nJets]  = ( j.electronEnergyFraction() < 0.90 );
-    jetPartonFlavor[nJets] = j.partonFlavour();
-    jetHadronFlavor[nJets] = j.hadronFlavour();
+    if (useGen_) {
+      jetPartonFlavor[nJets] = j.partonFlavour();
+      jetHadronFlavor[nJets] = j.hadronFlavour();
+    } else {
+      jetPartonFlavor[nJets] = -999;
+      jetHadronFlavor[nJets] = -999;
+    }
     nJets++;
   }
 
@@ -1447,7 +1453,6 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   //filler methods should fill relevant tree variables and return false if the event should be rejected
   bool isGoodEvent = 
     fillEventInfo(iEvent)
-    && fillPileUp()
     && fillMuons() 
     && fillElectrons()
     && fillTaus()
@@ -1455,11 +1460,18 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillPhotons(iEvent,iSetup)
     && fillJets()
     && fillJetsAK8()
-    && fillMet(iEvent)
-    && fillMC()
-    && fillGenParticles();
+    && fillMet(iEvent);
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
-
+  
+  bool isGoodMCEvent = true;
+  if (useGen_) {
+    isGoodMCEvent = fillMC()
+      && fillPileUp()
+      && fillGenParticles();
+  }
+  
+  isGoodEvent = isGoodEvent&&isGoodMCEvent;
+  
   if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && fillTrigger(iEvent));
   
   //fill the tree if the event wasn't rejected
