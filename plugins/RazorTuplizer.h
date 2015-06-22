@@ -259,6 +259,7 @@ protected:
   float muonPhi[OBJECTARRAYSIZE];
   int muonCharge[OBJECTARRAYSIZE];//muon charge
   bool muonIsLoose[OBJECTARRAYSIZE];
+  bool muonIsMedium[OBJECTARRAYSIZE];
   bool muonIsTight[OBJECTARRAYSIZE];
   float muon_d0[OBJECTARRAYSIZE];//transverse impact paramenter
   float muon_dZ[OBJECTARRAYSIZE];//impact parameter

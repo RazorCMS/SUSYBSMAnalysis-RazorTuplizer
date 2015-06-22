@@ -184,6 +184,7 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muonPhi", muonPhi,"muonPhi[nMuons]/F");
   RazorEvents->Branch("muonCharge", muonCharge, "muonCharge[nMuons]/I");
   RazorEvents->Branch("muonIsLoose", muonIsLoose,"muonIsLoose[nMuons]/O");
+  RazorEvents->Branch("muonIsMedium", muonIsMedium,"muonIsMedium[nMuons]/O");
   RazorEvents->Branch("muonIsTight", muonIsTight,"muonIsTight[nMuons]/O");
   RazorEvents->Branch("muon_d0", muon_d0, "muon_d0[nMuons]/F");
   RazorEvents->Branch("muon_dZ", muon_dZ, "muon_dZ[nMuons]/F");
@@ -471,6 +472,7 @@ void RazorTuplizer::resetBranches(){
         muonPhi[i] = 0.0;
         muonCharge[i] = -99;
         muonIsLoose[i] = false;
+        muonIsMedium[i] = false;
         muonIsTight[i] = false;
         muon_d0[i] = -99.0;
         muon_dZ[i] = -99.0;
@@ -736,6 +738,7 @@ bool RazorTuplizer::fillMuons(){
     muonPhi[nMuons] = mu.phi();
     muonCharge[nMuons] = mu.charge();
     muonIsLoose[nMuons] = mu.isLooseMuon();
+    muonIsMedium[nMuons] = mu.isMediumMuon();
     muonIsTight[nMuons] = mu.isTightMuon(*myPV);
     muon_d0[nMuons] = -mu.muonBestTrack()->dxy(myPV->position());
     muon_dZ[nMuons] = mu.muonBestTrack()->dz(myPV->position());
