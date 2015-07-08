@@ -461,6 +461,10 @@ void RazorTuplizer::resetBranches(){
     nGenJets = 0;
     nGenParticle = 0;
 
+    for(int i = 0; i < NTriggersMAX; i++){
+      triggerDecision[i] = false;
+    }
+
     for(int i = 0; i < 99; i++){
         //PU
         BunchXing[i] = -99;
