@@ -50,6 +50,7 @@ using namespace std;
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaEleEstimatorCSA14.h"
+#include "SUSYBSMAnalysis/RazorTuplizer/interface/ElectronMVAEstimatorRun2NonTrig.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
 
@@ -143,7 +144,7 @@ protected:
 
   //MVAs for triggering and non-triggering electron ID
   EGammaMvaEleEstimatorCSA14* myMVATrig;
-  EGammaMvaEleEstimatorCSA14* myMVANonTrig;
+  ElectronMVAEstimatorRun2NonTrig* myMVANonTrig;
   EGammaMvaPhotonEstimator* myPhotonMVA;
   
   //----- Member data ------//

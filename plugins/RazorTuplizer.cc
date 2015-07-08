@@ -73,14 +73,16 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 			myTrigWeights);
 
   std::vector<std::string> myNonTrigWeights;
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB_5_25ns_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_5_25ns_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB_10_25ns_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_10_25ns_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB1_5_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB2_5_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_5_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB1_10_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB2_10_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_10_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
   
-  myMVANonTrig = new EGammaMvaEleEstimatorCSA14();
-  myMVANonTrig->initialize("BDT",
-			EGammaMvaEleEstimatorCSA14::kNonTrig,
+  myMVANonTrig = new ElectronMVAEstimatorRun2NonTrig();
+  myMVANonTrig->initialize("BDTG method",
+			ElectronMVAEstimatorRun2NonTrig::kPHYS14,
 			true,
 			myNonTrigWeights);
 
