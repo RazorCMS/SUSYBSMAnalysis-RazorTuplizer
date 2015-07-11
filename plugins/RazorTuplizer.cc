@@ -318,6 +318,14 @@ void RazorTuplizer::enableJetBranches(){
   RazorEvents->Branch("jetPassEleFrac", jetPassEleFrac, "jetPassEleFrac[nJets]/O");
   RazorEvents->Branch("jetPartonFlavor", jetPartonFlavor, "jetPartonFlavor[nJets]/I");
   RazorEvents->Branch("jetHadronFlavor", jetHadronFlavor, "jetHadronFlavor[nJets]/I");
+  RazorEvents->Branch("jetChargedEMEnergyFraction", jetChargedEMEnergyFraction, "jetChargedEMEnergyFraction[nJets]/F"); 
+  RazorEvents->Branch("jetNeutralEMEnergyFraction", jetNeutralEMEnergyFraction, "jetNeutralEMEnergyFraction[nJets]/F"); 
+  RazorEvents->Branch("jetChargedHadronEnergyFraction", jetChargedHadronEnergyFraction, "jetChargedHadronEnergyFraction[nJets]/F"); 
+  RazorEvents->Branch("jetNeutralHadronEnergyFraction", jetNeutralHadronEnergyFraction, "jetNeutralHadronEnergyFraction[nJets]/F"); 
+  RazorEvents->Branch("jetMuonEnergyFraction", jetMuonEnergyFraction, "jetMuonEnergyFraction[nJets]/F"); 
+  RazorEvents->Branch("jetHOEnergyFraction", jetHOEnergyFraction, "jetHOEnergyFraction[nJets]/F");
+  RazorEvents->Branch("jetHFHadronEnergyFraction", jetHFHadronEnergyFraction, "jetHFHadronEnergyFraction[nJets]/F");
+  RazorEvents->Branch("jetHFEMEnergyFraction",jetHFEMEnergyFraction, "jetHFEMEnergyFraction[nJets]/F");
 }
 
 void RazorTuplizer::enableJetAK8Branches(){
@@ -369,6 +377,7 @@ void RazorTuplizer::enableRazorBranches(){
 void RazorTuplizer::enableTriggerBranches(){
   nameHLT = new std::vector<std::string>; nameHLT->clear();
   RazorEvents->Branch("HLTDecision", &triggerDecision, ("HLTDecision[" + std::to_string(NTriggersMAX) +  "]/O").c_str());
+  RazorEvents->Branch("HLTPrescale", &triggerHLTPrescale, ("HLTPrescale[" + std::to_string(NTriggersMAX) +  "]/I").c_str());
 }
 
 void RazorTuplizer::enableMCBranches(){
@@ -463,6 +472,7 @@ void RazorTuplizer::resetBranches(){
 
     for(int i = 0; i < NTriggersMAX; i++){
       triggerDecision[i] = false;
+      triggerHLTPrescale[i] = 0;
     }
 
     for(int i = 0; i < 99; i++){
@@ -600,7 +610,15 @@ void RazorTuplizer::resetBranches(){
 	jetPassEleFrac[i] = false;
         jetPartonFlavor[i] = 0;
         jetHadronFlavor[i] = 0;
-
+	jetChargedEMEnergyFraction[i] = -99.0;
+	jetNeutralEMEnergyFraction[i] = -99.0;
+	jetChargedHadronEnergyFraction[i] = -99.0;
+	jetNeutralHadronEnergyFraction[i] = -99.0;
+	jetMuonEnergyFraction[i] = -99.0;
+	jetHOEnergyFraction[i] = -99.0;
+	jetHFHadronEnergyFraction[i] = -99.0;
+	jetHFEMEnergyFraction[i] = -99.0;
+	
         //AK8 Jet
         fatJetE[i] = 0.0;
         fatJetPt[i] = 0.0;
@@ -1184,6 +1202,17 @@ bool RazorTuplizer::fillJets(){
       jetPartonFlavor[nJets] = -999;
       jetHadronFlavor[nJets] = -999;
     }
+
+    //extra jet information (may be only needed for debugging)
+    jetChargedEMEnergyFraction[nJets] = j.chargedEmEnergyFraction();
+    jetNeutralEMEnergyFraction[nJets] = j.neutralEmEnergyFraction();
+    jetChargedHadronEnergyFraction[nJets] = j.chargedHadronEnergyFraction();
+    jetNeutralHadronEnergyFraction[nJets] = j.neutralHadronEnergyFraction();
+    jetMuonEnergyFraction[nJets] =  j.muonEnergyFraction();
+    jetHOEnergyFraction[nJets] =  j.hoEnergyFraction();
+    jetHFHadronEnergyFraction[nJets] =  j.HFHadronEnergyFraction();
+    jetHFEMEnergyFraction[nJets] =  j.HFEMEnergyFraction();
+	
     nJets++;
   }
 
@@ -1440,6 +1469,7 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
       if (triggerPathNames[j] == "") continue;
       if (hltPathNameWithoutVersionNumber == triggerPathNames[j]) {
 	triggerDecision[j] = triggerBits->accept(i);
+	triggerDecision[j] = triggerPrescales->getPrescaleForIndex(i);
       }
     }    
   }
@@ -1480,7 +1510,6 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   }
   
   isGoodEvent = isGoodEvent&&isGoodMCEvent;
-  
   if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && fillTrigger(iEvent));
   
   //fill the tree if the event wasn't rejected

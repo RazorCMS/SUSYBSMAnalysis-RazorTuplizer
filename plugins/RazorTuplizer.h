@@ -388,6 +388,14 @@ protected:
   bool  jetPassEleFrac[OBJECTARRAYSIZE];  
   int   jetPartonFlavor[OBJECTARRAYSIZE];
   int   jetHadronFlavor[OBJECTARRAYSIZE];
+  float jetChargedEMEnergyFraction[OBJECTARRAYSIZE];
+  float jetNeutralEMEnergyFraction[OBJECTARRAYSIZE];
+  float jetChargedHadronEnergyFraction[OBJECTARRAYSIZE];
+  float jetNeutralHadronEnergyFraction[OBJECTARRAYSIZE];
+  float jetMuonEnergyFraction[OBJECTARRAYSIZE];
+  float jetHOEnergyFraction[OBJECTARRAYSIZE];
+  float jetHFHadronEnergyFraction[OBJECTARRAYSIZE];
+  float jetHFEMEnergyFraction[OBJECTARRAYSIZE];
 
   //AK8 Jets
   int nFatJets;
@@ -480,9 +488,10 @@ protected:
 
   //trigger info
   vector<string>  *nameHLT;
-  static const int NTriggersMAX = 100;
+  static const int NTriggersMAX = 150;
   string triggerPathNames[NTriggersMAX];
   bool triggerDecision[NTriggersMAX];
+  int  triggerHLTPrescale[NTriggersMAX];
 
 };
 
