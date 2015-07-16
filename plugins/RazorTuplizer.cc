@@ -1469,7 +1469,7 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
       if (triggerPathNames[j] == "") continue;
       if (hltPathNameWithoutVersionNumber == triggerPathNames[j]) {
 	triggerDecision[j] = triggerBits->accept(i);
-	triggerDecision[j] = triggerPrescales->getPrescaleForIndex(i);
+	triggerHLTPrescale[j] = triggerPrescales->getPrescaleForIndex(i);
       }
     }    
   }
