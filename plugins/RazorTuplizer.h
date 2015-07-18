@@ -274,6 +274,7 @@ protected:
   float muon_neutralHadIso[OBJECTARRAYSIZE];
   float muon_ptrel[OBJECTARRAYSIZE];
   float muon_miniiso[OBJECTARRAYSIZE];
+  bool  muon_passSingleMuTagFilter[OBJECTARRAYSIZE];
 
   //Electrons
   int nElectrons;
@@ -309,6 +310,11 @@ protected:
   float ele_CombineP4[OBJECTARRAYSIZE];
   float ele_ptrel[OBJECTARRAYSIZE];
   float ele_miniiso[OBJECTARRAYSIZE];
+  bool ele_passSingleEleTagFilter[OBJECTARRAYSIZE];
+  bool ele_passTPOneTagFilter[OBJECTARRAYSIZE];
+  bool ele_passTPTwoTagFilter[OBJECTARRAYSIZE];
+  bool ele_passTPOneProbeFilter[OBJECTARRAYSIZE];
+  bool ele_passTPTwoProbeFilter[OBJECTARRAYSIZE];
 
   //Taus
   int nTaus;

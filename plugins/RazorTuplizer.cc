@@ -200,6 +200,7 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_neutralHadIso", muon_neutralHadIso, "muon_neutralHadIso[nMuons]/F");
   RazorEvents->Branch("muon_ptrel", muon_ptrel, "muon_ptrel[nMuons]/F");
   RazorEvents->Branch("muon_miniiso", muon_miniiso, "muon_miniiso[nMuons]/F");
+  RazorEvents->Branch("muon_passSingleMuTagFilter", muon_passSingleMuTagFilter, "muon_passSingleMuTagFilter[nMuons]/O");
 }
 
 void RazorTuplizer::enableElectronBranches(){
@@ -235,6 +236,11 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
   RazorEvents->Branch("ele_ptrel", ele_ptrel, "ele_ptrel[nElectrons]/F");
   RazorEvents->Branch("ele_miniiso", ele_miniiso, "ele_miniiso[nElectrons]/F");
+  RazorEvents->Branch("ele_passSingleEleTagFilter", ele_passSingleEleTagFilter, "ele_passSingleEleTagFilter[nElectrons]/O");
+  RazorEvents->Branch("ele_passTPOneTagFilter", ele_passTPOneTagFilter, "ele_passTPOneTagFilter[nElectrons]/O");
+  RazorEvents->Branch("ele_passTPTwoTagFilter", ele_passTPTwoTagFilter, "ele_passTPTwoTagFilter[nElectrons]/O");
+  RazorEvents->Branch("ele_passTPOneProbeFilter", ele_passTPOneProbeFilter, "ele_passTPOneProbeFilter[nElectrons]/O");
+  RazorEvents->Branch("ele_passTPTwoProbeFilter", ele_passTPTwoProbeFilter, "ele_passTPTwoProbeFilter[nElectrons]/O");
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -502,6 +508,7 @@ void RazorTuplizer::resetBranches(){
         muon_neutralHadIso[i] = -99.0;
 	muon_ptrel[i] = -99.0;
 	muon_miniiso[i] = -99.0;
+	muon_passSingleMuTagFilter[i] = false;
 
         //Electron
         eleE[i] = 0.0;
@@ -534,7 +541,12 @@ void RazorTuplizer::resetBranches(){
         ele_CombineP4[i] = -99.0;
 	ele_ptrel[i] = -99.0;
 	ele_miniiso[i] = -99.0;
-
+	ele_passSingleEleTagFilter[i] = false;
+	ele_passTPOneTagFilter[i] = false;
+	ele_passTPTwoTagFilter[i] = false;
+	ele_passTPOneProbeFilter[i] = false;
+	ele_passTPTwoProbeFilter[i] = false;
+	
         //Tau
         tauE[i] = 0.0;
         tauPt[i] = 0.0;
@@ -803,6 +815,28 @@ bool RazorTuplizer::fillMuons(){
     muon_ptrel[nMuons] = getLeptonPtRel( jets, &mu );
     muon_miniiso[nMuons] = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.05, 0.2, 10., false, false);
 
+    //*************************************************
+    //Trigger Object Matching
+    //*************************************************
+    bool passTagMuonFilter = false;
+    for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
+
+      if (deltaR(trigObject.eta(), trigObject.phi(),mu.eta(),mu.phi()) > 0.3) continue;
+
+      if ( trigObject.hasFilterLabel("hltL3fL1sMu25L1f0Tkf27QL3trkIsoFiltered0p09") ||
+	   trigObject.hasFilterLabel("hltL3fL1sMu20Eta2p1L1f0Tkf24QL3trkIsoFiltered0p09") ||
+	   trigObject.hasFilterLabel("hltL3fL1sMu16Eta2p1L1f0Tkf20QL3trkIsoFiltered0p09") ||
+	   trigObject.hasFilterLabel("hltL3fL1sMu16L1f0Tkf20QL3trkIsoFiltered0p09") ||
+	   trigObject.hasFilterLabel("hltL3crIsoL1sMu25L1f0L2f10QL3f27QL3trkIsoFiltered0p09") ||
+	   trigObject.hasFilterLabel("hltL3crIsoL1sMu20Eta2p1L1f0L2f10QL3f24QL3trkIsoFiltered0p09") ||
+	   trigObject.hasFilterLabel("hltL3crIsoL1sMu16Eta2p1L1f0L2f10QL3f20QL3trkIsoFiltered0p09") ||
+	   trigObject.hasFilterLabel("hltL3crIsoL1sMu16L1f0L2f10QL3f20QL3trkIsoFiltered0p09")
+	   ) passTagMuonFilter = true;
+      if (passTagMuonFilter) break; 
+    }
+
+    muon_passSingleMuTagFilter[nMuons] = passTagMuonFilter;
+
     nMuons++;
   }
 
@@ -836,7 +870,9 @@ bool RazorTuplizer::fillElectrons(){
     ele_neutralHadIso[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
     ele_MissHits[nElectrons] = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
 
+    //*************************************************
     //Conversion Veto
+    //*************************************************
     ele_PassConvVeto[nElectrons] = false;
     if( beamSpot.isValid() && conversions.isValid() ) {
       ele_PassConvVeto[nElectrons] = !ConversionTools::hasMatchedConversion(ele,conversions,
@@ -854,7 +890,9 @@ bool RazorTuplizer::fillElectrons(){
     ele_OneOverEminusOneOverP[nElectrons] = 1./ele.ecalEnergy()  -  ele.eSuperClusterOverP()/ele.ecalEnergy();    
     }
 
+    //*************************************************
     //ID MVA
+    //*************************************************
     ele_IDMVATrig[nElectrons] = myMVATrig->mvaValue(ele,false);
     ele_IDMVANonTrig[nElectrons] = myMVANonTrig->mvaValue(ele,false);
 
@@ -863,6 +901,44 @@ bool RazorTuplizer::fillElectrons(){
 
     ele_ptrel[nElectrons] = getLeptonPtRel( jets, &ele );
     ele_miniiso[nElectrons] = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
+
+
+    //*************************************************
+    //Trigger Object Matching
+    //*************************************************
+    bool passSingleEleTagFilter = false;
+    bool passTPOneTagFilter= false;
+    bool passTPTwoTagFilter= false;
+    bool passTPOneProbeFilter= false;
+    bool passTPTwoProbeFilter= false;
+    for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
+      if (deltaR(trigObject.eta(), trigObject.phi(),ele.eta(),ele.phi()) > 0.3) continue;
+
+      if (trigObject.hasFilterLabel("hltEle23WPLooseGsfTrackIsoFilter")  ||
+	  trigObject.hasFilterLabel("hltEle27WPLooseGsfTrackIsoFilter")  ||
+	  trigObject.hasFilterLabel("hltEle27WPTightGsfTrackIsoFilter")  ||
+	  trigObject.hasFilterLabel("hltEle32WPLooseGsfTrackIsoFilter")  ||
+	  trigObject.hasFilterLabel("hltEle32WPTightGsfTrackIsoFilter")
+	  ) {
+	passSingleEleTagFilter = true;
+      }
+      
+      if (trigObject.hasFilterLabel("hltEle25WP60Ele8TrackIsoFilter")) passTPOneTagFilter = true;
+      if (trigObject.hasFilterLabel("hltEle25WP60SC4TrackIsoFilter")) passTPTwoTagFilter = true;
+      if (trigObject.hasFilterLabel("hltEle25WP60Ele8Mass55Filter")) passTPOneProbeFilter = true;
+      if (trigObject.hasFilterLabel("hltEle25WP60SC4Mass55Filter")) passTPTwoProbeFilter = true;
+      
+      if (passSingleEleTagFilter && passTPOneTagFilter && passTPTwoTagFilter &&
+	  passTPOneProbeFilter && passTPTwoProbeFilter
+	  ) break;
+    }
+  
+    ele_passSingleEleTagFilter[nElectrons] = passSingleEleTagFilter;
+    ele_passTPOneTagFilter[nElectrons] = passTPOneTagFilter;
+    ele_passTPTwoTagFilter[nElectrons] = passTPTwoTagFilter;
+    ele_passTPOneProbeFilter[nElectrons] = passTPOneProbeFilter;
+    ele_passTPTwoProbeFilter[nElectrons] = passTPTwoProbeFilter;
+
 
     nElectrons++;
   }
@@ -1454,6 +1530,36 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
   //   	      << std::endl;
   // }
 
+  // //********************************************************************
+  // // Print Trigger Objects
+  // //********************************************************************  
+  // for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
+  //   cout << "triggerObj: " << trigObject.pt() << " " << trigObject.eta() << " " << trigObject.phi() << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3fL1sMu25L1f0Tkf27QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3fL1sMu20Eta2p1L1f0Tkf24QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3fL1sMu16Eta2p1L1f0Tkf20QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3fL1sMu16L1f0Tkf20QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3crIsoL1sMu25L1f0L2f10QL3f27QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3crIsoL1sMu20Eta2p1L1f0L2f10QL3f24QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3crIsoL1sMu16Eta2p1L1f0L2f10QL3f20QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltL3crIsoL1sMu16L1f0L2f10QL3f20QL3trkIsoFiltered0p09") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltEle23WPLooseGsfTrackIsoFilter") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltEle27WPLooseGsfTrackIsoFilter") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltEle27WPTightGsfTrackIsoFilter") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltEle32WPLooseGsfTrackIsoFilter") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltEle32WPTightGsfTrackIsoFilter") << "\n";
+  //   cout << trigObject.hasFilterLabel("hltEle25WP60Ele8TrackIsoFilter") << "\n"; //tight leg of TP trigger
+  //   cout << trigObject.hasFilterLabel("hltEle25WP60Ele8Mass55Filter") << "\n"; //loose leg of TP trigger
+  //   cout << trigObject.hasFilterLabel("hltEle25WP60SC4TrackIsoFilter") << "\n"; //tight leg of TP trigger
+  //   cout << trigObject.hasFilterLabel("hltEle25WP60SC4Mass55Filter") << "\n"; //loose leg of TP trigger
+
+  //   for(int j=0; j<int(trigObject.filterLabels().size());j++) {
+  //     //trigObject.unpackPathNames(names);
+  //     //cout << "filter: " << (trigObject.pathNames())[j] << " " << (trigObject.filterLabels())[j] << "\n";
+  //     cout << "filter: " << (trigObject.filterLabels())[j] << "\n";
+  //   }    
+  // }
+
   //********************************************************************
   // Save trigger decisions in array of booleans
   //********************************************************************
@@ -1473,7 +1579,8 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
       }
     }    
   }
-    
+
+  
   return true;
 }
 
