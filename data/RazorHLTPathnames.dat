@@ -12,8 +12,8 @@
 11     HLT_IsoMu24_IterTrk02
 12     HLT_IsoTkMu24_eta2p1_IterTrk02
 13     HLT_Mu17_Mu8_SameSign_DZ
-14     HLT_Mu17_Mu8
-15     HLT_Mu17_TkMu8
+14     HLT_Mu17_Mu8_DZ
+15     HLT_Mu17_TkMu8_DZ
 16     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL
 17     HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ
 18     HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL
@@ -29,10 +29,10 @@
 28     HLT_Ele32_eta2p1_WP85_Gsf
 29     HLT_Ele105_CaloIdVT_GsfTrkIdT
 30     HLT_Ele115_CaloIdVT_GsfTrkIdT
-31     HLT_Ele23_Ele12_CaloId_TrackId_Iso
-32     HLT_Ele17_Ele12_Ele10_CaloId_TrackId
+31     HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+32     HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
 33     HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW
-34     HLT_Ele20WP60_Ele8_Mass55
+34     HLT_Ele25WP60_Ele8_Mass55
 35     HLT_Ele25WP60_SC4_Mass55
 36     HLT_LooseIsoPFTau50_Trk30_eta2p1_MET120
 37     HLT_DoubleMediumIsoPFTau40_Trk1_eta2p1_Reg
