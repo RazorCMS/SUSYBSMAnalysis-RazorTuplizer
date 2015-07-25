@@ -154,8 +154,16 @@ protected:
   bool    useGen_;
   bool enableTriggerInfo_;
   
-  // Input file containing the mapping of the HLT Triggers
+  // Mapping of the HLT Triggers and Filters
   string triggerPathNamesFile_;
+  string eleHLTFilterNamesFile_;
+  string muonHLTFilterNamesFile_;
+  static const int NTriggersMAX = 150;
+  string triggerPathNames[NTriggersMAX];
+  static const int MAX_ElectronHLTFilters = 100;
+  string eleHLTFilterNames[MAX_ElectronHLTFilters];
+  static const int MAX_MuonHLTFilters = 100;
+  string muonHLTFilterNames[MAX_MuonHLTFilters];
 
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
@@ -275,6 +283,7 @@ protected:
   float muon_ptrel[OBJECTARRAYSIZE];
   float muon_miniiso[OBJECTARRAYSIZE];
   bool  muon_passSingleMuTagFilter[OBJECTARRAYSIZE];
+  bool  muon_passHLTFilter[OBJECTARRAYSIZE][MAX_MuonHLTFilters];
 
   //Electrons
   int nElectrons;
@@ -314,7 +323,8 @@ protected:
   bool ele_passTPOneTagFilter[OBJECTARRAYSIZE];
   bool ele_passTPTwoTagFilter[OBJECTARRAYSIZE];
   bool ele_passTPOneProbeFilter[OBJECTARRAYSIZE];
-  bool ele_passTPTwoProbeFilter[OBJECTARRAYSIZE];
+  bool ele_passTPTwoProbeFilter[OBJECTARRAYSIZE];  
+  bool ele_passHLTFilter[OBJECTARRAYSIZE][MAX_ElectronHLTFilters];
 
   //Taus
   int nTaus;
@@ -494,8 +504,6 @@ protected:
 
   //trigger info
   vector<string>  *nameHLT;
-  static const int NTriggersMAX = 150;
-  string triggerPathNames[NTriggersMAX];
   bool triggerDecision[NTriggersMAX];
   int  triggerHLTPrescale[NTriggersMAX];
 

@@ -48,6 +48,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     useGen = cms.bool(False),
     enableTriggerInfo = cms.bool(True),                                 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
+    eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
+    muonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorMuonHLTFilterNames.dat"),
 
     vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
     

@@ -14,6 +14,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   useGen_(iConfig.getParameter<bool> ("useGen")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
+  eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
+  muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
@@ -99,8 +101,9 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 			  EGammaMvaPhotonEstimator::kPhotonMVATypeDefault);
 
 
-
+  //*****************************************************************************************
   //Read in HLT Trigger Path List from config file
+  //*****************************************************************************************
   for (int i = 0; i<NTriggersMAX; ++i) triggerPathNames[i] = "";
   ifstream myfile (edm::FileInPath(triggerPathNamesFile_.c_str()).fullPath().c_str()) ;
   if (myfile.is_open()) {
@@ -109,8 +112,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
     string hltpathname;
 
     while(myfile>>index>>hltpathname) {
-      // loop only eneterd if both c_tmp AND gamma_tmp
-      // can be retrieved from the file.
+      
       if (index < NTriggersMAX) {
 	triggerPathNames[index] = hltpathname;
       }    
@@ -129,6 +131,89 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
     cout << "****************************************************************************\n";    
     cout << "\n";
   }
+
+  //*****************************************************************************************
+  //Read in Electron HLT Filters List from config file
+  //*****************************************************************************************
+  for (int i = 0; i<NTriggersMAX; ++i) triggerPathNames[i] = "";
+  ifstream myEleHLTFilterFile (edm::FileInPath(eleHLTFilterNamesFile_.c_str()).fullPath().c_str()) ;
+  if (myEleHLTFilterFile.is_open()) {
+    char tmp[1024];
+    string line;
+    int index;
+    string hltfiltername;
+
+    while(myEleHLTFilterFile>>line) {
+      
+      if ( line.empty() || line.substr(0,1) == "#") {
+	myEleHLTFilterFile.getline(tmp,1024);
+	continue;
+      }
+
+      index = atoi(line.c_str());
+      myEleHLTFilterFile >> hltfiltername;
+      
+      if (index < MAX_ElectronHLTFilters) {
+	eleHLTFilterNames[index] = hltfiltername;
+      }    
+    }    
+    myEleHLTFilterFile.close();
+  } else {
+    cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(eleHLTFilterNamesFile_.c_str()).fullPath().c_str() << "\n";
+  }
+  
+  if(enableTriggerInfo_) {
+    cout << "\n";
+    cout << "****************** Electron HLT Filters Defined For Razor Ntuple ******************\n";    
+    for (int i = 0; i<MAX_ElectronHLTFilters; ++i) {
+      if (eleHLTFilterNames[i] != "") cout << "Ele HLT Filters " << i << " " << eleHLTFilterNames[i] << "\n";
+    }
+    cout << "****************************************************************************\n";    
+    cout << "\n";
+  }
+
+
+  //*****************************************************************************************
+  //Read in Muon HLT Filters List from config file
+  //*****************************************************************************************
+  for (int i = 0; i<NTriggersMAX; ++i) triggerPathNames[i] = "";
+  ifstream myMuonHLTFilterFile (edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str()) ;
+  if (myMuonHLTFilterFile.is_open()) {
+    char tmp[1024];
+    string line;
+    int index;
+    string hltfiltername;
+
+    while(myMuonHLTFilterFile>>line) {
+      
+      if ( line.empty() || line.substr(0,1) == "#") {
+	myMuonHLTFilterFile.getline(tmp,1024);
+	continue;
+      }
+
+      index = atoi(line.c_str());
+      myMuonHLTFilterFile >> hltfiltername;
+      
+      if (index < MAX_MuonHLTFilters) {
+	muonHLTFilterNames[index] = hltfiltername;
+      }    
+    }    
+    myMuonHLTFilterFile.close();
+  } else {
+    cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str() << "\n";
+  }
+  
+  if(enableTriggerInfo_) {
+    cout << "\n";
+    cout << "****************** Muon HLT Filters Defined For Razor Ntuple ******************\n";    
+    for (int i = 0; i<MAX_MuonHLTFilters; ++i) {
+      if (muonHLTFilterNames[i] != "") cout << "Muon HLT Filters " << i << " " << muonHLTFilterNames[i] << "\n";
+    }
+    cout << "****************************************************************************\n";    
+    cout << "\n";
+  }
+
+
 
 }
 
@@ -201,6 +286,7 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_ptrel", muon_ptrel, "muon_ptrel[nMuons]/F");
   RazorEvents->Branch("muon_miniiso", muon_miniiso, "muon_miniiso[nMuons]/F");
   RazorEvents->Branch("muon_passSingleMuTagFilter", muon_passSingleMuTagFilter, "muon_passSingleMuTagFilter[nMuons]/O");
+  RazorEvents->Branch("muon_passHLTFilter", &muon_passHLTFilter, Form("muon_passHLTFilter[nMuons][%d]/O",MAX_MuonHLTFilters));
 }
 
 void RazorTuplizer::enableElectronBranches(){
@@ -241,6 +327,7 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_passTPTwoTagFilter", ele_passTPTwoTagFilter, "ele_passTPTwoTagFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPOneProbeFilter", ele_passTPOneProbeFilter, "ele_passTPOneProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPTwoProbeFilter", ele_passTPTwoProbeFilter, "ele_passTPTwoProbeFilter[nElectrons]/O");
+  RazorEvents->Branch("ele_passHLTFilter", &ele_passHLTFilter, Form("ele_passHLTFilter[nElectrons][%d]/O",MAX_ElectronHLTFilters));
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -509,6 +596,7 @@ void RazorTuplizer::resetBranches(){
 	muon_ptrel[i] = -99.0;
 	muon_miniiso[i] = -99.0;
 	muon_passSingleMuTagFilter[i] = false;
+	for (int q=0;q<MAX_MuonHLTFilters;q++) muon_passHLTFilter[i][q] = false;
 
         //Electron
         eleE[i] = 0.0;
@@ -546,7 +634,8 @@ void RazorTuplizer::resetBranches(){
 	ele_passTPTwoTagFilter[i] = false;
 	ele_passTPOneProbeFilter[i] = false;
 	ele_passTPTwoProbeFilter[i] = false;
-	
+	for (int q=0;q<MAX_ElectronHLTFilters;q++) ele_passHLTFilter[i][q] = false;
+
         //Tau
         tauE[i] = 0.0;
         tauPt[i] = 0.0;
@@ -823,6 +912,7 @@ bool RazorTuplizer::fillMuons(){
 
       if (deltaR(trigObject.eta(), trigObject.phi(),mu.eta(),mu.phi()) > 0.3) continue;
 
+      //check single muon filters
       if ( trigObject.hasFilterLabel("hltL3fL1sMu25L1f0Tkf27QL3trkIsoFiltered0p09") ||
 	   trigObject.hasFilterLabel("hltL3fL1sMu20Eta2p1L1f0Tkf24QL3trkIsoFiltered0p09") ||
 	   trigObject.hasFilterLabel("hltL3fL1sMu16Eta2p1L1f0Tkf20QL3trkIsoFiltered0p09") ||
@@ -832,7 +922,12 @@ bool RazorTuplizer::fillMuons(){
 	   trigObject.hasFilterLabel("hltL3crIsoL1sMu16Eta2p1L1f0L2f10QL3f20QL3trkIsoFiltered0p09") ||
 	   trigObject.hasFilterLabel("hltL3crIsoL1sMu16L1f0L2f10QL3f20QL3trkIsoFiltered0p09")
 	   ) passTagMuonFilter = true;
-      if (passTagMuonFilter) break; 
+
+      //check all filters
+      for ( int q=0; q<MAX_MuonHLTFilters;q++) {
+	if (trigObject.hasFilterLabel(muonHLTFilterNames[q].c_str())) muon_passHLTFilter[nMuons][q] = true;
+      }
+
     }
 
     muon_passSingleMuTagFilter[nMuons] = passTagMuonFilter;
@@ -914,6 +1009,7 @@ bool RazorTuplizer::fillElectrons(){
     for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
       if (deltaR(trigObject.eta(), trigObject.phi(),ele.eta(),ele.phi()) > 0.3) continue;
 
+      //check Single ele filters
       if (trigObject.hasFilterLabel("hltEle23WPLooseGsfTrackIsoFilter")  ||
 	  trigObject.hasFilterLabel("hltEle27WPLooseGsfTrackIsoFilter")  ||
 	  trigObject.hasFilterLabel("hltEle27WPTightGsfTrackIsoFilter")  ||
@@ -923,14 +1019,17 @@ bool RazorTuplizer::fillElectrons(){
 	passSingleEleTagFilter = true;
       }
       
+      //check Tag and Probe Filters
       if (trigObject.hasFilterLabel("hltEle25WP60Ele8TrackIsoFilter")) passTPOneTagFilter = true;
       if (trigObject.hasFilterLabel("hltEle25WP60SC4TrackIsoFilter")) passTPTwoTagFilter = true;
       if (trigObject.hasFilterLabel("hltEle25WP60Ele8Mass55Filter")) passTPOneProbeFilter = true;
       if (trigObject.hasFilterLabel("hltEle25WP60SC4Mass55Filter")) passTPTwoProbeFilter = true;
-      
-      if (passSingleEleTagFilter && passTPOneTagFilter && passTPTwoTagFilter &&
-	  passTPOneProbeFilter && passTPTwoProbeFilter
-	  ) break;
+
+      //check all filters
+      for ( int q=0; q<MAX_ElectronHLTFilters;q++) {
+	if (trigObject.hasFilterLabel(eleHLTFilterNames[q].c_str())) ele_passHLTFilter[nElectrons][q] = true;
+      }
+
     }
   
     ele_passSingleEleTagFilter[nElectrons] = passSingleEleTagFilter;
