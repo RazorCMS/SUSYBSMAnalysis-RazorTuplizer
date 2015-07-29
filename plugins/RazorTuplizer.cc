@@ -135,7 +135,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   //*****************************************************************************************
   //Read in Electron HLT Filters List from config file
   //*****************************************************************************************
-  for (int i = 0; i<NTriggersMAX; ++i) triggerPathNames[i] = "";
+  for (int i = 0; i<MAX_ElectronHLTFilters; ++i) eleHLTFilterNames[i] = "";
   ifstream myEleHLTFilterFile (edm::FileInPath(eleHLTFilterNamesFile_.c_str()).fullPath().c_str()) ;
   if (myEleHLTFilterFile.is_open()) {
     char tmp[1024];
@@ -176,7 +176,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   //*****************************************************************************************
   //Read in Muon HLT Filters List from config file
   //*****************************************************************************************
-  for (int i = 0; i<NTriggersMAX; ++i) triggerPathNames[i] = "";
+  for (int i = 0; i<MAX_MuonHLTFilters; ++i) muonHLTFilterNames[i] = "";
   ifstream myMuonHLTFilterFile (edm::FileInPath(muonHLTFilterNamesFile_.c_str()).fullPath().c_str()) ;
   if (myMuonHLTFilterFile.is_open()) {
     char tmp[1024];
@@ -1611,12 +1611,12 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
   //fill trigger information
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-  //std::cout << "\n === TRIGGER PATHS === " << std::endl;
+  // std::cout << "\n === TRIGGER PATHS === " << std::endl;
 
-  // //********************************************************************
-  // //Option to save all HLT path names in the ntuple per event
-  // //Expensive option in terms of ntuple size
-  // //********************************************************************
+  //********************************************************************
+  //Option to save all HLT path names in the ntuple per event
+  //Expensive option in terms of ntuple size
+  //********************************************************************
   // for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
   //   string hltPathNameReq = "HLT_";   
   //   if (triggerBits->accept(i)) 
