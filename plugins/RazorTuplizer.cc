@@ -75,12 +75,12 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 			myTrigWeights);
 
   std::vector<std::string> myNonTrigWeights;
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB1_5_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB2_5_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_5_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB1_10_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB2_10_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
-  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_10_oldscenario2phys14_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB1_5_oldNonTrigSpring15_ConvVarCwoBoolean_TMVA412_FullStatLowPt_PairNegWeightsGlobal_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB2_5_oldNonTrigSpring15_ConvVarCwoBoolean_TMVA412_FullStatLowPt_PairNegWeightsGlobal_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_5_oldNonTrigSpring15_ConvVarCwoBoolean_TMVA412_FullStatLowPt_PairNegWeightsGlobal_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB1_10_oldNonTrigSpring15_ConvVarCwoBoolean_TMVA412_FullStatLowPt_PairNegWeightsGlobal_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EB2_10_oldNonTrigSpring15_ConvVarCwoBoolean_TMVA412_FullStatLowPt_PairNegWeightsGlobal_BDT.weights.xml").fullPath().c_str());
+  myNonTrigWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/EIDmva_EE_10_oldNonTrigSpring15_ConvVarCwoBoolean_TMVA412_FullStatLowPt_PairNegWeightsGlobal_BDT.weights.xml").fullPath().c_str());
   
   myMVANonTrig = new ElectronMVAEstimatorRun2NonTrig();
   myMVANonTrig->initialize("BDTG method",
@@ -988,13 +988,13 @@ bool RazorTuplizer::fillElectrons(){
     //*************************************************
     //ID MVA
     //*************************************************
-    ele_IDMVATrig[nElectrons] = myMVATrig->mvaValue(ele,false);
-    ele_IDMVANonTrig[nElectrons] = myMVANonTrig->mvaValue(ele,false);
+    ele_IDMVATrig[nElectrons]    = myMVATrig->mvaValue(ele, false);
+    ele_IDMVANonTrig[nElectrons] = myMVANonTrig->mvaValue(ele,conversions, beamSpot->position(),false);
 
     ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
-    ele_CombineP4[nElectrons] = ele.ecalTrackRegressionEnergy();
+    ele_CombineP4[nElectrons]   = ele.ecalTrackRegressionEnergy();
 
-    ele_ptrel[nElectrons] = getLeptonPtRel( jets, &ele );
+    ele_ptrel[nElectrons]   = getLeptonPtRel( jets, &ele );
     ele_miniiso[nElectrons] = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
 
 

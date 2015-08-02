@@ -37,6 +37,7 @@ using namespace std;
 #include "TrackingTools/IPTools/interface/IPTools.h"
 #include "EgammaAnalysis/ElectronTools/interface/ElectronEffectiveArea.h"
 #include "DataFormats/Common/interface/RefToPtr.h"
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
 #include "DataFormats/PatCandidates/interface/Electron.h"
 
@@ -80,10 +81,14 @@ class ElectronMVAEstimatorRun2NonTrig{
                       const reco::Vertex& vertex, 
                       const TransientTrackBuilder& transientTrackBuilder,
                       noZS::EcalClusterLazyTools myEcalCluster,
+		      edm::Handle<vector<reco::Conversion> > conversions,
+		      const math::XYZPoint beamspotPosition,
                       bool printDebug = kFALSE);
 
 
     Double_t mvaValue(const pat::Electron& ele,
+		      edm::Handle<vector<reco::Conversion> > conversions,
+		      const math::XYZPoint beamspotPosition,
                       bool printDebug);
 
 
@@ -94,7 +99,6 @@ class ElectronMVAEstimatorRun2NonTrig{
     Bool_t                     fisInitialized;
     MVAType                    fMVAType;
 
-    Float_t                    fMVAVar_kfhits;    
     Float_t                    fMVAVar_see;
     Float_t                    fMVAVar_spp;
     Float_t                    fMVAVar_OneMinusE1x5E5x5;
@@ -102,22 +106,30 @@ class ElectronMVAEstimatorRun2NonTrig{
     Float_t                    fMVAVar_etawidth;
     Float_t                    fMVAVar_phiwidth;
     Float_t                    fMVAVar_HoE;
-
     Float_t                    fMVAVar_PreShowerOverRaw;
+    Float_t                    fMVAVar_kfhits;    
     Float_t                    fMVAVar_kfchi2;
     Float_t                    fMVAVar_gsfchi2;
     Float_t                    fMVAVar_fbrem;
+    Float_t                    fMVAVar_gsfhits;
+    Float_t                    fMVAVar_expectedMissingInnerHits;
+    Float_t                    fMVAVar_convVtxFitProbability;
     Float_t                    fMVAVar_EoP;
     Float_t                    fMVAVar_eleEoPout;
     Float_t                    fMVAVar_IoEmIoP;
     Float_t                    fMVAVar_deta;
     Float_t                    fMVAVar_dphi;
     Float_t                    fMVAVar_detacalo;
-
     Float_t                    fMVAVar_pt;    
     Float_t                    fMVAVar_isBarrel; 
     Float_t                    fMVAVar_isEndcap; 
     Float_t                    fMVAVar_SCeta; 
+    Float_t                    fMVAVar_eClass; 
+    Float_t                    fMVAVar_pfRelIso; 
+    Float_t                    fMVAVar_expectedInnerHits; 
+    Float_t                    fMVAVar_vtxconv; 
+    Float_t                    fMVAVar_mcEventWeight; 
+    Float_t                    fMVAVar_mcCBmatchingCategory; 
  
 };
 

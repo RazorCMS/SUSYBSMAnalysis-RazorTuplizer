@@ -67,7 +67,6 @@ void ElectronMVAEstimatorRun2NonTrig::initialize( std::string methodName,
     TMVA::Reader *tmpTMVAReader = new TMVA::Reader( "!Color:!Silent:Error" );  
     tmpTMVAReader->SetVerbose(kTRUE);
 
-    tmpTMVAReader->AddVariable("ele_kfhits",           &fMVAVar_kfhits);
   
     // Pure ECAL -> shower shapes
     tmpTMVAReader->AddVariable("ele_oldsigmaietaieta", &fMVAVar_see);
@@ -82,11 +81,17 @@ void ElectronMVAEstimatorRun2NonTrig::initialize( std::string methodName,
       tmpTMVAReader->AddVariable("ele_psEoverEraw",    &fMVAVar_PreShowerOverRaw);
     
     //Pure tracking variables
+    tmpTMVAReader->AddVariable("ele_kfhits",           &fMVAVar_kfhits);
     tmpTMVAReader->AddVariable("ele_kfchi2",           &fMVAVar_kfchi2);
-    tmpTMVAReader->AddVariable("ele_chi2_hits",        &fMVAVar_gsfchi2);
+    tmpTMVAReader->AddVariable("ele_gsfchi2",          &fMVAVar_gsfchi2);
     
     // Energy matching
     tmpTMVAReader->AddVariable("ele_fbrem",           &fMVAVar_fbrem);
+
+    tmpTMVAReader->AddVariable("ele_gsfhits",         &fMVAVar_gsfhits);
+    tmpTMVAReader->AddVariable("ele_expected_inner_hits",             &fMVAVar_expectedMissingInnerHits);
+    tmpTMVAReader->AddVariable("ele_conversionVertexFitProbability",  &fMVAVar_convVtxFitProbability);
+
     tmpTMVAReader->AddVariable("ele_ep",              &fMVAVar_EoP);
     tmpTMVAReader->AddVariable("ele_eelepout",        &fMVAVar_eleEoPout);
     tmpTMVAReader->AddVariable("ele_IoEmIop",         &fMVAVar_IoEmIoP);
@@ -101,6 +106,13 @@ void ElectronMVAEstimatorRun2NonTrig::initialize( std::string methodName,
     tmpTMVAReader->AddSpectator("ele_isbarrel",       &fMVAVar_isBarrel);
     tmpTMVAReader->AddSpectator("ele_isendcap",       &fMVAVar_isEndcap);
     tmpTMVAReader->AddSpectator("scl_eta",            &fMVAVar_SCeta);
+
+    tmpTMVAReader->AddSpectator("ele_eClass",                 &fMVAVar_eClass);
+    tmpTMVAReader->AddSpectator("ele_pfRelIso",               &fMVAVar_pfRelIso);
+    tmpTMVAReader->AddSpectator("ele_expected_inner_hits",    &fMVAVar_expectedInnerHits);
+    tmpTMVAReader->AddSpectator("ele_vtxconv",                &fMVAVar_vtxconv);
+    tmpTMVAReader->AddSpectator("mc_event_weight",            &fMVAVar_mcEventWeight);
+    tmpTMVAReader->AddSpectator("mc_ele_CBmatching_category", &fMVAVar_mcCBmatchingCategory);
 
     tmpTMVAReader->BookMVA(fMethodname , weightsfiles[i]);
     std::cout << "MVABin " << i << " : MethodName = " << fMethodname 
@@ -138,10 +150,12 @@ UInt_t ElectronMVAEstimatorRun2NonTrig::GetMVABin( double eta, double pt) const 
 //--------------------------------------------------------------------------------------------------
 //MVA Value
 Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele, 
-					const reco::Vertex& vertex, 
-					const TransientTrackBuilder& transientTrackBuilder,					
-                                              noZS::EcalClusterLazyTools myEcalCluster,
-					bool printDebug) {
+						   const reco::Vertex& vertex, 
+						   const TransientTrackBuilder& transientTrackBuilder,					
+						   noZS::EcalClusterLazyTools myEcalCluster,
+						   edm::Handle<vector<reco::Conversion> > conversions,
+						   const math::XYZPoint beamspotPosition,
+						   bool printDebug) {
   
   if (!fisInitialized) { 
     std::cout << "Error: ElectronMVAEstimatorRun2NonTrig not properly initialized.\n"; 
@@ -153,45 +167,64 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
   validKF = (myTrackRef.isAvailable());
   validKF = (myTrackRef.isNonnull());  
 
+  // Pure ECAL -> shower shapes
+  std::vector<float> vCov = myEcalCluster.localCovariances(*(ele.superCluster()->seed())) ;
+  fMVAVar_see = ele.full5x5_sigmaIetaIeta();
+  fMVAVar_spp = ele.full5x5_sigmaIphiIphi();
+  fMVAVar_OneMinusE1x5E5x5 = (ele.full5x5_e5x5()) !=0. ? 1.0 - ele.full5x5_e1x5()/ele.full5x5_e5x5() : -1.0 ;
+  fMVAVar_R9              =  ele.full5x5_r9();
+  fMVAVar_etawidth        =  ele.superCluster()->etaWidth();
+  fMVAVar_phiwidth        =  ele.superCluster()->phiWidth();
+  fMVAVar_HoE             =  ele.hadronicOverEm();
+  //Endcap only variables
+  fMVAVar_PreShowerOverRaw=  ele.superCluster()->preshowerEnergy() / ele.superCluster()->rawEnergy();
+
   // Pure tracking variables
-  fMVAVar_fbrem           =  ele.fbrem();
-  fMVAVar_kfchi2          =  (validKF) ? myTrackRef->normalizedChi2() : 0 ;
   fMVAVar_kfhits          =  (validKF) ? myTrackRef->hitPattern().trackerLayersWithMeasurement() : -1. ; 
+  fMVAVar_kfchi2          =  (validKF) ? myTrackRef->normalizedChi2() : 0 ;
   fMVAVar_gsfchi2         =  ele.gsfTrack()->normalizedChi2();  
 
-  
+  // Energy matching
+  fMVAVar_fbrem           =  ele.fbrem();
+  fMVAVar_gsfhits         =  ele.gsfTrack()->found();
+  fMVAVar_expectedMissingInnerHits = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+
+  reco::ConversionRef conv_ref = ConversionTools::matchedConversion(ele,conversions, beamspotPosition);
+  double vertexFitProbability = -1.; 
+  if(!conv_ref.isNull()) {
+    const reco::Vertex &vtx = conv_ref.get()->conversionVertex(); if (vtx.isValid()) {
+      vertexFitProbability = TMath::Prob( vtx.chi2(), vtx.ndof());
+    } 
+  }
+  fMVAVar_convVtxFitProbability = vertexFitProbability;
+
+  fMVAVar_EoP             =  ele.eSuperClusterOverP();
+  fMVAVar_eleEoPout       =  ele.eEleClusterOverPout();
+  fMVAVar_IoEmIoP         =  (1.0/ele.ecalEnergy()) - (1.0 / ele.p());  // in the future to be changed with ele.gsfTrack()->p()
+
   // Geometrical matchings
   fMVAVar_deta            =  ele.deltaEtaSuperClusterTrackAtVtx();
   fMVAVar_dphi            =  ele.deltaPhiSuperClusterTrackAtVtx();
   fMVAVar_detacalo        =  ele.deltaEtaSeedClusterTrackAtCalo();
 
-
-  // Pure ECAL -> shower shapes
-  std::vector<float> vCov = myEcalCluster.localCovariances(*(ele.superCluster()->seed())) ;
-  if (!isnan(vCov[0])) fMVAVar_see = sqrt (vCov[0]); //EleSigmaIEtaIEta
-  else fMVAVar_see = 0.;
-  if (!isnan(vCov[2])) fMVAVar_spp = sqrt (vCov[2]);   //EleSigmaIPhiIPhi
-  else fMVAVar_spp = 0.;    
-
-  fMVAVar_etawidth        =  ele.superCluster()->etaWidth();
-  fMVAVar_phiwidth        =  ele.superCluster()->phiWidth();
-  fMVAVar_OneMinusE1x5E5x5        =  (ele.e5x5()) !=0. ? 1.-(myEcalCluster.e1x5(*(ele.superCluster()->seed()))/myEcalCluster.e5x5(*(ele.superCluster()->seed()))) : -1. ;
-  fMVAVar_R9              =  myEcalCluster.e3x3(*(ele.superCluster()->seed())) / ele.superCluster()->rawEnergy();
-
-  // Energy matching
-  fMVAVar_HoE             =  ele.hadronicOverEm();
-  fMVAVar_EoP             =  ele.eSuperClusterOverP();
-  fMVAVar_IoEmIoP         =  (1.0/ele.ecalEnergy()) - (1.0 / ele.p());  // in the future to be changed with ele.gsfTrack()->p()
-  fMVAVar_eleEoPout       =  ele.eEleClusterOverPout();
-  fMVAVar_PreShowerOverRaw=  ele.superCluster()->preshowerEnergy() / ele.superCluster()->rawEnergy();
-
-
   // Spectators
-  fMVAVar_SCeta             =  ele.superCluster()->eta();
   fMVAVar_pt              =  ele.pt();                          
   fMVAVar_isBarrel        =  (ele.superCluster()->eta()<1.479);
-  fMVAVar_isEndcap        =  (ele.superCluster()->eta()>1.479);
- 
+  fMVAVar_isEndcap        =  (ele.superCluster()->eta()>=1.479);
+  fMVAVar_SCeta           =  ele.superCluster()->eta();
+
+  // The spectator variables below were examined for training, but
+  // are not necessary for evaluating the discriminator, so they are
+  // given dummy values (the specator variables above are also unimportant).
+  // They are introduced only to match the definition of the discriminator 
+  // in the weights file.
+  fMVAVar_eClass               = 999;
+  fMVAVar_pfRelIso             = 999;
+  fMVAVar_expectedInnerHits    = 999;
+  fMVAVar_vtxconv              = 999;
+  fMVAVar_mcEventWeight        = 999;
+  fMVAVar_mcCBmatchingCategory = 999;
+
   // evaluate
   bindVariables();
   Double_t mva = -9999;  
@@ -199,7 +232,8 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
 
   if(printDebug) {
     cout << " *** Inside the class fMethodname " << fMethodname << " fMVAType " << fMVAType << endl;
-    cout << " fbrem " <<  fMVAVar_fbrem  
+    cout << " bin " << GetMVABin(fMVAVar_SCeta,fMVAVar_pt) 
+	 << " fbrem " <<  fMVAVar_fbrem  
       	 << " kfchi2 " << fMVAVar_kfchi2  
 	 << " mykfhits " << fMVAVar_kfhits  
 	 << " gsfchi2 " << fMVAVar_gsfchi2  
@@ -221,15 +255,15 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
     cout << " ### MVA " << mva << endl;
   }
 
-
-
   return mva;
 }
 
 
 
 Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const pat::Electron& ele,
-                                              bool printDebug) {
+						   edm::Handle<vector<reco::Conversion> > conversions,
+						   const math::XYZPoint beamspotPosition,
+						   bool printDebug) {
     
     if (!fisInitialized) {
         std::cout << "Error: ElectronMVAEstimatorRun2NonTrig not properly initialized.\n";
@@ -241,72 +275,94 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const pat::Electron& ele,
     validKF = (myTrackRef.isAvailable());
     validKF = (myTrackRef.isNonnull());
     
+    // Pure ECAL -> shower shapes
+    fMVAVar_see = ele.full5x5_sigmaIetaIeta(); 
+    fMVAVar_spp = ele.full5x5_sigmaIphiIphi();  
+    fMVAVar_OneMinusE1x5E5x5        =  (ele.full5x5_e5x5()) !=0. ? 1.0-(ele.full5x5_e1x5()/ele.full5x5_e5x5()) : -1.0 ;
+    fMVAVar_R9              =  ele.full5x5_r9();
+    fMVAVar_etawidth        =  ele.superCluster()->etaWidth();
+    fMVAVar_phiwidth        =  ele.superCluster()->phiWidth();
+    fMVAVar_HoE             =  ele.hadronicOverEm();
+    //Endcap only variables
+    fMVAVar_PreShowerOverRaw=  ele.superCluster()->preshowerEnergy() / ele.superCluster()->rawEnergy();
+
     // Pure tracking variables
-    fMVAVar_fbrem           =  ele.fbrem();
-    fMVAVar_kfchi2          =  (validKF) ? myTrackRef->normalizedChi2() : 0 ;
     fMVAVar_kfhits          =  (validKF) ? myTrackRef->hitPattern().trackerLayersWithMeasurement() : -1. ;
+    fMVAVar_kfchi2          =  (validKF) ? myTrackRef->normalizedChi2() : 0 ;
     fMVAVar_gsfchi2         =  ele.gsfTrack()->normalizedChi2();
     
-    
+    // Energy matching
+    fMVAVar_fbrem           =  ele.fbrem();
+    fMVAVar_gsfhits         =  ele.gsfTrack()->found();
+    fMVAVar_expectedMissingInnerHits = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+
+    reco::ConversionRef conv_ref = ConversionTools::matchedConversion(ele,conversions, beamspotPosition);
+    double vertexFitProbability = -1.; 
+    if(!conv_ref.isNull()) {
+      const reco::Vertex &vtx = conv_ref.get()->conversionVertex(); if (vtx.isValid()) {
+	vertexFitProbability = TMath::Prob( vtx.chi2(), vtx.ndof());
+      } 
+    }
+    fMVAVar_convVtxFitProbability = vertexFitProbability;
+
+    fMVAVar_EoP             =  ele.eSuperClusterOverP();
+    fMVAVar_IoEmIoP         =  (1.0/ele.ecalEnergy()) - (1.0 / ele.p());  
+    fMVAVar_eleEoPout       =  ele.eEleClusterOverPout();
+       
     // Geometrical matchings
     fMVAVar_deta            =  ele.deltaEtaSuperClusterTrackAtVtx();
     fMVAVar_dphi            =  ele.deltaPhiSuperClusterTrackAtVtx();
     fMVAVar_detacalo        =  ele.deltaEtaSeedClusterTrackAtCalo();
-    
-    
-    // Pure ECAL -> shower shapes
-    fMVAVar_see = ele.full5x5_sigmaIetaIeta(); 
-    fMVAVar_spp = ele.full5x5_sigmaIphiIphi();  
-    
-    fMVAVar_etawidth        =  ele.superCluster()->etaWidth();
-    fMVAVar_phiwidth        =  ele.superCluster()->phiWidth();
-    fMVAVar_OneMinusE1x5E5x5        =  (ele.full5x5_e5x5()) !=0. ? 1.-(ele.full5x5_e1x5()/ele.full5x5_e5x5()) : -1. ;
-    fMVAVar_R9              =  ele.full5x5_r9();
-    
-    // Energy matching
-    fMVAVar_HoE             =  ele.hadronicOverEm();
-    fMVAVar_EoP             =  ele.eSuperClusterOverP();
-    fMVAVar_IoEmIoP         =  (1.0/ele.ecalEnergy()) - (1.0 / ele.p());  
-    fMVAVar_eleEoPout       =  ele.eEleClusterOverPout();
-    fMVAVar_PreShowerOverRaw=  ele.superCluster()->preshowerEnergy() / ele.superCluster()->rawEnergy();
-    
-    
+               
     // Spectators
-    fMVAVar_SCeta             =  ele.superCluster()->eta();
     fMVAVar_pt              =  ele.pt();
     fMVAVar_isBarrel        =  (ele.superCluster()->eta()<1.479);
     fMVAVar_isEndcap        =  (ele.superCluster()->eta()>=1.479);
-            
-    // evaluate
-    bindVariables();
-    Double_t mva = -9999;
-    mva = fTMVAReader[GetMVABin(fMVAVar_SCeta,fMVAVar_pt)]->EvaluateMVA(fMethodname);
-    
-    if(printDebug) {
-        cout << " *** Inside the class fMethodname " << fMethodname << " fMVAType " << fMVAType << endl;
-        cout << " fbrem " <<  fMVAVar_fbrem
-        << " kfchi2 " << fMVAVar_kfchi2
-        << " mykfhits " << fMVAVar_kfhits
-        << " gsfchi2 " << fMVAVar_gsfchi2
-        << " deta " <<  fMVAVar_deta
-        << " dphi " << fMVAVar_dphi
-        << " detacalo " << fMVAVar_detacalo
-        << " see " << fMVAVar_see
-        << " spp " << fMVAVar_spp
-        << " etawidth " << fMVAVar_etawidth  
-        << " phiwidth " << fMVAVar_phiwidth  
-        << " OneMinusE1x5E5x5 " << fMVAVar_OneMinusE1x5E5x5  
-        << " R9 " << fMVAVar_R9  
-        << " HoE " << fMVAVar_HoE  
-        << " EoP " << fMVAVar_EoP  
-        << " IoEmIoP " << fMVAVar_IoEmIoP  
-        << " eleEoPout " << fMVAVar_eleEoPout  
-        << " eta " << fMVAVar_SCeta
-        << " pt " << fMVAVar_pt << endl;
-        cout << " ### MVA " << mva << endl;
-    }
-       
-    return mva;
+     fMVAVar_SCeta             =  ele.superCluster()->eta();
+           
+     // The spectator variables below were examined for training, but
+     // are not necessary for evaluating the discriminator, so they are
+     // given dummy values (the specator variables above are also unimportant).
+     // They are introduced only to match the definition of the discriminator 
+     // in the weights file.
+     fMVAVar_eClass               = 999;
+     fMVAVar_pfRelIso             = 999;
+     fMVAVar_expectedInnerHits    = 999;
+     fMVAVar_vtxconv              = 999;
+     fMVAVar_mcEventWeight        = 999;
+     fMVAVar_mcCBmatchingCategory = 999;
+     
+     // evaluate
+     bindVariables();
+     Double_t mva = -9999;
+     mva = fTMVAReader[GetMVABin(fMVAVar_SCeta,fMVAVar_pt)]->EvaluateMVA(fMethodname);
+     
+     if(printDebug) {
+       cout << "Ele : " << ele.pt() << " " << ele.eta() << " " << ele.phi() << "\n";
+       cout << " *** Inside the class fMethodname " << fMethodname << " fMVAType " << fMVAType << endl;
+       cout << " fbrem " <<  fMVAVar_fbrem
+	    << " kfchi2 " << fMVAVar_kfchi2
+	    << " mykfhits " << fMVAVar_kfhits
+	    << " gsfchi2 " << fMVAVar_gsfchi2
+	    << " deta " <<  fMVAVar_deta
+	    << " dphi " << fMVAVar_dphi
+	    << " detacalo " << fMVAVar_detacalo
+	    << " see " << fMVAVar_see
+	    << " spp " << fMVAVar_spp
+	    << " etawidth " << fMVAVar_etawidth  
+	    << " phiwidth " << fMVAVar_phiwidth  
+	    << " OneMinusE1x5E5x5 " << fMVAVar_OneMinusE1x5E5x5  
+	    << " R9 " << fMVAVar_R9  
+	    << " HoE " << fMVAVar_HoE  
+	    << " EoP " << fMVAVar_EoP  
+	    << " IoEmIoP " << fMVAVar_IoEmIoP  
+	    << " eleEoPout " << fMVAVar_eleEoPout  
+	    << " eta " << fMVAVar_SCeta
+	    << " pt " << fMVAVar_pt << endl;
+       cout << " ### MVA " << mva << endl;
+     }
+     
+     return mva;
 }
 
 
