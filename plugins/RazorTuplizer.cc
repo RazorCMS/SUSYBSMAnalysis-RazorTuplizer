@@ -445,6 +445,9 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metType1Phi", &metType1Phi, "metType1Phi/F");
   RazorEvents->Branch("metType0Plus1Pt", &metType0Plus1Pt, "metType0Plus1Pt/F");
   RazorEvents->Branch("metType0Plus1Phi", &metType0Plus1Phi, "metType0Plus1Phi/F");
+  RazorEvents->Branch("metNoHFPt", &metNoHFPt, "metNoHFPt/F");
+  RazorEvents->Branch("metNoHFPhi", &metNoHFPhi, "metNoHFPhi/F");
+
   RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
   RazorEvents->Branch("Flag_CSCTightHaloFilter", &Flag_CSCTightHaloFilter, "Flag_CSCTightHaloFilter/O");
   RazorEvents->Branch("Flag_hcalLaserEventFilter", &Flag_hcalLaserEventFilter, "Flag_hcalLaserEventFilter/O");
@@ -764,6 +767,10 @@ void RazorTuplizer::resetBranches(){
     metType1Phi = -99.0;
     metType0Plus1Pt = -99.0;
     metType0Plus1Phi = -99.0;
+    metPtRecomputed = -99.0;
+    metPhiRecomputed = -99.0;
+    metNoHFPt = -99.0;
+    metNoHFPhi = -99.0;
     Flag_HBHENoiseFilter = false;
     Flag_CSCTightHaloFilter = false;
     Flag_hcalLaserEventFilter = false;
@@ -1113,6 +1120,7 @@ bool RazorTuplizer::fillTaus(){
 };
 
 bool RazorTuplizer::fillIsoPFCandidates(){
+
   for (const pat::PackedCandidate &candidate : *packedPFCands) {
 
     if (candidate.charge() != 0 && candidate.pt() > 5 && candidate.fromPV() == 3 ) {
@@ -1165,6 +1173,7 @@ bool RazorTuplizer::fillIsoPFCandidates(){
       } // if candidate passes isolation
     }
   }
+
   return true;
 }
 
@@ -1424,6 +1433,25 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metType0Plus1Pt = 0;
   metType0Plus1Phi = 0;
 
+  //Recompute MET ourselves
+  double PFMET_X = 0;
+  double PFMET_Y = 0;
+  double PFMETNoHF_X = 0;
+  double PFMETNoHF_Y = 0;
+  for (const pat::PackedCandidate &candidate : *packedPFCands) {
+    PFMET_X += -1.0*(candidate.px());
+    PFMET_Y += -1.0*(candidate.py());
+    if (candidate.eta() < 3.0) {
+      PFMETNoHF_X += -1.0*(candidate.px());
+      PFMETNoHF_Y += -1.0*(candidate.py());
+    }
+  }
+  metPtRecomputed = sqrt( pow(PFMET_X,2) + pow(PFMET_Y,2));
+  metPhiRecomputed = atan2( PFMET_Y, PFMET_X);
+  metNoHFPt = sqrt( pow(PFMETNoHF_X,2) + pow(PFMETNoHF_Y,2));
+  metNoHFPhi = atan2( PFMETNoHF_Y, PFMETNoHF_X);
+
+ 
   //MET filters
   const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
   for(unsigned int i = 0, n = metFilterBits->size(); i < n; ++i){

@@ -439,6 +439,11 @@ protected:
   float metType1Phi;
   float metType0Plus1Pt;
   float metType0Plus1Phi;
+  float metPtRecomputed;
+  float metPhiRecomputed;
+  float metNoHFPt;
+  float metNoHFPhi;
+
   bool Flag_HBHENoiseFilter;
   bool Flag_CSCTightHaloFilter;
   bool Flag_hcalLaserEventFilter;
