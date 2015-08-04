@@ -1646,10 +1646,7 @@ bool RazorTuplizer::fillGenParticles(){
        || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
        ){
       prunedV.push_back(&(*prunedGenParticles)[i]);
-    }
-    
-    //cout << i << " : " << (*prunedGenParticles)[i].pdgId() << " " << (*prunedGenParticles)[i].status() << " " << (*prunedGenParticles)[i].pt() << "\n";
-    //if (prunedV.size()<99) prunedV.push_back(&(*prunedGenParticles)[i]); //keep all pruned particles
+    }    
   }
 
   //Total number of gen particles
