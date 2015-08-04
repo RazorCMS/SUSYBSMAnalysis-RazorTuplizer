@@ -16,6 +16,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
+  photonHLTFilterNamesFile_(iConfig.getParameter<string> ("photonHLTFilterNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
@@ -215,6 +216,48 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 
 
 
+  //*****************************************************************************************
+  //Read in Photon HLT Filters List from config file
+  //*****************************************************************************************
+  for (int i = 0; i<MAX_PhotonHLTFilters; ++i) photonHLTFilterNames[i] = "";
+  ifstream myPhotonHLTFilterFile (edm::FileInPath(photonHLTFilterNamesFile_.c_str()).fullPath().c_str()) ;
+  if (myPhotonHLTFilterFile.is_open()) {
+    char tmp[1024];
+    string line;
+    int index;
+    string hltfiltername;
+
+    while(myPhotonHLTFilterFile>>line) {
+      
+      if ( line.empty() || line.substr(0,1) == "#") {
+	myPhotonHLTFilterFile.getline(tmp,1024);
+	continue;
+      }
+
+      index = atoi(line.c_str());
+      myPhotonHLTFilterFile >> hltfiltername;
+      
+      if (index < MAX_PhotonHLTFilters) {
+	photonHLTFilterNames[index] = hltfiltername;
+      }    
+    }    
+    myPhotonHLTFilterFile.close();
+  } else {
+    cout << "ERROR!!! Could not open trigger path name file : " << edm::FileInPath(photonHLTFilterNamesFile_.c_str()).fullPath().c_str() << "\n";
+  }
+  
+  if(enableTriggerInfo_) {
+    cout << "\n";
+    cout << "****************** Photon HLT Filters Defined For Razor Ntuple ******************\n";    
+    for (int i = 0; i<MAX_PhotonHLTFilters; ++i) {
+      if (photonHLTFilterNames[i] != "") cout << "Photon HLT Filters " << i << " " << photonHLTFilterNames[i] << "\n";
+    }
+    cout << "****************************************************************************\n";    
+    cout << "\n";
+  }
+
+
+
 }
 
 RazorTuplizer::~RazorTuplizer()
@@ -390,6 +433,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterPhi", pho_superClusterPhi, "pho_superClusterPhi[nPhotons]/F");
   RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/O");
+  RazorEvents->Branch("pho_passHLTFilter", &pho_passHLTFilter, Form("pho_passHLTFilter[nPhotons][%d]/O",MAX_PhotonHLTFilters));
 }
 
 void RazorTuplizer::enableJetBranches(){
@@ -695,6 +739,7 @@ void RazorTuplizer::resetBranches(){
         pho_superClusterEta[i] = -99.0;
         pho_superClusterPhi[i] = -99.0;
         pho_hasPixelSeed[i] = false;
+	for (int q=0;q<MAX_PhotonHLTFilters;q++) pho_passHLTFilter[i][q] = false;
 
         //Jet
         jetE[i] = 0.0;
@@ -1349,11 +1394,18 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_superClusterPhi[nPhotons] = pho.superCluster()->phi();
     pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
 
-    /*
-    const reco::Candidate* genPhoton = pho.genPhoton();
-    if(genPhoton != NULL)std::cout << "======>gen PT: " << genPhoton->pt() <<
-      " recoPT: " << pho.pt() << std::endl;
-    */
+    //*************************************************
+    //Trigger Object Matching
+    //*************************************************
+    for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
+      if (deltaR(trigObject.eta(), trigObject.phi(),pho.eta(),pho.phi()) > 0.3) continue;
+    
+      //check all filters
+      for ( int q=0; q<MAX_PhotonHLTFilters;q++) {
+	if (trigObject.hasFilterLabel(photonHLTFilterNames[q].c_str())) pho_passHLTFilter[nPhotons][q] = true;
+      }
+    }
+
     nPhotons++;
   }
 

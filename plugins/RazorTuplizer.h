@@ -158,12 +158,15 @@ protected:
   string triggerPathNamesFile_;
   string eleHLTFilterNamesFile_;
   string muonHLTFilterNamesFile_;
+  string photonHLTFilterNamesFile_;
   static const int NTriggersMAX = 150;
   string triggerPathNames[NTriggersMAX];
   static const int MAX_ElectronHLTFilters = 100;
   string eleHLTFilterNames[MAX_ElectronHLTFilters];
   static const int MAX_MuonHLTFilters = 100;
   string muonHLTFilterNames[MAX_MuonHLTFilters];
+  static const int MAX_PhotonHLTFilters = 100;
+  string photonHLTFilterNames[MAX_PhotonHLTFilters];
 
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
@@ -384,6 +387,7 @@ protected:
   float pho_superClusterEta[OBJECTARRAYSIZE];
   float pho_superClusterPhi[OBJECTARRAYSIZE];
   bool pho_hasPixelSeed[OBJECTARRAYSIZE];
+  bool pho_passHLTFilter[OBJECTARRAYSIZE][MAX_PhotonHLTFilters];
 
   //AK4 Jets
   int nJets;
