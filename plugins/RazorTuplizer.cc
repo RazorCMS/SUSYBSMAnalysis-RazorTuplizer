@@ -1493,7 +1493,7 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   for (const pat::PackedCandidate &candidate : *packedPFCands) {
     PFMET_X += -1.0*(candidate.px());
     PFMET_Y += -1.0*(candidate.py());
-    if (candidate.eta() < 3.0) {
+    if (abs(candidate.pdgId()) != 1 && abs(candidate.pdgId()) != 2 && candidate.eta() < 3.0) {
       PFMETNoHF_X += -1.0*(candidate.px());
       PFMETNoHF_Y += -1.0*(candidate.py());
     }
