@@ -75,11 +75,11 @@ void EGammaMvaPhotonEstimator::initialize( std::vector<std::string> methodName,
       // Add all the vars, we take the string with variable name from the weights file (the Expression field)
       tmpTMVAReader->AddVariable("recoPhi"   , &fMVAVar_Phi);
       tmpTMVAReader->AddVariable("r9"        , &fMVAVar_R9);
-      tmpTMVAReader->AddVariable("sieie_2012", &fMVAVar_Sieie);
-      tmpTMVAReader->AddVariable("sieip_2012", &fMVAVar_Sieip);
-      tmpTMVAReader->AddVariable("e1x3_2012/e5x5_2012"        , &fMVAVar_E1x3OverE5x5);
-      tmpTMVAReader->AddVariable("e2x2_2012/e5x5_2012"        , &fMVAVar_E2x2OverE5x5);
-      tmpTMVAReader->AddVariable("e2x5_2012/e5x5_2012"        , &fMVAVar_E2x5MaxOverE5x5);
+      tmpTMVAReader->AddVariable("sieieFull5x5", &fMVAVar_Sieie);
+      tmpTMVAReader->AddVariable("sieipFull5x5", &fMVAVar_Sieip);
+      tmpTMVAReader->AddVariable("e1x3Full5x5/e5x5Full5x5"        , &fMVAVar_E1x3OverE5x5);
+      tmpTMVAReader->AddVariable("e2x2Full5x5/e5x5Full5x5"        , &fMVAVar_E2x2OverE5x5);
+      tmpTMVAReader->AddVariable("e2x5Full5x5/e5x5Full5x5"        , &fMVAVar_E2x5MaxOverE5x5);
       tmpTMVAReader->AddVariable("recoSCEta" , &fMVAVar_Sceta);
       tmpTMVAReader->AddVariable("rawE"      , &fMVAVar_RawE);
       tmpTMVAReader->AddVariable("scEtaWidth", &fMVAVar_ScEtaWidth);

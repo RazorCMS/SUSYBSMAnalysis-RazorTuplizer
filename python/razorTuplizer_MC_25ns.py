@@ -40,6 +40,9 @@ process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
+process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
+process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
+
 #------ Analyzer ------#
 
 #list input collections
@@ -71,6 +74,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     triggerPrescales = cms.InputTag("patTrigger"),
     triggerObjects = cms.InputTag("selectedPatTrigger"),
     metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
+    hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
@@ -104,5 +108,5 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 )
 
 #run
-process.p = cms.Path(
-        process.ntuples)
+process.p = cms.Path( process.HBHENoiseFilterResultProducer*
+                      process.ntuples)

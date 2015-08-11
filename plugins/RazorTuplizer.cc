@@ -33,6 +33,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   triggerPrescalesToken_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("triggerPrescales"))),     
   metToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("mets"))),
   metFilterBitsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("metFilterBits"))),
+  hbheNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheNoiseFilter"))),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genInfo"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("puInfo"))),
@@ -91,8 +92,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
 
   //set up photon MVA ID
   std::vector<std::string> myPhotonMVAWeights;
-  myPhotonMVAWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/PhotonIDMVA_PHYS14_EB.weights.xml").fullPath().c_str());
-  myPhotonMVAWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/PhotonIDMVA_PHYS14_EE.weights.xml").fullPath().c_str());
+  myPhotonMVAWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/PhotonIDMVA_Spring15_50ns_v0_EB.weights.xml").fullPath().c_str());
+  myPhotonMVAWeights.push_back(edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/PhotonIDMVA_Spring15_50ns_v0_EE.weights.xml").fullPath().c_str());
   std::vector<std::string> myPhotonMVAMethodNames;
   myPhotonMVAMethodNames.push_back("BDTG photons barrel");
   myPhotonMVAMethodNames.push_back("BDTG photons endcap");
@@ -584,6 +585,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(gedPhotonCoresToken_, gedPhotonCores);
   iEvent.getByToken(superClustersToken_,superClusters);
   iEvent.getByToken(lostTracksToken_,lostTracks);
+  iEvent.getByToken(hbheNoiseFilterToken_, hbheNoiseFilter);
 
   if (useGen_) {
     iEvent.getByToken(prunedGenParticlesToken_,prunedGenParticles);
@@ -1503,7 +1505,6 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metNoHFPt = sqrt( pow(PFMETNoHF_X,2) + pow(PFMETNoHF_Y,2));
   metNoHFPhi = atan2( PFMETNoHF_Y, PFMETNoHF_X);
 
- 
   //MET filters
   const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
   for(unsigned int i = 0, n = metFilterBits->size(); i < n; ++i){
@@ -1527,13 +1528,16 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
       Flag_eeBadScFilter = metFilterBits->accept(i);
     else if(strcmp(metNames.triggerName(i).c_str(), "Flag_METFilters") == 0)
       Flag_METFilters = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
-      Flag_HBHENoiseFilter = metFilterBits->accept(i);
+    // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
+    //   Flag_HBHENoiseFilter = metFilterBits->accept(i);
     else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
       Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
     else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
       Flag_hcalLaserEventFilter = metFilterBits->accept(i);
   }
+
+  //use custom hbhefilter, because miniAOD filters are problematic.
+  Flag_HBHENoiseFilter = *hbheNoiseFilter;
   
   return true;
 };

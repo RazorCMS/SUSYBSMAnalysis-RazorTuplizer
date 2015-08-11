@@ -185,6 +185,7 @@ protected:
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<pat::METCollection> metToken_;
   edm::EDGetTokenT<edm::TriggerResults> metFilterBitsToken_;
+  edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
@@ -230,6 +231,7 @@ protected:
   edm::Handle<GenEventInfoProduct> genInfo;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
   edm::Handle<HcalNoiseSummary> hcalNoiseInfo;
+  edm::Handle<bool> hbheNoiseFilter;
   edm::Handle<vector<reco::VertexCompositePtrCandidate> > secondaryVertices;
   edm::Handle<double> rhoAll;
   edm::Handle<double> rhoFastjetAll;
