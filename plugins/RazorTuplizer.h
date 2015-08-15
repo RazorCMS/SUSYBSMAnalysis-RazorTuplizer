@@ -134,7 +134,12 @@ public:
 					 const reco::Candidate* ptcl,
 					 double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0,
 					 bool use_pfweight = false, bool charged_only = false);  
-  
+  double ActivityPFMiniIsolationAnnulus(edm::Handle<pat::PackedCandidateCollection> pfcands,
+					const reco::Candidate* ptcl,
+					double dROuterSize = 0.4,
+					double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0);
+
+
   TLorentzVector photonP4FromVtx( TVector3 vtx, TVector3 phoPos, double E );
 
 protected:
@@ -288,6 +293,7 @@ protected:
   float muon_ptrel[OBJECTARRAYSIZE];
   float muon_chargedMiniIso[OBJECTARRAYSIZE];
   float muon_photonAndNeutralHadronMiniIso[OBJECTARRAYSIZE];
+  float muon_activityMiniIsoAnnulus[OBJECTARRAYSIZE];
   bool  muon_passSingleMuTagFilter[OBJECTARRAYSIZE];
   bool  muon_passHLTFilter[OBJECTARRAYSIZE][MAX_MuonHLTFilters];
 
@@ -326,6 +332,7 @@ protected:
   float ele_ptrel[OBJECTARRAYSIZE];
   float ele_chargedMiniIso[OBJECTARRAYSIZE];
   float ele_photonAndNeutralHadronMiniIso[OBJECTARRAYSIZE];
+  float ele_activityMiniIsoAnnulus[OBJECTARRAYSIZE];
   bool ele_passSingleEleTagFilter[OBJECTARRAYSIZE];
   bool ele_passTPOneTagFilter[OBJECTARRAYSIZE];
   bool ele_passTPTwoTagFilter[OBJECTARRAYSIZE];

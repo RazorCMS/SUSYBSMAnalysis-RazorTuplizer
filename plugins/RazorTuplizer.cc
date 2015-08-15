@@ -330,6 +330,7 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_ptrel", muon_ptrel, "muon_ptrel[nMuons]/F");
   RazorEvents->Branch("muon_chargedMiniIso", muon_chargedMiniIso, "muon_chargedMiniIso[nMuons]/F");
   RazorEvents->Branch("muon_photonAndNeutralHadronMiniIso", muon_photonAndNeutralHadronMiniIso, "muon_photonAndNeutralHadronMiniIso[nMuons]/F");
+  RazorEvents->Branch("muon_activityMiniIsoAnnulus", muon_activityMiniIsoAnnulus, "muon_activityMiniIsoAnnulus[nMuons]/F");
   RazorEvents->Branch("muon_passSingleMuTagFilter", muon_passSingleMuTagFilter, "muon_passSingleMuTagFilter[nMuons]/O");
   RazorEvents->Branch("muon_passHLTFilter", &muon_passHLTFilter, Form("muon_passHLTFilter[nMuons][%d]/O",MAX_MuonHLTFilters));
 }
@@ -368,6 +369,7 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_ptrel", ele_ptrel, "ele_ptrel[nElectrons]/F");
   RazorEvents->Branch("ele_chargedMiniIso", ele_chargedMiniIso, "ele_chargedMiniIso[nElectrons]/F");
   RazorEvents->Branch("ele_photonAndNeutralHadronMiniIso", ele_photonAndNeutralHadronMiniIso, "ele_photonAndNeutralHadronMiniIso[nElectrons]/F");
+  RazorEvents->Branch("ele_activityMiniIsoAnnulus", ele_activityMiniIsoAnnulus, "ele_activityMiniIsoAnnulus[nElectrons]/F");
   RazorEvents->Branch("ele_passSingleEleTagFilter", ele_passSingleEleTagFilter, "ele_passSingleEleTagFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPOneTagFilter", ele_passTPOneTagFilter, "ele_passTPOneTagFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPTwoTagFilter", ele_passTPTwoTagFilter, "ele_passTPTwoTagFilter[nElectrons]/O");
@@ -647,6 +649,7 @@ void RazorTuplizer::resetBranches(){
 	muon_ptrel[i] = -99.0;
 	muon_chargedMiniIso[i] = -99.0;
 	muon_photonAndNeutralHadronMiniIso[i] = -99.0;
+	muon_activityMiniIsoAnnulus[i] = -99.0;
 	muon_passSingleMuTagFilter[i] = false;
 	for (int q=0;q<MAX_MuonHLTFilters;q++) muon_passHLTFilter[i][q] = false;
 
@@ -682,6 +685,7 @@ void RazorTuplizer::resetBranches(){
 	ele_ptrel[i] = -99.0;
 	ele_chargedMiniIso[i] = -99.0;
 	ele_photonAndNeutralHadronMiniIso[i] = -99.0;
+	ele_activityMiniIsoAnnulus[i] = -99.0;
 	ele_passSingleEleTagFilter[i] = false;
 	ele_passTPOneTagFilter[i] = false;
 	ele_passTPTwoTagFilter[i] = false;
@@ -963,6 +967,7 @@ bool RazorTuplizer::fillMuons(){
     pair<double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.05, 0.2, 10., false, false);
     muon_chargedMiniIso[nMuons] = PFMiniIso.first;
     muon_photonAndNeutralHadronMiniIso[nMuons] = PFMiniIso.second;
+    muon_activityMiniIsoAnnulus[nMuons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.4, 0.05, 0.2, 10.);
 
     //*************************************************
     //Trigger Object Matching
@@ -1058,6 +1063,7 @@ bool RazorTuplizer::fillElectrons(){
     pair<double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
     ele_chargedMiniIso[nElectrons] = PFMiniIso.first;
     ele_photonAndNeutralHadronMiniIso[nElectrons] = PFMiniIso.second;
+    ele_activityMiniIsoAnnulus[nElectrons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.4, 0.05, 0.2, 10.);
 
     //*************************************************
     //Trigger Object Matching
@@ -1737,19 +1743,17 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
     }
   }
 
-  //********************************************************************
-  // Print Trigger Objects
-  //********************************************************************  
-  if ( triggerDecision[47] ) {
-    for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
-      cout << "triggerObj: " << trigObject.pt() << " " << trigObject.eta() << " " << trigObject.phi() << "\n";
-      for(int j=0; j<int(trigObject.filterLabels().size());j++) {
-	//trigObject.unpackPathNames(names);
-	//cout << "filter: " << (trigObject.pathNames())[j] << " " << (trigObject.filterLabels())[j] << "\n";
-	cout << "filter: " << (trigObject.filterLabels())[j] << "\n";
-      }    
-    }
-  }
+  // //********************************************************************
+  // // Print Trigger Objects
+  // //********************************************************************  
+  // for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
+  //   cout << "triggerObj: " << trigObject.pt() << " " << trigObject.eta() << " " << trigObject.phi() << "\n";
+  //   for(int j=0; j<int(trigObject.filterLabels().size());j++) {
+  //     //trigObject.unpackPathNames(names);
+  //     //cout << "filter: " << (trigObject.pathNames())[j] << " " << (trigObject.filterLabels())[j] << "\n";
+  //     cout << "filter: " << (trigObject.filterLabels())[j] << "\n";
+  //   }    
+  // }
 
 
   return true;

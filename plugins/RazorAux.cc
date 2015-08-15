@@ -234,6 +234,51 @@ pair<double,double> RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCan
   return result;
 }
 
+double RazorTuplizer::ActivityPFMiniIsolationAnnulus(edm::Handle<pat::PackedCandidateCollection> pfcands,
+						     const reco::Candidate* ptcl,
+						     double dROuterSize,
+						     double r_iso_min, double r_iso_max, double kt_scale) {  
+  double iso_nh(0.); double iso_ch(0.);
+  double iso_ph(0.); double iso_pu(0.);
+  double ptThresh(0.5);
+  if(ptcl->isElectron()) ptThresh = 0;
+  double r_iso = max(r_iso_min,min(r_iso_max, kt_scale/ptcl->pt()));
+  for (const pat::PackedCandidate &pfc : *pfcands) {
+    if (abs(pfc.pdgId())<7) continue;
+    double dr = deltaR(pfc, *ptcl);
+
+    //select the annulus between mini-isolation cone size (r_iso) and dROuterSize
+    if (!(dr < dROuterSize && dr >= r_iso)) continue;
+
+    ////////////////// NEUTRALS /////////////////////////
+    if (pfc.charge()==0){
+      if (pfc.pt()>ptThresh) {
+
+	/////////// PHOTONS ////////////
+	if (abs(pfc.pdgId())==22) {
+	  iso_ph += pfc.pt();
+	  /////////// NEUTRAL HADRONS ////////////
+	} else if (abs(pfc.pdgId())==130) {
+	  iso_nh += pfc.pt();
+	}
+      }
+      ////////////////// CHARGED from PV /////////////////////////
+    } else if (pfc.fromPV()>1){
+      if (abs(pfc.pdgId())==211) {
+	iso_ch += pfc.pt();
+      }
+      ////////////////// CHARGED from PU /////////////////////////
+    } else {
+      if (pfc.pt()>ptThresh){
+	iso_pu += pfc.pt();
+      }
+    }
+  }
+  double activity(0.);
+  activity = iso_ch + fmax( 0.0, iso_ph + iso_nh - 0.5*iso_pu);
+
+  return activity;
+}
 
 //**************************************************************
 //Compute ptRel for leptons
