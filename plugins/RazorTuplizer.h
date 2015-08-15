@@ -130,11 +130,11 @@ public:
   
   double getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const reco::Candidate* lepton);
 
-  double getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
-			    const reco::Candidate* ptcl,
-			    double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0,
-			    bool use_pfweight = false, bool charged_only = false);  
-
+  pair<double,double> getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
+					 const reco::Candidate* ptcl,
+					 double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0,
+					 bool use_pfweight = false, bool charged_only = false);  
+  
   TLorentzVector photonP4FromVtx( TVector3 vtx, TVector3 phoPos, double E );
 
 protected:
@@ -286,7 +286,8 @@ protected:
   float muon_photonIso[OBJECTARRAYSIZE];
   float muon_neutralHadIso[OBJECTARRAYSIZE];
   float muon_ptrel[OBJECTARRAYSIZE];
-  float muon_miniiso[OBJECTARRAYSIZE];
+  float muon_chargedMiniIso[OBJECTARRAYSIZE];
+  float muon_photonAndNeutralHadronMiniIso[OBJECTARRAYSIZE];
   bool  muon_passSingleMuTagFilter[OBJECTARRAYSIZE];
   bool  muon_passHLTFilter[OBJECTARRAYSIZE][MAX_MuonHLTFilters];
 
@@ -323,7 +324,8 @@ protected:
   float ele_RegressionE[OBJECTARRAYSIZE];
   float ele_CombineP4[OBJECTARRAYSIZE];
   float ele_ptrel[OBJECTARRAYSIZE];
-  float ele_miniiso[OBJECTARRAYSIZE];
+  float ele_chargedMiniIso[OBJECTARRAYSIZE];
+  float ele_photonAndNeutralHadronMiniIso[OBJECTARRAYSIZE];
   bool ele_passSingleEleTagFilter[OBJECTARRAYSIZE];
   bool ele_passTPOneTagFilter[OBJECTARRAYSIZE];
   bool ele_passTPTwoTagFilter[OBJECTARRAYSIZE];

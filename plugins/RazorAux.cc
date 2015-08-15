@@ -154,12 +154,12 @@ bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, co
   
 }
 
-double RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
+pair<double,double> RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
 					 const reco::Candidate* ptcl,
 					 double r_iso_min, double r_iso_max, double kt_scale,
 					 bool use_pfweight, bool charged_only) {
   
-  if (ptcl->pt()<5.) return 99999.;
+  //if (ptcl->pt()<5.) return 99999.;
   double deadcone_nh(0.), deadcone_ch(0.), deadcone_ph(0.), deadcone_pu(0.);
   if(ptcl->isElectron()) {
     if (fabs(ptcl->eta())>1.479) {deadcone_ch = 0.015; deadcone_pu = 0.015; deadcone_ph = 0.08;}
@@ -228,7 +228,10 @@ double RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollect
     else iso = iso_ch;
   }
   iso = iso/ptcl->pt();
-  return iso;
+
+  //return pair of numbers for charged mini-iso and photon+neutralHadron mini-iso
+  pair<double,double> result = pair<double,double>( iso_ch , iso_ph + iso_nh );
+  return result;
 }
 
 
