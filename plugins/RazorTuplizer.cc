@@ -330,6 +330,7 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_ptrel", muon_ptrel, "muon_ptrel[nMuons]/F");
   RazorEvents->Branch("muon_chargedMiniIso", muon_chargedMiniIso, "muon_chargedMiniIso[nMuons]/F");
   RazorEvents->Branch("muon_photonAndNeutralHadronMiniIso", muon_photonAndNeutralHadronMiniIso, "muon_photonAndNeutralHadronMiniIso[nMuons]/F");
+  RazorEvents->Branch("muon_chargedPileupMiniIso", muon_chargedPileupMiniIso, "muon_chargedPileupMiniIso[nMuons]/F");
   RazorEvents->Branch("muon_activityMiniIsoAnnulus", muon_activityMiniIsoAnnulus, "muon_activityMiniIsoAnnulus[nMuons]/F");
   RazorEvents->Branch("muon_passSingleMuTagFilter", muon_passSingleMuTagFilter, "muon_passSingleMuTagFilter[nMuons]/O");
   RazorEvents->Branch("muon_passHLTFilter", &muon_passHLTFilter, Form("muon_passHLTFilter[nMuons][%d]/O",MAX_MuonHLTFilters));
@@ -369,6 +370,7 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_ptrel", ele_ptrel, "ele_ptrel[nElectrons]/F");
   RazorEvents->Branch("ele_chargedMiniIso", ele_chargedMiniIso, "ele_chargedMiniIso[nElectrons]/F");
   RazorEvents->Branch("ele_photonAndNeutralHadronMiniIso", ele_photonAndNeutralHadronMiniIso, "ele_photonAndNeutralHadronMiniIso[nElectrons]/F");
+  RazorEvents->Branch("ele_chargedPileupMiniIso", ele_chargedPileupMiniIso, "ele_chargedPileupMiniIso[nElectrons]/F");
   RazorEvents->Branch("ele_activityMiniIsoAnnulus", ele_activityMiniIsoAnnulus, "ele_activityMiniIsoAnnulus[nElectrons]/F");
   RazorEvents->Branch("ele_passSingleEleTagFilter", ele_passSingleEleTagFilter, "ele_passSingleEleTagFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPOneTagFilter", ele_passTPOneTagFilter, "ele_passTPOneTagFilter[nElectrons]/O");
@@ -649,6 +651,7 @@ void RazorTuplizer::resetBranches(){
 	muon_ptrel[i] = -99.0;
 	muon_chargedMiniIso[i] = -99.0;
 	muon_photonAndNeutralHadronMiniIso[i] = -99.0;
+	muon_chargedPileupMiniIso[i] = -99.0;
 	muon_activityMiniIsoAnnulus[i] = -99.0;
 	muon_passSingleMuTagFilter[i] = false;
 	for (int q=0;q<MAX_MuonHLTFilters;q++) muon_passHLTFilter[i][q] = false;
@@ -685,6 +688,7 @@ void RazorTuplizer::resetBranches(){
 	ele_ptrel[i] = -99.0;
 	ele_chargedMiniIso[i] = -99.0;
 	ele_photonAndNeutralHadronMiniIso[i] = -99.0;
+	ele_chargedPileupMiniIso[i] = -99.0;
 	ele_activityMiniIsoAnnulus[i] = -99.0;
 	ele_passSingleEleTagFilter[i] = false;
 	ele_passTPOneTagFilter[i] = false;
@@ -964,9 +968,10 @@ bool RazorTuplizer::fillMuons(){
     muon_photonIso[nMuons] = mu.pfIsolationR04().sumPhotonEt;
     muon_neutralHadIso[nMuons] = mu.pfIsolationR04().sumNeutralHadronEt;
     muon_ptrel[nMuons] = getLeptonPtRel( jets, &mu );
-    pair<double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.05, 0.2, 10., false, false);
-    muon_chargedMiniIso[nMuons] = PFMiniIso.first;
-    muon_photonAndNeutralHadronMiniIso[nMuons] = PFMiniIso.second;
+    tuple<double,double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.05, 0.2, 10., false, false);
+    muon_chargedMiniIso[nMuons] = std::get<0>(PFMiniIso);
+    muon_photonAndNeutralHadronMiniIso[nMuons] = std::get<1>(PFMiniIso);
+    muon_chargedPileupMiniIso[nMuons] = std::get<2>(PFMiniIso);
     muon_activityMiniIsoAnnulus[nMuons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.4, 0.05, 0.2, 10.);
 
     //*************************************************
@@ -1060,9 +1065,10 @@ bool RazorTuplizer::fillElectrons(){
     ele_CombineP4[nElectrons]   = ele.ecalTrackRegressionEnergy();
 
     ele_ptrel[nElectrons]   = getLeptonPtRel( jets, &ele );
-    pair<double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
-    ele_chargedMiniIso[nElectrons] = PFMiniIso.first;
-    ele_photonAndNeutralHadronMiniIso[nElectrons] = PFMiniIso.second;
+    tuple<double,double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
+    ele_chargedMiniIso[nElectrons] = std::get<0>(PFMiniIso);
+    ele_photonAndNeutralHadronMiniIso[nElectrons] = std::get<1>(PFMiniIso);
+    ele_chargedPileupMiniIso[nElectrons] = std::get<2>(PFMiniIso);
     ele_activityMiniIsoAnnulus[nElectrons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.4, 0.05, 0.2, 10.);
 
     //*************************************************

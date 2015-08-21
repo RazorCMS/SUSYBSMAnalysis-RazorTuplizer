@@ -13,6 +13,7 @@ Description: Base class for miniAOD analysis with CRAB
 #include <memory>
 #include <string>
 #include <vector>
+#include <tuple>
 
 using namespace std;
 
@@ -130,10 +131,10 @@ public:
   
   double getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const reco::Candidate* lepton);
 
-  pair<double,double> getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
-					 const reco::Candidate* ptcl,
-					 double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0,
-					 bool use_pfweight = false, bool charged_only = false);  
+  tuple<double,double,double> getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
+						 const reco::Candidate* ptcl,
+						 double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0,
+						 bool use_pfweight = false, bool charged_only = false);  
   double ActivityPFMiniIsolationAnnulus(edm::Handle<pat::PackedCandidateCollection> pfcands,
 					const reco::Candidate* ptcl,
 					double dROuterSize = 0.4,
@@ -293,6 +294,7 @@ protected:
   float muon_ptrel[OBJECTARRAYSIZE];
   float muon_chargedMiniIso[OBJECTARRAYSIZE];
   float muon_photonAndNeutralHadronMiniIso[OBJECTARRAYSIZE];
+  float muon_chargedPileupMiniIso[OBJECTARRAYSIZE];
   float muon_activityMiniIsoAnnulus[OBJECTARRAYSIZE];
   bool  muon_passSingleMuTagFilter[OBJECTARRAYSIZE];
   bool  muon_passHLTFilter[OBJECTARRAYSIZE][MAX_MuonHLTFilters];
@@ -332,6 +334,7 @@ protected:
   float ele_ptrel[OBJECTARRAYSIZE];
   float ele_chargedMiniIso[OBJECTARRAYSIZE];
   float ele_photonAndNeutralHadronMiniIso[OBJECTARRAYSIZE];
+  float ele_chargedPileupMiniIso[OBJECTARRAYSIZE];
   float ele_activityMiniIsoAnnulus[OBJECTARRAYSIZE];
   bool ele_passSingleEleTagFilter[OBJECTARRAYSIZE];
   bool ele_passTPOneTagFilter[OBJECTARRAYSIZE];

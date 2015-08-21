@@ -154,7 +154,8 @@ bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, co
   
 }
 
-pair<double,double> RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
+
+tuple<double,double,double> RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
 					 const reco::Candidate* ptcl,
 					 double r_iso_min, double r_iso_max, double kt_scale,
 					 bool use_pfweight, bool charged_only) {
@@ -230,7 +231,11 @@ pair<double,double> RazorTuplizer::getPFMiniIsolation(edm::Handle<pat::PackedCan
   iso = iso/ptcl->pt();
 
   //return pair of numbers for charged mini-iso and photon+neutralHadron mini-iso
-  pair<double,double> result = pair<double,double>( iso_ch , iso_ph + iso_nh );
+  tuple<double,double,double> result;
+  std::get<0>(result) =  iso_ch;
+  std::get<1>(result) =  iso_ph + iso_nh;
+  std::get<2>(result) =  iso_pu;
+
   return result;
 }
 
