@@ -31,12 +31,8 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #------ Declare the correct global tag ------#
 
-#global tag for CSA14 25ns 20 PU (asymptotic alignment and calibration) scenario
-#process.GlobalTag.globaltag = 'PLS170_V7AN1::All'
-#global tag for CSA14 50ns 40 PU (more pessimistic alignment and calibration) scenario
-#process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
-#global tag for PHYS14 asymptotic 25ns scenario
-process.GlobalTag.globaltag = 'GR_P_V56::All'
+#Global Tag for Run2015B
+process.GlobalTag.globaltag = '74X_dataRun2_Prompt_v1::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
