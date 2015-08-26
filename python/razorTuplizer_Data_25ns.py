@@ -11,8 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'/store/mc/RunIISpring15DR74/ttHJetToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8/MINIAODSIM/Asympt50ns_MCRUN2_74_V9A-v1/70000/E84BFE7C-01FF-E411-9D16-003048D15D48.root'
-        
+        '/store/data/Run2015C/DoubleMuon/MINIAOD/PromptReco-v1/000/254/232/00000/164C316D-C845-E511-8A53-02163E014229.root'        
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -25,6 +24,7 @@ process.TFileService = cms.Service("TFileService",
 )
 
 #load run conditions
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('Configuration.Geometry.GeometryIdeal_cff')
 process.load("Configuration.StandardSequences.MagneticField_cff")
@@ -32,7 +32,9 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 #------ Declare the correct global tag ------#
 
 #Global Tag for Run2015B
-process.GlobalTag.globaltag = '74X_dataRun2_Prompt_v1::All'
+#process.GlobalTag.globaltag = '74X_dataRun2_Prompt_v1::All'
+#Above tag is not working yet...
+process.GlobalTag.globaltag = 'GR_P_V56::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
