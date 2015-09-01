@@ -78,3 +78,13 @@
 53     hltEle25WP60SC4TrackIsoFilter
 54     hltEle25WP60SC4EtUnseededFilter
 55     hltEle25WP60SC4Mass55Filter
+#HLT_Ele30WP60_SC4_Mass55
+56     hltL1sL1SingleEG25OrSingleIsoEG30er
+57     hltEle30WP60SC4TrackIsoFilter
+58     hltEle30WP60SC4HcalIsoFilter
+59     hltEle30WP60SC4HcalIsoFilter
+#HLT_Ele30WP60_Ele8_Mass55
+#hltL1sL1SingleEG25OrSingleIsoEG30er
+60     hltEle30WP60Ele8TrackIsoFilter
+61     hltEle30WP60Ele8PixelMatchUnseededFilter
+62     hltEle30WP60Ele8Mass55Filter
