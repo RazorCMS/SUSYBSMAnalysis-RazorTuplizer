@@ -88,3 +88,6 @@
 60     hltEle30WP60Ele8TrackIsoFilter
 61     hltEle30WP60Ele8PixelMatchUnseededFilter
 62     hltEle30WP60Ele8Mass55Filter
+# HLT_Ele22_eta2p1_WP75_Gsf (25ns MC)
+63     hltL1sL1SingleIsoEG20er
+64     hltSingleEle22WP75GsfTrackIsoFilter
