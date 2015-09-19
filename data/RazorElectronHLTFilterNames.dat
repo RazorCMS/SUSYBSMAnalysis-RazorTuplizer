@@ -91,3 +91,6 @@
 # HLT_Ele22_eta2p1_WP75_Gsf (25ns MC)
 63     hltL1sL1SingleIsoEG20er
 64     hltSingleEle22WP75GsfTrackIsoFilter
+# HLT_Ele27_WPLoose_Gsf (Data)
+65     hltL1sL1SingleIsoEG20OrSingleEG20OrSingleEG25
+66     hltL1sL1SingleIsoEG20OrSingleEG20OrSingleEG25

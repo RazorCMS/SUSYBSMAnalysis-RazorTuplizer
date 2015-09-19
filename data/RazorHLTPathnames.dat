@@ -7,10 +7,12 @@
 7    HLT_IsoMu17_eta2p1
 8    HLT_IsoMu20
 9    HLT_IsoMu20_eta2p1
+8    HLT_IsoMu22
 10    HLT_IsoMu24_eta2p1
 11    HLT_IsoMu27
 12    HLT_IsoTkMu20
 13    HLT_IsoTkMu20_eta2p1
+12    HLT_IsoTkMu22
 14    HLT_IsoTkMu27
 15    HLT_IsoMu24_IterTrk02
 16    HLT_IsoTkMu24_eta2p1_IterTrk02
@@ -155,3 +157,4 @@
 155    HLT_Mu15_IsoVVVL_PFHT400_PFMET70
 156    HLT_Mu15_IsoVVVL_PFHT600
 157    HLT_Mu15_PFHT300
+158    HLT_Ele27_WPLoose_Gsf
