@@ -186,7 +186,7 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
 
   // Energy matching
   fMVAVar_fbrem           =  ele.fbrem();
-  fMVAVar_gsfhits         =  ele.gsfTrack()->found();
+  fMVAVar_gsfhits         =  ele.gsfTrack()->hitPattern().trackerLayersWithMeasurement();
   fMVAVar_expectedMissingInnerHits = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
 
   reco::ConversionRef conv_ref = ConversionTools::matchedConversion(ele,conversions, beamspotPosition);
@@ -200,7 +200,8 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
 
   fMVAVar_EoP             =  ele.eSuperClusterOverP();
   fMVAVar_eleEoPout       =  ele.eEleClusterOverPout();
-  fMVAVar_IoEmIoP         =  (1.0/ele.ecalEnergy()) - (1.0 / ele.p());  // in the future to be changed with ele.gsfTrack()->p()
+  float pAtVertex = ele.trackMomentumAtVtx().R();
+  fMVAVar_IoEmIoP         =  (1.0/ele.ecalEnergy()) - (1.0 / pAtVertex);
 
   // Geometrical matchings
   fMVAVar_deta            =  ele.deltaEtaSuperClusterTrackAtVtx();
@@ -209,8 +210,9 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
 
   // Spectators
   fMVAVar_pt              =  ele.pt();                          
-  fMVAVar_isBarrel        =  (ele.superCluster()->eta()<1.479);
-  fMVAVar_isEndcap        =  (ele.superCluster()->eta()>=1.479);
+  constexpr float ebeeSplit = 1.479;
+  fMVAVar_isBarrel        =  (ele.superCluster()->eta()<ebeeSplit);
+  fMVAVar_isEndcap        =  (ele.superCluster()->eta()>=ebeeSplit);
   fMVAVar_SCeta           =  ele.superCluster()->eta();
 
   // The spectator variables below were examined for training, but
@@ -218,12 +220,13 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
   // given dummy values (the specator variables above are also unimportant).
   // They are introduced only to match the definition of the discriminator 
   // in the weights file.
-  fMVAVar_eClass               = 999;
-  fMVAVar_pfRelIso             = 999;
-  fMVAVar_expectedInnerHits    = 999;
-  fMVAVar_vtxconv              = 999;
-  fMVAVar_mcEventWeight        = 999;
-  fMVAVar_mcCBmatchingCategory = 999;
+  constexpr unsigned nines = 999;
+  fMVAVar_eClass               = nines;
+  fMVAVar_pfRelIso             = nines;
+  fMVAVar_expectedInnerHits    = nines;
+  fMVAVar_vtxconv              = nines;
+  fMVAVar_mcEventWeight        = nines;
+  fMVAVar_mcCBmatchingCategory = nines;
 
   // evaluate
   bindVariables();
