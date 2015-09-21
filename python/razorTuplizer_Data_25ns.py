@@ -24,17 +24,14 @@ process.TFileService = cms.Service("TFileService",
 )
 
 #load run conditions
-#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.load('Configuration.Geometry.GeometryIdeal_cff')
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #------ Declare the correct global tag ------#
 
-#Global Tag for Run2015B
-#process.GlobalTag.globaltag = '74X_dataRun2_Prompt_v1::All'
-#Above tag is not working yet...
-process.GlobalTag.globaltag = 'GR_P_V56::All'
+#Global Tag for Run2015D
+process.GlobalTag.globaltag = '74X_dataRun2_Prompt_v2'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -60,8 +57,11 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     taus = cms.InputTag("slimmedTaus"),
     photons = cms.InputTag("slimmedPhotons"),
     jets = cms.InputTag("slimmedJets"),
+    jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),
     mets = cms.InputTag("slimmedMETs"),
+    metsNoHF = cms.InputTag("slimmedMETsNoHF"),
+    metsPuppi = cms.InputTag("slimmedMETsPuppi"),
     packedPfCands = cms.InputTag("packedPFCandidates"),
 
     packedGenParticles = cms.InputTag("packedGenParticles"),
