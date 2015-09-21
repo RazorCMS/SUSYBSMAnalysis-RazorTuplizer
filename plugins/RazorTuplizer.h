@@ -181,6 +181,7 @@ protected:
   edm::EDGetTokenT<pat::TauCollection> tausToken_;
   edm::EDGetTokenT<pat::PhotonCollection> photonsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
+  edm::EDGetTokenT<pat::JetCollection> jetsPuppiToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsAK8Token_;
   edm::EDGetTokenT<pat::PackedCandidateCollection> packedPFCandsToken_;
   edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenParticlesToken_;
@@ -190,6 +191,8 @@ protected:
   edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjectsToken_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<pat::METCollection> metToken_;
+  edm::EDGetTokenT<pat::METCollection> metNoHFToken_;
+  edm::EDGetTokenT<pat::METCollection> metPuppiToken_;
   edm::EDGetTokenT<edm::TriggerResults> metFilterBitsToken_;
   edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
@@ -228,8 +231,11 @@ protected:
   edm::Handle<pat::PhotonCollection> photons;
   edm::Handle<pat::TauCollection> taus;
   edm::Handle<pat::JetCollection> jets;
+  edm::Handle<pat::JetCollection> jetsPuppi;
   edm::Handle<pat::JetCollection> jetsAK8;
   edm::Handle<pat::METCollection> mets;
+  edm::Handle<pat::METCollection> metsNoHF;
+  edm::Handle<pat::METCollection> metsPuppi;
   edm::Handle<edm::View<reco::GenParticle> > prunedGenParticles;
   edm::Handle<edm::View<pat::PackedGenParticle> > packedGenParticles;
   edm::Handle<reco::GenJetCollection> genJets;
@@ -360,6 +366,9 @@ protected:
   bool tau_passMuVetoTight[OBJECTARRAYSIZE];  
   UInt_t tau_ID[OBJECTARRAYSIZE];//tauID Bits
   float tau_combinedIsoDeltaBetaCorr3Hits[OBJECTARRAYSIZE];
+  float tau_chargedIsoPtSum[OBJECTARRAYSIZE];
+  float tau_neutralIsoPtSum[OBJECTARRAYSIZE];
+  float tau_puCorrPtSum[OBJECTARRAYSIZE];
   float tau_eleVetoMVA[OBJECTARRAYSIZE];
   int tau_eleVetoCategory[OBJECTARRAYSIZE];
   float tau_muonVetoMVA[OBJECTARRAYSIZE];
@@ -461,6 +470,8 @@ protected:
   float metPhiRecomputed;
   float metNoHFPt;
   float metNoHFPhi;
+  float metPuppiPt;
+  float metPuppiPhi;
 
   bool Flag_HBHENoiseFilter;
   bool Flag_CSCTightHaloFilter;

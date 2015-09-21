@@ -23,6 +23,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   tausToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
   photonsToken_(consumes<pat::PhotonCollection>(iConfig.getParameter<edm::InputTag>("photons"))),
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
+  jetsPuppiToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsPuppi"))),
   jetsAK8Token_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8"))),
   packedPFCandsToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("packedPfCands"))),
   prunedGenParticlesToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("prunedGenParticles"))),
@@ -32,6 +33,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   triggerObjectsToken_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("triggerObjects"))),
   triggerPrescalesToken_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("triggerPrescales"))),     
   metToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("mets"))),
+  metNoHFToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsNoHF"))),
+  metPuppiToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsPuppi"))),
   metFilterBitsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("metFilterBits"))),
   hbheNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheNoiseFilter"))),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
@@ -397,6 +400,9 @@ void RazorTuplizer::enableTauBranches(){
   RazorEvents->Branch("tau_passMuVetoTight", tau_passMuVetoTight, "tau_passMuVetoTight[nTaus]/O");
   RazorEvents->Branch("tau_ID", tau_ID, "tau_ID[nTaus]/i");
   RazorEvents->Branch("tau_combinedIsoDeltaBetaCorr3Hits", tau_combinedIsoDeltaBetaCorr3Hits, "tau_combinedIsoDeltaBetaCorr3Hits[nTaus]/F");
+  RazorEvents->Branch("tau_chargedIsoPtSum", tau_chargedIsoPtSum, "tau_chargedIsoPtSum[nTaus]/F");
+  RazorEvents->Branch("tau_neutralIsoPtSum", tau_neutralIsoPtSum, "tau_neutralIsoPtSum[nTaus]/F");
+  RazorEvents->Branch("tau_puCorrPtSum", tau_puCorrPtSum, "tau_puCorrPtSum[nTaus]/F");
   RazorEvents->Branch("tau_eleVetoMVA", tau_eleVetoMVA, "tau_eleVetoMVA[nTaus]/F");
   RazorEvents->Branch("tau_eleVetoCategory", tau_eleVetoCategory, "tau_eleVetoCategory[nTaus]/I");
   RazorEvents->Branch("tau_muonVetoMVA", tau_muonVetoMVA, "tau_muonVetoMVA[nTaus]/F");
@@ -498,6 +504,8 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metType0Plus1Phi", &metType0Plus1Phi, "metType0Plus1Phi/F");
   RazorEvents->Branch("metNoHFPt", &metNoHFPt, "metNoHFPt/F");
   RazorEvents->Branch("metNoHFPhi", &metNoHFPhi, "metNoHFPhi/F");
+  RazorEvents->Branch("metPuppiPt", &metPuppiPt, "metPuppiPt/F");
+  RazorEvents->Branch("metPuppiPhi", &metPuppiPhi, "metPuppiPhi/F");
 
   RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
   RazorEvents->Branch("Flag_CSCTightHaloFilter", &Flag_CSCTightHaloFilter, "Flag_CSCTightHaloFilter/O");
@@ -569,8 +577,11 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(photonsToken_, photons);
   iEvent.getByToken(tausToken_, taus);
   iEvent.getByToken(jetsToken_, jets);
+  iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
+  iEvent.getByToken(metNoHFToken_, metsNoHF);
+  iEvent.getByToken(metPuppiToken_, metsPuppi);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
   iEvent.getByToken(rhoAllToken_,rhoAll);
@@ -713,6 +724,9 @@ void RazorTuplizer::resetBranches(){
         tau_passMuVetoTight[i] = false;
         tau_ID[i] = 0;
         tau_combinedIsoDeltaBetaCorr3Hits[i] = -99.0;
+	tau_chargedIsoPtSum[i] = -99.0;
+	tau_neutralIsoPtSum[i] = -99.0;
+	tau_puCorrPtSum[i] = -99.0;
         tau_eleVetoMVA[i] = -99.0;
         tau_eleVetoCategory[i] = -1;
         tau_muonVetoMVA[i] = -99.0;
@@ -830,6 +844,8 @@ void RazorTuplizer::resetBranches(){
     metPhiRecomputed = -99.0;
     metNoHFPt = -99.0;
     metNoHFPhi = -99.0;
+    metPuppiPt = -99.0;
+    metPuppiPhi = -99.0;
     Flag_HBHENoiseFilter = false;
     Flag_CSCTightHaloFilter = false;
     Flag_hcalLaserEventFilter = false;
@@ -1132,16 +1148,18 @@ bool RazorTuplizer::fillTaus(){
     tau_passEleVetoLoose[nTaus] = bool(tau.tauID("againstElectronLooseMVA5"));
     tau_passEleVetoMedium[nTaus] = bool(tau.tauID("againstElectronMediumMVA5"));
     tau_passEleVetoTight[nTaus] = bool(tau.tauID("againstElectronTightMVA5"));
-    tau_passMuVetoLoose[nTaus] = bool(tau.tauID("againstMuonLooseMVA"));
-    tau_passMuVetoMedium[nTaus] = bool(tau.tauID("againstMuonMediumMVA"));
-    tau_passMuVetoTight[nTaus] = bool(tau.tauID("againstMuonTightMVA") );  
-  
+    tau_passMuVetoLoose[nTaus] = bool(tau.tauID("againstMuonLoose3"));
+    //tau_passMuVetoMedium[nTaus] = bool(tau.tauID("")); //doesn't exist anymore in miniAOD 2015 v2
+    tau_passMuVetoTight[nTaus] = bool(tau.tauID("againstMuonTight3") );  
     tau_combinedIsoDeltaBetaCorr3Hits[nTaus] = tau.tauID("byCombinedIsolationDeltaBetaCorrRaw3Hits");
+    tau_chargedIsoPtSum[nTaus] = tau.tauID("chargedIsoPtSum");
+    tau_neutralIsoPtSum[nTaus] = tau.tauID("neutralIsoPtSum");
+    tau_puCorrPtSum[nTaus] = tau.tauID("puCorrPtSum");
     tau_eleVetoMVA[nTaus] = tau.tauID("againstElectronMVA5raw") ;
     tau_eleVetoCategory[nTaus] = tau.tauID("againstElectronMVA5category");
-    tau_muonVetoMVA[nTaus] = tau.tauID("againstMuonMVAraw");
+    //tau_muonVetoMVA[nTaus] = tau.tauID("againstMuonMVAraw"); //doesn't exist anymore in miniAOD 2015 v2
     tau_isoMVAnewDMwLT[nTaus] = tau.tauID("byIsolationMVA3newDMwLTraw");
-    tau_isoMVAnewDMwoLT[nTaus] = tau.tauID("byIsolationMVA3newDMwoLTraw") ; 
+    //tau_isoMVAnewDMwoLT[nTaus] = tau.tauID("byIsolationMVA3newDMwoLTraw") ; //doesn't exist anymore in miniAOD 2015 v2 
 
     tau_ID[nTaus] = 
       bool(tau.tauID("decayModeFinding")) +
@@ -1156,9 +1174,6 @@ bool RazorTuplizer::fillTaus(){
       bool(tau.tauID("againstElectronVTightMVA5")) +
       bool(tau.tauID("againstMuonLoose3")) +
       bool(tau.tauID("againstMuonTight3")) +
-      bool(tau.tauID("againstMuonLooseMVA")) +
-      bool(tau.tauID("againstMuonMediumMVA")) +
-      bool(tau.tauID("againstMuonTightMVA")) +
       bool(tau.tauID("byVLooseIsolationMVA3newDMwLT")) +
       bool(tau.tauID("byLooseIsolationMVA3newDMwLT")) +
       bool(tau.tauID("byMediumIsolationMVA3newDMwLT")) +
@@ -1496,8 +1511,11 @@ bool RazorTuplizer::fillJetsAK8(){
 
 bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   const pat::MET &Met = mets->front();
-  metPt = Met.uncorrectedPt();
-  metPhi = Met.uncorrectedPhi();
+  const pat::MET &MetNoHF = metsNoHF->front();
+  const pat::MET &MetPuppi = metsPuppi->front();
+
+  metPt = Met.uncorPt();
+  metPhi = Met.uncorPhi();
   sumMET = Met.sumEt();
   metType0Pt = 0;
   metType0Phi = 0;
@@ -1506,23 +1524,10 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metType0Plus1Pt = 0;
   metType0Plus1Phi = 0;
 
-  //Recompute MET ourselves
-  double PFMET_X = 0;
-  double PFMET_Y = 0;
-  double PFMETNoHF_X = 0;
-  double PFMETNoHF_Y = 0;
-  for (const pat::PackedCandidate &candidate : *packedPFCands) {
-    PFMET_X += -1.0*(candidate.px());
-    PFMET_Y += -1.0*(candidate.py());
-    if (abs(candidate.pdgId()) != 1 && abs(candidate.pdgId()) != 2 && candidate.eta() < 3.0) {
-      PFMETNoHF_X += -1.0*(candidate.px());
-      PFMETNoHF_Y += -1.0*(candidate.py());
-    }
-  }
-  metPtRecomputed = sqrt( pow(PFMET_X,2) + pow(PFMET_Y,2));
-  metPhiRecomputed = atan2( PFMET_Y, PFMET_X);
-  metNoHFPt = sqrt( pow(PFMETNoHF_X,2) + pow(PFMETNoHF_Y,2));
-  metNoHFPhi = atan2( PFMETNoHF_Y, PFMETNoHF_X);
+  metNoHFPt = MetNoHF.pt();
+  metNoHFPhi = MetNoHF.phi();
+  metPuppiPt = MetPuppi.pt();
+  metPuppiPhi = MetPuppi.phi();
 
   //MET filters
   const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
