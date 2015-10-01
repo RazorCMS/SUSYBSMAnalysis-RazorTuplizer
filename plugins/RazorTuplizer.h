@@ -439,6 +439,10 @@ protected:
   float jetHOEnergyFraction[OBJECTARRAYSIZE];
   float jetHFHadronEnergyFraction[OBJECTARRAYSIZE];
   float jetHFEMEnergyFraction[OBJECTARRAYSIZE];
+  float jetAllMuonPt[OBJECTARRAYSIZE];
+  float jetAllMuonEta[OBJECTARRAYSIZE];
+  float jetAllMuonPhi[OBJECTARRAYSIZE];
+  float jetAllMuonM[OBJECTARRAYSIZE];
 
   //AK8 Jets
   int nFatJets;

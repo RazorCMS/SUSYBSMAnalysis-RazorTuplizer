@@ -476,6 +476,10 @@ void RazorTuplizer::enableJetBranches(){
   RazorEvents->Branch("jetHOEnergyFraction", jetHOEnergyFraction, "jetHOEnergyFraction[nJets]/F");
   RazorEvents->Branch("jetHFHadronEnergyFraction", jetHFHadronEnergyFraction, "jetHFHadronEnergyFraction[nJets]/F");
   RazorEvents->Branch("jetHFEMEnergyFraction",jetHFEMEnergyFraction, "jetHFEMEnergyFraction[nJets]/F");
+  RazorEvents->Branch("jetAllMuonPt", jetAllMuonPt,"jetAllMuonPt[nJets]/F");
+  RazorEvents->Branch("jetAllMuonEta", jetAllMuonEta,"jetAllMuonEta[nJets]/F");
+  RazorEvents->Branch("jetAllMuonPhi", jetAllMuonPhi,"jetAllMuonPhi[nJets]/F");
+  RazorEvents->Branch("jetAllMuonM", jetAllMuonM,"jetAllMuonM[nJets]/F");
 }
 
 void RazorTuplizer::enableJetAK8Branches(){
@@ -577,11 +581,11 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(photonsToken_, photons);
   iEvent.getByToken(tausToken_, taus);
   iEvent.getByToken(jetsToken_, jets);
-  iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
+  if (isData_) iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
-  iEvent.getByToken(metNoHFToken_, metsNoHF);
-  iEvent.getByToken(metPuppiToken_, metsPuppi);
+  if (isData_) iEvent.getByToken(metNoHFToken_, metsNoHF);
+  if (isData_) iEvent.getByToken(metPuppiToken_, metsPuppi);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
   iEvent.getByToken(rhoAllToken_,rhoAll);
@@ -795,6 +799,10 @@ void RazorTuplizer::resetBranches(){
 	jetHOEnergyFraction[i] = -99.0;
 	jetHFHadronEnergyFraction[i] = -99.0;
 	jetHFEMEnergyFraction[i] = -99.0;
+        jetAllMuonPt[i] = 0.0;
+        jetAllMuonEta[i] = 0.0;
+        jetAllMuonPhi[i] = 0.0;
+        jetAllMuonM[i] = 0.0;
 	
         //AK8 Jet
         fatJetE[i] = 0.0;
@@ -1451,7 +1459,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
 bool RazorTuplizer::fillJets(){
   for (const pat::Jet &j : *jets) {
-    if (j.pt() < 20) continue;
+    if (j.pt() < 10) continue;
     jetE[nJets] = j.correctedP4(0).E();
     jetPt[nJets] = j.correctedP4(0).Pt();
     jetEta[nJets] = j.correctedP4(0).Eta();
@@ -1485,6 +1493,23 @@ bool RazorTuplizer::fillJets(){
     jetHFHadronEnergyFraction[nJets] =  j.HFHadronEnergyFraction();
     jetHFEMEnergyFraction[nJets] =  j.HFEMEnergyFraction();
 	
+    //save muon vector for JEC's
+    reco::Candidate::LorentzVector AllMuonP4; AllMuonP4.SetPxPyPzE(0,0,0,0);
+    const std::vector<reco::CandidatePtr> & cands = j.daughterPtrVector();
+    for ( std::vector<reco::CandidatePtr>::const_iterator cand = cands.begin();
+	  cand != cands.end(); ++cand ) {
+      const reco::PFCandidate *pfcand = dynamic_cast<const reco::PFCandidate *>(cand->get());
+      const reco::Candidate *mu = (pfcand != 0 ? ( pfcand->muonRef().isNonnull() ? pfcand->muonRef().get() : 0) : cand->get());
+      if ( mu != 0 && (mu->isGlobalMuon() || mu->isStandAloneMuon()) ) {
+	reco::Candidate::LorentzVector muonP4 = (*cand)->p4();
+	AllMuonP4 = AllMuonP4 + muonP4;
+      }
+    }
+    jetAllMuonPt[nJets] = AllMuonP4.Pt();
+    jetAllMuonEta[nJets] = AllMuonP4.Eta();
+    jetAllMuonPhi[nJets] = AllMuonP4.Phi();
+    jetAllMuonM[nJets] = AllMuonP4.M();
+   
     nJets++;
   }
 
@@ -1511,9 +1536,7 @@ bool RazorTuplizer::fillJetsAK8(){
 
 bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   const pat::MET &Met = mets->front();
-  const pat::MET &MetNoHF = metsNoHF->front();
-  const pat::MET &MetPuppi = metsPuppi->front();
-
+  
   metPt = Met.uncorPt();
   metPhi = Met.uncorPhi();
   sumMET = Met.sumEt();
@@ -1524,10 +1547,14 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metType0Plus1Pt = 0;
   metType0Plus1Phi = 0;
 
-  metNoHFPt = MetNoHF.pt();
-  metNoHFPhi = MetNoHF.phi();
-  metPuppiPt = MetPuppi.pt();
-  metPuppiPhi = MetPuppi.phi();
+  if(isData_) {
+    const pat::MET &MetPuppi = metsPuppi->front();
+    const pat::MET &MetNoHF = metsNoHF->front();
+    metPuppiPt = MetPuppi.pt();
+    metPuppiPhi = MetPuppi.phi();
+    metNoHFPt = MetNoHF.pt();
+    metNoHFPhi = MetNoHF.phi();
+  }
 
   //MET filters
   const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
