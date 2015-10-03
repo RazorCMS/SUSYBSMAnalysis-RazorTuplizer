@@ -1633,11 +1633,13 @@ bool RazorTuplizer::fillMC(){
     genAlphaQCD = genInfo->alphaQCD();
     genAlphaQED = genInfo->alphaQED();
 
-    //get lhe event info:    
-    std::vector<std::string>::const_iterator c_begin = lheInfo->comments_begin();
-    std::vector<std::string>::const_iterator c_end = lheInfo->comments_end();
-    for( std::vector<std::string>::const_iterator cit=c_begin; cit!=c_end; ++cit) {
-      lheComments->push_back(*cit);
+    //get lhe event info:
+    if (isFastsim_ && lheInfo.isValid()) {
+      std::vector<std::string>::const_iterator c_begin = lheInfo->comments_begin();
+      std::vector<std::string>::const_iterator c_end = lheInfo->comments_end();
+      for( std::vector<std::string>::const_iterator cit=c_begin; cit!=c_end; ++cit) {
+	lheComments->push_back(*cit);
+      }
     }
 
     return true;
