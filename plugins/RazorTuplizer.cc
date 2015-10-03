@@ -12,6 +12,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   //get inputs from config file
   isData_(iConfig.getParameter<bool> ("isData")),
   useGen_(iConfig.getParameter<bool> ("useGen")),  
+  isFastsim_(iConfig.getParameter<bool> ("isFastsim")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
@@ -553,6 +554,8 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genQScale", &genQScale, "genQScale/F");
   RazorEvents->Branch("genAlphaQCD", &genAlphaQCD, "genAlphaQCD/F");
   RazorEvents->Branch("genAlphaQED", &genAlphaQED, "genAlphaQED/F");
+  lheComments = new std::vector<std::string>; lheComments->clear();
+  if (isFastsim_) RazorEvents->Branch("lheComments", "std::vector<std::string>",&lheComments);
 }
 
 void RazorTuplizer::enableGenParticleBranches(){
@@ -1557,39 +1560,41 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   }
 
   //MET filters
-  const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
-  for(unsigned int i = 0, n = metFilterBits->size(); i < n; ++i){
-    if(strcmp(metNames.triggerName(i).c_str(), "Flag_trackingFailureFilter") == 0)
-      Flag_trackingFailureFilter = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_goodVertices") == 0)
-      Flag_goodVertices = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_CSCTightHaloFilter") == 0)
-      Flag_CSCTightHaloFilter = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOGFilters") == 0)
-      Flag_trkPOGFilters = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_logErrorTooManyClusters") == 0)
-      Flag_trkPOG_logErrorTooManyClusters = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_EcalDeadCellTriggerPrimitiveFilter") == 0)
-      Flag_EcalDeadCellTriggerPrimitiveFilter = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_ecalLaserCorrFilter") == 0)
-      Flag_ecalLaserCorrFilter = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_manystripclus53X") == 0)
-      Flag_trkPOG_manystripclus53X = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_eeBadScFilter") == 0)
-      Flag_eeBadScFilter = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_METFilters") == 0)
-      Flag_METFilters = metFilterBits->accept(i);
-    // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
-    //   Flag_HBHENoiseFilter = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
-      Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
-    else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
-      Flag_hcalLaserEventFilter = metFilterBits->accept(i);
+  if (!isFastsim_) {
+    const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
+    for(unsigned int i = 0, n = metFilterBits->size(); i < n; ++i){
+      if(strcmp(metNames.triggerName(i).c_str(), "Flag_trackingFailureFilter") == 0)
+	Flag_trackingFailureFilter = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_goodVertices") == 0)
+	Flag_goodVertices = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_CSCTightHaloFilter") == 0)
+	Flag_CSCTightHaloFilter = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOGFilters") == 0)
+	Flag_trkPOGFilters = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_logErrorTooManyClusters") == 0)
+	Flag_trkPOG_logErrorTooManyClusters = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_EcalDeadCellTriggerPrimitiveFilter") == 0)
+	Flag_EcalDeadCellTriggerPrimitiveFilter = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_ecalLaserCorrFilter") == 0)
+	Flag_ecalLaserCorrFilter = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_manystripclus53X") == 0)
+	Flag_trkPOG_manystripclus53X = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_eeBadScFilter") == 0)
+	Flag_eeBadScFilter = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_METFilters") == 0)
+	Flag_METFilters = metFilterBits->accept(i);
+      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
+      //   Flag_HBHENoiseFilter = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
+	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
+	Flag_hcalLaserEventFilter = metFilterBits->accept(i);
+    }
+
+    //use custom hbhefilter, because miniAOD filters are problematic.
+    Flag_HBHENoiseFilter = *hbheNoiseFilter;
   }
 
-  //use custom hbhefilter, because miniAOD filters are problematic.
-  Flag_HBHENoiseFilter = *hbheNoiseFilter;
-  
   return true;
 };
 
@@ -1627,6 +1632,13 @@ bool RazorTuplizer::fillMC(){
     genQScale = genInfo->qScale();
     genAlphaQCD = genInfo->alphaQCD();
     genAlphaQED = genInfo->alphaQED();
+
+    //get lhe event info:    
+    std::vector<std::string>::const_iterator c_begin = lheInfo->comments_begin();
+    std::vector<std::string>::const_iterator c_end = lheInfo->comments_end();
+    for( std::vector<std::string>::const_iterator cit=c_begin; cit!=c_end; ++cit) {
+      lheComments->push_back(*cit);
+    }
 
     return true;
 }

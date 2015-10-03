@@ -158,6 +158,7 @@ protected:
   // Control Switches
   bool    isData_;
   bool    useGen_;
+  bool    isFastsim_;
   bool enableTriggerInfo_;
   
   // Mapping of the HLT Triggers and Filters
@@ -508,6 +509,7 @@ protected:
   float genQScale;
   float genAlphaQCD;
   float genAlphaQED;
+  vector<string> *lheComments;
 
   //gen info
   int nGenParticle;

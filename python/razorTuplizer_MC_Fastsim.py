@@ -11,8 +11,11 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/mc/RunIISpring15DR74/ttHJetToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8/MINIAODSIM/Asympt50ns_MCRUN2_74_V9A-v1/70000/E84BFE7C-01FF-E411-9D16-003048D15D48.root'
-        
+        #'/store/mc/RunIISpring15FSPremix/SMS-T1bbbb_mGluino-825-850_mLSP-625to800-400to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/50000/5418D3AD-1D5E-E511-83CA-0025905A611C.root'
+        'file:/tmp/sixie/0261E2EC-205C-E511-8041-002590D9D84A.root'
+        #'file:/tmp/sixie/000FC7B8-9567-E511-BFC2-00259073E37C.root'
+        #'/store/mc/RunIISpring15FSPremix/SMS-T1bbbb_mGluino-1000-1025_mLSP-1to975-1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/10000/0261E2EC-205C-E511-8041-002590D9D84A.root'
+        #'/store/mc/RunIISpring15FSPremix/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/60000/000FC7B8-9567-E511-BFC2-00259073E37C.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -40,8 +43,8 @@ process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
-process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
-process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
+#process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
+#process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
 
 #------ Analyzer ------#
 
@@ -49,7 +52,7 @@ process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
     isData = cms.bool(False),    
     useGen = cms.bool(True),
-    isFastsim = cms.bool(False),
+    isFastsim = cms.bool(True),
     enableTriggerInfo = cms.bool(True),                                 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
     eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
@@ -80,22 +83,22 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
 
-    lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
-    genInfo = cms.InputTag("generator", "", "SIM"),
+    lheInfo = cms.InputTag("source", "", "LHEFile"),
+    genInfo = cms.InputTag("generator", "", "HLT"),
     puInfo = cms.InputTag("addPileupInfo", "", "HLT"), #uncomment if no pre-mixing
     #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
-    hcalNoiseInfo = cms.InputTag("hcalnoise", "", "RECO"),
+    hcalNoiseInfo = cms.InputTag("hcalnoise", "", "HLT"),
 
     secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "PAT"),
 
-    rhoAll = cms.InputTag("fixedGridRhoAll", "", "RECO"),
-    rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "RECO"),
-    rhoFastjetAllCalo = cms.InputTag("fixedGridRhoFastjetAllCalo", "", "RECO"),
-    rhoFastjetCentralCalo = cms.InputTag("fixedGridRhoFastjetCentralCalo", "", "RECO"),
-    rhoFastjetCentralChargedPileUp = cms.InputTag("fixedGridRhoFastjetCentralChargedPileUp", "", "RECO"),
-    rhoFastjetCentralNeutral = cms.InputTag("fixedGridRhoFastjetCentralNeutral", "", "RECO"),
+    rhoAll = cms.InputTag("fixedGridRhoAll", "", "HLT"),
+    rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "HLT"),
+    rhoFastjetAllCalo = cms.InputTag("fixedGridRhoFastjetAllCalo", "", "HLT"),
+    rhoFastjetCentralCalo = cms.InputTag("fixedGridRhoFastjetCentralCalo", "", "HLT"),
+    rhoFastjetCentralChargedPileUp = cms.InputTag("fixedGridRhoFastjetCentralChargedPileUp", "", "HLT"),
+    rhoFastjetCentralNeutral = cms.InputTag("fixedGridRhoFastjetCentralNeutral", "", "HLT"),
 
-    beamSpot = cms.InputTag("offlineBeamSpot", "", "RECO"),
+    beamSpot = cms.InputTag("offlineBeamSpot", "", "HLT"),
 
     ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "PAT"),
     eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "PAT"),
@@ -112,5 +115,5 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 )
 
 #run
-process.p = cms.Path( process.HBHENoiseFilterResultProducer*
+process.p = cms.Path( #process.HBHENoiseFilterResultProducer*
                       process.ntuples)

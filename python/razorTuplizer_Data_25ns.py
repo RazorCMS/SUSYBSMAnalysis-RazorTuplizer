@@ -11,7 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/data/Run2015C/DoubleMuon/MINIAOD/PromptReco-v1/000/254/232/00000/164C316D-C845-E511-8A53-02163E014229.root'        
+        '/store/data/Run2015D/SingleMuon/MINIAOD/PromptReco-v3/000/256/677/00000/CEAE1A74-3A5F-E511-821F-02163E013938.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -44,6 +44,7 @@ process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
     isData = cms.bool(True),    
     useGen = cms.bool(False),
+    isFastsim = cms.bool(False),
     enableTriggerInfo = cms.bool(True),                                 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
     eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
