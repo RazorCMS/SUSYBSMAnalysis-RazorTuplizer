@@ -38,6 +38,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   metPuppiToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsPuppi"))),
   metFilterBitsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("metFilterBits"))),
   hbheNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheNoiseFilter"))),
+  hbheTightNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheTightNoiseFilter"))),
+  hbheIsoNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheIsoNoiseFilter"))),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genInfo"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("puInfo"))),
@@ -513,9 +515,12 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metPuppiPhi", &metPuppiPhi, "metPuppiPhi/F");
 
   RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
+  RazorEvents->Branch("Flag_HBHETightNoiseFilter", &Flag_HBHETightNoiseFilter, "Flag_HBHETightNoiseFilter/O");
+  RazorEvents->Branch("Flag_HBHEIsoNoiseFilter", &Flag_HBHEIsoNoiseFilter, "Flag_HBHEIsoNoiseFilter/O");
   RazorEvents->Branch("Flag_CSCTightHaloFilter", &Flag_CSCTightHaloFilter, "Flag_CSCTightHaloFilter/O");
   RazorEvents->Branch("Flag_hcalLaserEventFilter", &Flag_hcalLaserEventFilter, "Flag_hcalLaserEventFilter/O");
   RazorEvents->Branch("Flag_EcalDeadCellTriggerPrimitiveFilter", &Flag_EcalDeadCellTriggerPrimitiveFilter, "Flag_EcalDeadCellTriggerPrimitiveFilter/O");
+  RazorEvents->Branch("Flag_EcalDeadCellBoundaryEnergyFilter", &Flag_EcalDeadCellBoundaryEnergyFilter, "Flag_EcalDeadCellBoundaryEnergyFilter/O");
   RazorEvents->Branch("Flag_goodVertices", &Flag_goodVertices, "Flag_goodVertices/O");
   RazorEvents->Branch("Flag_trackingFailureFilter", &Flag_trackingFailureFilter, "Flag_trackingFailureFilter/O");
   RazorEvents->Branch("Flag_eeBadScFilter", &Flag_eeBadScFilter, "Flag_eeBadScFilter/O");
@@ -610,6 +615,8 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(superClustersToken_,superClusters);
   iEvent.getByToken(lostTracksToken_,lostTracks);
   iEvent.getByToken(hbheNoiseFilterToken_, hbheNoiseFilter);
+  iEvent.getByToken(hbheTightNoiseFilterToken_, hbheTightNoiseFilter);
+  iEvent.getByToken(hbheIsoNoiseFilterToken_, hbheIsoNoiseFilter);
 
   if (useGen_) {
     iEvent.getByToken(prunedGenParticlesToken_,prunedGenParticles);
@@ -858,9 +865,12 @@ void RazorTuplizer::resetBranches(){
     metPuppiPt = -99.0;
     metPuppiPhi = -99.0;
     Flag_HBHENoiseFilter = false;
+    Flag_HBHETightNoiseFilter = false;
+    Flag_HBHEIsoNoiseFilter = false;
     Flag_CSCTightHaloFilter = false;
     Flag_hcalLaserEventFilter = false;
     Flag_EcalDeadCellTriggerPrimitiveFilter = false;
+    Flag_EcalDeadCellBoundaryEnergyFilter = false;
     Flag_goodVertices = false;
     Flag_trackingFailureFilter = false;
     Flag_eeBadScFilter = false;
@@ -1562,6 +1572,14 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   //MET filters
   if (!isFastsim_) {
     const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
+    
+    //*******************************************************************************
+    //For Debug printout
+    //*******************************************************************************
+    // for (unsigned int i = 0, n = metFilterBits->size(); i < n; ++i) {
+    // 	std::cout << "MET Filter " << metNames.triggerName(i).c_str() << "\n";
+    // }
+    
     for(unsigned int i = 0, n = metFilterBits->size(); i < n; ++i){
       if(strcmp(metNames.triggerName(i).c_str(), "Flag_trackingFailureFilter") == 0)
 	Flag_trackingFailureFilter = metFilterBits->accept(i);
@@ -1575,6 +1593,8 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_trkPOG_logErrorTooManyClusters = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_EcalDeadCellTriggerPrimitiveFilter") == 0)
 	Flag_EcalDeadCellTriggerPrimitiveFilter = metFilterBits->accept(i);
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_EcalDeadCellBoundaryEnergyFilter") == 0)
+	Flag_EcalDeadCellBoundaryEnergyFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_ecalLaserCorrFilter") == 0)
 	Flag_ecalLaserCorrFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_manystripclus53X") == 0)
@@ -1585,14 +1605,18 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_METFilters = metFilterBits->accept(i);
       // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
       //   Flag_HBHENoiseFilter = metFilterBits->accept(i);
+      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseIsoFilter") == 0)
+      //   HBHEIsoNoiseFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
 	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
-	Flag_hcalLaserEventFilter = metFilterBits->accept(i);
-    }
+	Flag_hcalLaserEventFilter = metFilterBits->accept(i);     
+    } //loop over met filters
 
     //use custom hbhefilter, because miniAOD filters are problematic.
     Flag_HBHENoiseFilter = *hbheNoiseFilter;
+    Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
+    Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
   }
 
   return true;

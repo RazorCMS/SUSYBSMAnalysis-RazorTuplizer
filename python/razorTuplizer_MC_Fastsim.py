@@ -11,11 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'/store/mc/RunIISpring15FSPremix/SMS-T1bbbb_mGluino-825-850_mLSP-625to800-400to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/50000/5418D3AD-1D5E-E511-83CA-0025905A611C.root'
-        'file:/tmp/sixie/0261E2EC-205C-E511-8041-002590D9D84A.root'
-        #'file:/tmp/sixie/000FC7B8-9567-E511-BFC2-00259073E37C.root'
-        #'/store/mc/RunIISpring15FSPremix/SMS-T1bbbb_mGluino-1000-1025_mLSP-1to975-1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/10000/0261E2EC-205C-E511-8041-002590D9D84A.root'
-        #'/store/mc/RunIISpring15FSPremix/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/60000/000FC7B8-9567-E511-BFC2-00259073E37C.root'
+        '/store/mc/RunIISpring15FSPremix/SMS-T1bbbb_mGluino-1150_mLSP-400to975-1100to1125_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/50000/320B2CE3-BE5D-E511-8C9E-B083FED76C6C.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -82,6 +78,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     triggerObjects = cms.InputTag("selectedPatTrigger"),
     metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
+    hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
+    hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
 
     lheInfo = cms.InputTag("source", "", "LHEFile"),
     genInfo = cms.InputTag("generator", "", "HLT"),

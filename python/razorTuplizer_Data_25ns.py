@@ -11,10 +11,11 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/data/Run2015D/SingleMuon/MINIAOD/PromptReco-v3/000/256/677/00000/CEAE1A74-3A5F-E511-821F-02163E013938.root'
+        #'/store/data/Run2015D/SingleMuon/MINIAOD/PromptReco-v3/000/256/677/00000/CEAE1A74-3A5F-E511-821F-02163E013938.root'
+        '/store/data/Run2015D/HTMHT/MINIAOD/PromptReco-v3/000/256/936/00000/5CDEE11A-2F62-E511-B317-02163E014526.root'        
     )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(2000) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
@@ -37,6 +38,8 @@ process.GlobalTag.globaltag = '74X_dataRun2_Prompt_v2'
 
 process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
 process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
+process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
+process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
 
 #------ Analyzer ------#
 
@@ -74,6 +77,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     triggerObjects = cms.InputTag("selectedPatTrigger"),
     metFilterBits = cms.InputTag("TriggerResults", "", "RECO"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
+    hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
+    hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),

@@ -11,8 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:/tmp/sixie/000FC7B8-9567-E511-BFC2-00259073E37C.root'
-        #'/store/mc/RunIISpring15FSPremix/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/60000/000FC7B8-9567-E511-BFC2-00259073E37C.root'
+        '/store/mc/RunIISpring15FSPremix/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/MCRUN2_74_V9-v1/60000/000FC7B8-9567-E511-BFC2-00259073E37C.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -79,6 +78,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     triggerObjects = cms.InputTag("selectedPatTrigger"),
     metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
+    hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
+    hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "HLT"),

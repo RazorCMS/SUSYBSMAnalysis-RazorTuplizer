@@ -196,6 +196,8 @@ protected:
   edm::EDGetTokenT<pat::METCollection> metPuppiToken_;
   edm::EDGetTokenT<edm::TriggerResults> metFilterBitsToken_;
   edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
+  edm::EDGetTokenT<bool> hbheTightNoiseFilterToken_;
+  edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
@@ -245,6 +247,8 @@ protected:
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
   edm::Handle<HcalNoiseSummary> hcalNoiseInfo;
   edm::Handle<bool> hbheNoiseFilter;
+  edm::Handle<bool> hbheTightNoiseFilter;
+  edm::Handle<bool> hbheIsoNoiseFilter;
   edm::Handle<vector<reco::VertexCompositePtrCandidate> > secondaryVertices;
   edm::Handle<double> rhoAll;
   edm::Handle<double> rhoFastjetAll;
@@ -479,9 +483,12 @@ protected:
   float metPuppiPhi;
 
   bool Flag_HBHENoiseFilter;
+  bool Flag_HBHETightNoiseFilter;
+  bool Flag_HBHEIsoNoiseFilter;
   bool Flag_CSCTightHaloFilter;
   bool Flag_hcalLaserEventFilter;
   bool Flag_EcalDeadCellTriggerPrimitiveFilter;
+  bool Flag_EcalDeadCellBoundaryEnergyFilter;
   bool Flag_goodVertices;
   bool Flag_trackingFailureFilter;
   bool Flag_eeBadScFilter;
