@@ -902,6 +902,7 @@ void RazorTuplizer::resetBranches(){
     fixedGridRhoFastjetCentralChargedPileUp = -99.0;
     fixedGridRhoFastjetCentralNeutral = -99.0;
 
+    lheComments->clear();
 }
 
 //------ Methods to fill tree variables ------//
