@@ -909,6 +909,7 @@ void RazorTuplizer::resetBranches(){
     fixedGridRhoFastjetCentralChargedPileUp = -99.0;
     fixedGridRhoFastjetCentralNeutral = -99.0;
 
+    lheComments->clear();
 }
 
 //------ Methods to fill tree variables ------//
@@ -933,14 +934,15 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
     }
   }
 
-  if(nPV == 0)return false;
+  //if(nPV == 0)return false;
   if (foundPV) {
     pvX = myPV->x();
     pvY = myPV->y();
     pvZ = myPV->z();
-  } else {
-    return false;
-  }
+  } 
+  //else {
+  //  return false;
+  //}
 
   //get rho
   fixedGridRhoAll = *rhoAll;
