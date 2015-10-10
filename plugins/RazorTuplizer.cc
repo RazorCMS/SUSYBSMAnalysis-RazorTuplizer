@@ -883,6 +883,13 @@ void RazorTuplizer::resetBranches(){
 
     genMetPt = -999;
     genMetPhi = -999;
+    genVertexZ = -999;
+    genWeight = 1;
+    genSignalProcessID = -999;
+    genQScale = -999;
+    genAlphaQCD = -999;
+    genAlphaQED = -999;
+    lheComments->clear(); 
 
     MR = -999;
     RSQ = -999;
