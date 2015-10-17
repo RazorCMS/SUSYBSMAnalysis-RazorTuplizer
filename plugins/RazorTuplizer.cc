@@ -40,6 +40,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   hbheNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheNoiseFilter"))),
   hbheTightNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheTightNoiseFilter"))),
   hbheIsoNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheIsoNoiseFilter"))),
+  lheRunInfoTag_(iConfig.getParameter<edm::InputTag>("lheInfo")),
+  lheRunInfoToken_(consumes<LHERunInfoProduct,edm::InRun>(lheRunInfoTag_)),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genInfo"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("puInfo"))),
@@ -62,7 +64,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   gedGsfElectronCoresToken_(consumes<vector<reco::GsfElectronCore> >(iConfig.getParameter<edm::InputTag>("gedGsfElectronCores"))),
   gedPhotonCoresToken_(consumes<vector<reco::PhotonCore> >(iConfig.getParameter<edm::InputTag>("gedPhotonCores"))),
   superClustersToken_(consumes<vector<reco::SuperCluster> >(iConfig.getParameter<edm::InputTag>("superClusters"))),
-  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks")))
+  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks")))//,
+//   pdfweightshelper(100,20,edm::FileInPath("PhysicsTools/HepMCCandAlgos/data/NNPDF30_lo_as_0130.csv"))
 {
   //declare the TFileService for output
   edm::Service<TFileService> fs;
@@ -70,6 +73,23 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   //set up output tree
   RazorEvents = fs->make<TTree>("RazorEvents", "selected miniAOD information");
   NEvents = fs->make<TH1F>("NEvents",";;NEvents;",1,-0.5,0.5);
+  if (useGen_) {
+    sumWeights = fs->make<TH1D>("sumWeights",";;sumWeights;",1,-0.5,0.5);
+    sumScaleWeights = fs->make<TH1D>("sumScaleWeights",";;sumScaleWeights;",9,-0.5,8.5);
+    sumPdfWeights = fs->make<TH1D>("sumPdfWeights",";;sumPdfWeights;",100,-0.5,99.5);
+    sumAlphasWeights = fs->make<TH1D>("sumAlphasWeights",";;sumAlphasWeights;",2,-0.5,1.5);
+    
+    sumWeights->Sumw2();
+    sumScaleWeights->Sumw2();
+    sumPdfWeights->Sumw2();
+    sumAlphasWeights->Sumw2();
+  }
+  else {
+    sumWeights = 0;
+    sumScaleWeights = 0;
+    sumPdfWeights = 0;
+    sumAlphasWeights = 0;
+  }
 
   //set up electron MVA ID
   std::vector<std::string> myTrigWeights;
@@ -560,7 +580,15 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genAlphaQCD", &genAlphaQCD, "genAlphaQCD/F");
   RazorEvents->Branch("genAlphaQED", &genAlphaQED, "genAlphaQED/F");
   lheComments = new std::vector<std::string>; lheComments->clear();
-  if (isFastsim_) RazorEvents->Branch("lheComments", "std::vector<std::string>",&lheComments);
+  scaleWeights = new std::vector<float>; scaleWeights->clear();
+  pdfWeights = new std::vector<float>; pdfWeights->clear();
+  alphasWeights = new std::vector<float>; alphasWeights->clear();
+  if (isFastsim_) {
+    RazorEvents->Branch("lheComments", "std::vector<std::string>",&lheComments);
+  }
+  RazorEvents->Branch("scaleWeights", "std::vector<float>",&scaleWeights);
+  RazorEvents->Branch("pdfWeights", "std::vector<float>",&pdfWeights);
+  RazorEvents->Branch("alphasWeights", "std::vector<float>",&alphasWeights);
 }
 
 void RazorTuplizer::enableGenParticleBranches(){
@@ -890,6 +918,9 @@ void RazorTuplizer::resetBranches(){
     genAlphaQCD = -999;
     genAlphaQED = -999;
     lheComments->clear(); 
+    scaleWeights->clear();
+    pdfWeights->clear();
+    alphasWeights->clear();
 
     MR = -999;
     RSQ = -999;
@@ -921,6 +952,7 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   
   //select the primary vertex, if any
   nPV = 0;
+  myPV = &(vertices->front());
   bool foundPV = false;
   for(unsigned int i = 0; i < vertices->size(); i++){
     if(vertices->at(i).isValid() && !vertices->at(i).isFake()){
@@ -931,21 +963,10 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
       nPV++;
     }
   }
-
-  if(nPV == 0)return false;
-  if (foundPV) {
-    pvX = myPV->x();
-    pvY = myPV->y();
-    pvZ = myPV->z();
-  } else {
-    return false;
-  }
-
-  if (foundPV) {
-    pvX = myPV->x();
-    pvY = myPV->y();
-    pvZ = myPV->z();
-  } 
+  
+  pvX = myPV->x();
+  pvY = myPV->y();
+  pvZ = myPV->z();
 
   //get rho
   fixedGridRhoAll = *rhoAll;
@@ -1668,15 +1689,77 @@ bool RazorTuplizer::fillMC(){
     genQScale = genInfo->qScale();
     genAlphaQCD = genInfo->alphaQCD();
     genAlphaQED = genInfo->alphaQED();
-
-    //get lhe event info:
-    if (isFastsim_ && lheInfo.isValid()) {
+    
+    //get lhe weights for systematic uncertainties:
+    if (lheInfo.isValid() && lheInfo->weights().size()>0) {
+      
+      double nomlheweight = lheInfo->weights()[0].wgt;
+      
+      //fill scale variation weights
+      if (lheInfo->weights().size()>=9) {  
+        for (unsigned int iwgt=0; iwgt<9; ++iwgt) {
+          double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+          scaleWeights->push_back(wgtval);
+        }
+      }
+      
+      //fill pdf variation weights
+      if (firstPdfWeight>=0 && lastPdfWeight>=0 && lastPdfWeight<int(lheInfo->weights().size())) {
+        for (int iwgt = firstPdfWeight; iwgt<=lastPdfWeight; ++iwgt) {
+          double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+          pdfWeights->push_back(wgtval);
+        }
+      }
+            
+      //fill alpha_s variation weights
+      if (firstAlphasWeight>=0 && lastAlphasWeight>=0 && lastAlphasWeight<int(lheInfo->weights().size())) {
+        for (int iwgt = firstAlphasWeight; iwgt<=lastAlphasWeight; ++iwgt) {
+          double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+          alphasWeights->push_back(wgtval);
+        }
+      }
+    }
+    
+      //related to collapsing of pdf weights into eigenvectors, will be revived later
+//       std::array<double, 100> inpdfweights;
+//       for (unsigned int ipdf=0; ipdf<100; ++ipdf) {
+//         unsigned int iwgt = ipdf + 10;
+//         inpdfweights[ipdf] = lheInfo->weights()[iwgt].wgt/nomlheweight;
+//         
+//         double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+//         scaleWeights->push_back(wgtval);
+//       }
+//       
+//       std::array<double, 20> outpdfweights;
+//       pdfweightshelper.DoMC2Hessian(inpdfweights.data(),outpdfweights.data());
+//       
+//       for (unsigned int iwgt=0; iwgt<20; ++iwgt) {
+//         double wgtval = outpdfweights[iwgt]*genWeight;
+//         pdfWeights->push_back(wgtval);
+//       }
+        
+    //fill lhe comment lines with SUSY model parameter information
+    if (lheInfo.isValid() && isFastsim_) {
       std::vector<std::string>::const_iterator c_begin = lheInfo->comments_begin();
       std::vector<std::string>::const_iterator c_end = lheInfo->comments_end();
       for( std::vector<std::string>::const_iterator cit=c_begin; cit!=c_end; ++cit) {
-	lheComments->push_back(*cit);
-      }
+        lheComments->push_back(*cit);
+      } 
     }
+    
+    //fill sum of weights histograms
+    sumWeights->Fill(0.,genWeight);
+    
+    for (unsigned int iwgt=0; iwgt<scaleWeights->size(); ++iwgt) {
+      sumScaleWeights->Fill(double(iwgt),(*scaleWeights)[iwgt]);
+    }
+    for (unsigned int iwgt=0; iwgt<pdfWeights->size(); ++iwgt) {
+      sumPdfWeights->Fill(double(iwgt),(*pdfWeights)[iwgt]);
+    }
+    for (unsigned int iwgt=0; iwgt<alphasWeights->size(); ++iwgt) {
+      sumAlphasWeights->Fill(double(iwgt),(*alphasWeights)[iwgt]);
+    }    
+    
 
     return true;
 }
@@ -1847,6 +1930,80 @@ bool RazorTuplizer::fillTrigger(const edm::Event& iEvent){
   return true;
 }
 
+//------ Method called for each run ------//
+
+void RazorTuplizer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup) {
+  
+  //read LHE header if present and determine which weights to read for pdf and alphas uncertainties based on the 
+  //central pdf set used
+  //This is semi-hardcoded for now to work with current centrally produced samples
+  //covering SUSY signal samples, LO madgraph, NLO madgraph_aMC@NLO, and NLO powheg
+  //generated with nnpdf30
+  //More robust selection will require some parsing of <initrwgt> block
+  
+  if (useGen_) {
+  
+    edm::Handle<LHERunInfoProduct> lheRunInfo;
+    iRun.getByLabel(lheRunInfoTag_,lheRunInfo);
+    
+    if (lheRunInfo.isValid()) {
+      int pdfidx = lheRunInfo->heprup().PDFSUP.first;
+      
+      if (pdfidx == 263000) {
+        //NNPDF30_lo_as_0130 (nf5) for LO madgraph samples and SUSY signals
+        firstPdfWeight = 10;
+        lastPdfWeight = 109;
+        firstAlphasWeight = -1;
+        lastAlphasWeight = -1;      
+      }
+      else if (pdfidx == 263400) {
+        //NNPdf30_lo_as_0130_nf4 for LO madgraph samples
+        firstPdfWeight = 111;
+        lastPdfWeight = 210;
+        firstAlphasWeight = -1;
+        lastAlphasWeight = -1;            
+      }
+      else if (pdfidx == 260000 || pdfidx == -1) {
+        //NNPdf30_nlo_as_0118 (nf5) for NLO powheg samples
+        //(work around apparent bug in current powheg samples by catching "-1" as well)
+        firstPdfWeight = 9;
+        lastPdfWeight = 108;
+        firstAlphasWeight = 109;
+        lastAlphasWeight = 110; 
+      }
+      else if (pdfidx == 292200) {
+        //NNPdf30_nlo_as_0118 (nf5) with built-in alphas variations for NLO aMC@NLO samples
+        firstPdfWeight = 9;
+        lastPdfWeight = 108;
+        firstAlphasWeight = 109;
+        lastAlphasWeight = 110; 
+      }   
+      else if (pdfidx == 292000) {
+        //NNPdf30_nlo_as_0118_nf4 with built-in alphas variations for NLO aMC@NLO samples
+        firstPdfWeight = 9;
+        lastPdfWeight = 108;
+        firstAlphasWeight = 109;
+        lastAlphasWeight = 110;
+      }
+      else {
+        firstPdfWeight = -1;
+        lastPdfWeight = -1;
+        firstAlphasWeight = -1;
+        lastAlphasWeight = -1;
+      }    
+      
+    }
+    else {
+      firstPdfWeight = -1;
+      lastPdfWeight = -1;
+      firstAlphasWeight = -1;
+      lastAlphasWeight = -1;
+    }
+    
+  }
+  
+  
+}
 
 //------ Method called for each event ------//
 

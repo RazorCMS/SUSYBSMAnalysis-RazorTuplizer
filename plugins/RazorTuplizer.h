@@ -47,6 +47,7 @@ using namespace std;
 #include "DataFormats/METReco/interface/HcalNoiseSummary.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidate.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
@@ -54,6 +55,7 @@ using namespace std;
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/ElectronMVAEstimatorRun2NonTrig.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
+// #include "PhysicsTools/HepMCCandAlgos/interface/PDFWeightsHelper.h"
 
 //ROOT includes
 #include "TTree.h"
@@ -145,6 +147,7 @@ public:
 
 protected:
   virtual void beginJob() override;
+  virtual void beginRun(const edm::Run&, const edm::EventSetup&) override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
 
@@ -198,6 +201,8 @@ protected:
   edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
   edm::EDGetTokenT<bool> hbheTightNoiseFilterToken_;
   edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
+  edm::InputTag lheRunInfoTag_;
+  edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
@@ -221,6 +226,7 @@ protected:
   edm::EDGetTokenT<vector<reco::PhotonCore> > gedPhotonCoresToken_;
   edm::EDGetTokenT<vector<reco::SuperCluster> > superClustersToken_;
   edm::EDGetTokenT<vector<pat::PackedCandidate> > lostTracksToken_;
+  
   
   //EDM handles for each miniAOD input object
   edm::Handle<edm::TriggerResults> triggerBits;
@@ -273,6 +279,10 @@ protected:
   //output tree
   TTree *RazorEvents;
   TH1F *NEvents;
+  TH1D *sumWeights;
+  TH1D *sumScaleWeights;
+  TH1D *sumPdfWeights;
+  TH1D *sumAlphasWeights;
 
   //------ Variables for tree ------//
 
@@ -517,7 +527,15 @@ protected:
   float genAlphaQCD;
   float genAlphaQED;
   vector<string> *lheComments;
+  vector<float> *scaleWeights;
+  vector<float> *pdfWeights;
+  vector<float> *alphasWeights;
 
+  int firstPdfWeight;
+  int lastPdfWeight;
+  int firstAlphasWeight;
+  int lastAlphasWeight;
+  
   //gen info
   int nGenParticle;
   int gParticleMotherId[GENPARTICLEARRAYSIZE];
@@ -553,6 +571,9 @@ protected:
   vector<string>  *nameHLT;
   bool triggerDecision[NTriggersMAX];
   int  triggerHLTPrescale[NTriggersMAX];
+  
+  //pdf weight helper
+//   PDFWeightsHelper pdfweightshelper;
 
 };
 
