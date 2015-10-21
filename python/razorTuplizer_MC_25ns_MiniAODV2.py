@@ -115,6 +115,21 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     lostTracks = cms.InputTag("lostTracks", "", "PAT")
 )
 
+#########
+runOnData=False #data/MC switch
+usePrivateSQlite=False #use external JECs (sqlite file)
+useHFCandidates=True #create an additionnal NoHF slimmed MET collection if the option is set to false
+
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+
+#default configuration for miniAOD reprocessing, change the isData flag to run on data
+#for a full met computation, remove the pfCandColl input
+runMetCorAndUncFromMiniAOD(process,
+                           isData=runOnData,
+                           # repro74X=runOnOld74XMAOD #only for 74X X<12 miniAODs 
+                           )
+#########
+
 #run
 process.p = cms.Path( process.HBHENoiseFilterResultProducer*
-                      process.ntuples)
+                    process.ntuples)

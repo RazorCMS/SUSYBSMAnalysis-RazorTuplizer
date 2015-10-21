@@ -909,6 +909,44 @@ void RazorTuplizer::resetBranches(){
     Flag_trkPOG_logErrorTooManyClusters = false;
     Flag_METFilters = false;
 
+    metType1PtJetResUp=-999.;
+    metType1PtJetResDown=-999.;
+    metType1PtJetEnUp=-999.;
+    metType1PtJetEnDown=-999.;
+    metType1PtMuonEnUp=-999.;
+    metType1PtMuonEnDown=-999.;
+    metType1PtElectronEnUp=-999.;
+    metType1PtElectronEnDown=-999.;
+    metType1PtTauEnUp=-999.;
+    metType1PtTauEnDown=-999.;
+    metType1PtUnclusteredEnUp=-999.;
+    metType1PtUnclusteredEnDown=-999.;
+    metType1PtPhotonEnUp=-999.;
+    metType1PtPhotonEnDown=-999.;
+    metType1PtMETUncertaintySize=-999.;
+    metType1PtJetResUpSmear=-999.;
+    metType1PtJetResDownSmear=-999.;
+    metType1PtMETFullUncertaintySize=-999.;
+  
+    metType1PhiJetResUp=-999.;
+    metType1PhiJetResDown=-999.;
+    metType1PhiJetEnUp=-999.;
+    metType1PhiJetEnDown=-999.;
+    metType1PhiMuonEnUp=-999.;
+    metType1PhiMuonEnDown=-999.;
+    metType1PhiElectronEnUp=-999.;
+    metType1PhiElectronEnDown=-999.;
+    metType1PhiTauEnUp=-999.;
+    metType1PhiTauEnDown=-999.;
+    metType1PhiUnclusteredEnUp=-999.;
+    metType1PhiUnclusteredEnDown=-999.;
+    metType1PhiPhotonEnUp=-999.;
+    metType1PhiPhotonEnDown=-999.;
+    metType1PhiMETUncertaintySize=-999.;
+    metType1PhiJetResUpSmear=-999.;
+    metType1PhiJetResDownSmear=-999.;
+    metType1PhiMETFullUncertaintySize=-999.;
+
     genMetPt = -999;
     genMetPhi = -999;
     genVertexZ = -999;
@@ -1593,6 +1631,47 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metType0Plus1Pt = 0;
   metType0Plus1Phi = 0;
 
+  if(!isData_)
+    {
+      metType1PtJetResUp           = Met.shiftedPt(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PtJetResDown         = Met.shiftedPt(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
+      metType1PtJetEnUp            = Met.shiftedPt(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PtJetEnDown          = Met.shiftedPt(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);
+      metType1PtMuonEnUp           = Met.shiftedPt(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PtMuonEnDown         = Met.shiftedPt(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);
+      metType1PtElectronEnUp       = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PtElectronEnDown     = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);
+      metType1PtTauEnUp	           = Met.shiftedPt(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PtTauEnDown          = Met.shiftedPt(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);
+      metType1PtUnclusteredEnUp    = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PtUnclusteredEnDown  = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);
+      metType1PtPhotonEnUp         = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PtPhotonEnDown       = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);
+      // metType1PtMETUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);
+      // metType1PtJetResUpSmear     = Met.shiftedPt(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
+      // metType1PtJetResDownSmear   = Met.shiftedPt(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
+      // metType1PtMETFullUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
+      
+      metType1PhiJetResUp          = Met.shiftedPhi(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
+      metType1PhiJetResDown        = Met.shiftedPhi(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
+      metType1PhiJetEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiJetEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiMuonEnUp          = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiMuonEnDown        = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);	 
+      metType1PhiElectronEnUp      = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiElectronEnDown    = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiTauEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiTauEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiUnclusteredEnUp   = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiUnclusteredEnDown = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiPhotonEnUp        = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);	      
+      metType1PhiPhotonEnDown      = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);	      
+      // metType1PhiMETUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);	      
+      // metType1PhiJetResUpSmear     = Met.shiftedPhi(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
+      // metType1PhiJetResDownSmear   = Met.shiftedPhi(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
+      // metType1PhiMETFullUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
+    }
+  
   if(isData_) {
     const pat::MET &MetPuppi = metsPuppi->front();
     const pat::MET &MetNoHF = metsNoHF->front();

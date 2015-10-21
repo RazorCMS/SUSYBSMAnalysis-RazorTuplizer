@@ -492,6 +492,45 @@ protected:
   float metPuppiPt;
   float metPuppiPhi;
 
+  float metType1PtJetResUp;
+  float metType1PtJetResDown;
+  float metType1PtJetEnUp;
+  float metType1PtJetEnDown;
+  float metType1PtMuonEnUp;
+  float metType1PtMuonEnDown;
+  float metType1PtElectronEnUp;
+  float metType1PtElectronEnDown;
+  float metType1PtTauEnUp;
+  float metType1PtTauEnDown;
+  float metType1PtUnclusteredEnUp;
+  float metType1PtUnclusteredEnDown;
+  float metType1PtPhotonEnUp;
+  float metType1PtPhotonEnDown;
+  float metType1PtMETUncertaintySize;
+  float metType1PtJetResUpSmear;
+  float metType1PtJetResDownSmear;
+  float metType1PtMETFullUncertaintySize;
+  
+  float metType1PhiJetResUp;
+  float metType1PhiJetResDown;
+  float metType1PhiJetEnUp;
+  float metType1PhiJetEnDown;
+  float metType1PhiMuonEnUp;
+  float metType1PhiMuonEnDown;
+  float metType1PhiElectronEnUp;
+  float metType1PhiElectronEnDown;
+  float metType1PhiTauEnUp;
+  float metType1PhiTauEnDown;
+  float metType1PhiUnclusteredEnUp;
+  float metType1PhiUnclusteredEnDown;
+  float metType1PhiPhotonEnUp;
+  float metType1PhiPhotonEnDown;
+  float metType1PhiMETUncertaintySize;
+  float metType1PhiJetResUpSmear;
+  float metType1PhiJetResDownSmear;
+  float metType1PhiMETFullUncertaintySize;
+
+
   bool Flag_HBHENoiseFilter;
   bool Flag_HBHETightNoiseFilter;
   bool Flag_HBHEIsoNoiseFilter;
