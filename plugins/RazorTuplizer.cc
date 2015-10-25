@@ -647,11 +647,11 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(photonsToken_, photons);
   iEvent.getByToken(tausToken_, taus);
   iEvent.getByToken(jetsToken_, jets);
-  if (isData_) iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
+  iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
-  if (isData_) iEvent.getByToken(metNoHFToken_, metsNoHF);
-  if (isData_) iEvent.getByToken(metPuppiToken_, metsPuppi);
+  iEvent.getByToken(metNoHFToken_, metsNoHF);
+  iEvent.getByToken(metPuppiToken_, metsPuppi);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
   iEvent.getByToken(rhoAllToken_,rhoAll);
@@ -1702,15 +1702,13 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
       // metType1PhiMETFullUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
     }
   
-  if(isData_) {
-    const pat::MET &MetPuppi = metsPuppi->front();
-    const pat::MET &MetNoHF = metsNoHF->front();
-    metPuppiPt = MetPuppi.pt();
-    metPuppiPhi = MetPuppi.phi();
-    metNoHFPt = MetNoHF.pt();
-    metNoHFPhi = MetNoHF.phi();
-  }
-
+  const pat::MET &MetPuppi = metsPuppi->front();
+  const pat::MET &MetNoHF = metsNoHF->front();
+  metPuppiPt = MetPuppi.pt();
+  metPuppiPhi = MetPuppi.phi();
+  metNoHFPt = MetNoHF.pt();
+  metNoHFPhi = MetNoHF.phi();
+  
   //MET filters
   if (!isFastsim_) {
     const edm::TriggerNames &metNames = iEvent.triggerNames(*metFilterBits);
