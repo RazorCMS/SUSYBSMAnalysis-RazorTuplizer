@@ -64,8 +64,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   gedGsfElectronCoresToken_(consumes<vector<reco::GsfElectronCore> >(iConfig.getParameter<edm::InputTag>("gedGsfElectronCores"))),
   gedPhotonCoresToken_(consumes<vector<reco::PhotonCore> >(iConfig.getParameter<edm::InputTag>("gedPhotonCores"))),
   superClustersToken_(consumes<vector<reco::SuperCluster> >(iConfig.getParameter<edm::InputTag>("superClusters"))),
-  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks")))//,
-//   pdfweightshelper(100,20,edm::FileInPath("PhysicsTools/HepMCCandAlgos/data/NNPDF30_lo_as_0130.csv"))
+  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks")))
 {
   //declare the TFileService for output
   edm::Service<TFileService> fs;
@@ -1809,41 +1808,35 @@ bool RazorTuplizer::fillMC(){
           scaleWeights->push_back(wgtval);
         }
       }
-      
+   
       //fill pdf variation weights
-      if (firstPdfWeight>=0 && lastPdfWeight>=0 && lastPdfWeight<int(lheInfo->weights().size())) {
-        for (int iwgt = firstPdfWeight; iwgt<=lastPdfWeight; ++iwgt) {
-          double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+      if (firstPdfWeight>=0 && lastPdfWeight>=0 && lastPdfWeight<int(lheInfo->weights().size()) && (lastPdfWeight-firstPdfWeight+1)==100) {
+        
+        //fill pdf variation weights after converting with mc2hessian transformation
+        std::array<double, 100> inpdfweights;
+        for (int iwgt=firstPdfWeight, ipdf=0; iwgt<=lastPdfWeight; ++iwgt, ++ipdf) {
+          inpdfweights[ipdf] = lheInfo->weights()[iwgt].wgt/nomlheweight;
+        }
+        
+        std::array<double, 60> outpdfweights;
+        pdfweightshelper.DoMC2Hessian(inpdfweights.data(),outpdfweights.data());
+        
+        for (unsigned int iwgt=0; iwgt<60; ++iwgt) {
+          double wgtval = outpdfweights[iwgt]*genWeight;
           pdfWeights->push_back(wgtval);
-        }
-      }
-            
-      //fill alpha_s variation weights
-      if (firstAlphasWeight>=0 && lastAlphasWeight>=0 && lastAlphasWeight<int(lheInfo->weights().size())) {
-        for (int iwgt = firstAlphasWeight; iwgt<=lastAlphasWeight; ++iwgt) {
-          double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
-          alphasWeights->push_back(wgtval);
-        }
-      }
+        }       
+              
+        //fill alpha_s variation weights
+        if (firstAlphasWeight>=0 && lastAlphasWeight>=0 && lastAlphasWeight<int(lheInfo->weights().size())) {
+          for (int iwgt = firstAlphasWeight; iwgt<=lastAlphasWeight; ++iwgt) {
+            double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+            alphasWeights->push_back(wgtval);
+          }
+        }        
+        
+      }   
+
     }
-    
-      //related to collapsing of pdf weights into eigenvectors, will be revived later
-//       std::array<double, 100> inpdfweights;
-//       for (unsigned int ipdf=0; ipdf<100; ++ipdf) {
-//         unsigned int iwgt = ipdf + 10;
-//         inpdfweights[ipdf] = lheInfo->weights()[iwgt].wgt/nomlheweight;
-//         
-//         double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
-//         scaleWeights->push_back(wgtval);
-//       }
-//       
-//       std::array<double, 20> outpdfweights;
-//       pdfweightshelper.DoMC2Hessian(inpdfweights.data(),outpdfweights.data());
-//       
-//       for (unsigned int iwgt=0; iwgt<20; ++iwgt) {
-//         double wgtval = outpdfweights[iwgt]*genWeight;
-//         pdfWeights->push_back(wgtval);
-//       }
         
     //fill lhe comment lines with SUSY model parameter information
     if (lheInfo.isValid() && isFastsim_) {
@@ -2058,6 +2051,7 @@ void RazorTuplizer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup
       
       if (pdfidx == 263000) {
         //NNPDF30_lo_as_0130 (nf5) for LO madgraph samples and SUSY signals
+        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_hessian_60.csv"));
         firstPdfWeight = 10;
         lastPdfWeight = 109;
         firstAlphasWeight = -1;
@@ -2065,6 +2059,7 @@ void RazorTuplizer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup
       }
       else if (pdfidx == 263400) {
         //NNPdf30_lo_as_0130_nf4 for LO madgraph samples
+        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_nf_4_hessian_60.csv"));
         firstPdfWeight = 111;
         lastPdfWeight = 210;
         firstAlphasWeight = -1;
@@ -2073,6 +2068,7 @@ void RazorTuplizer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup
       else if (pdfidx == 260000 || pdfidx == -1) {
         //NNPdf30_nlo_as_0118 (nf5) for NLO powheg samples
         //(work around apparent bug in current powheg samples by catching "-1" as well)
+        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
         firstPdfWeight = 9;
         lastPdfWeight = 108;
         firstAlphasWeight = 109;
@@ -2080,6 +2076,7 @@ void RazorTuplizer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup
       }
       else if (pdfidx == 292200) {
         //NNPdf30_nlo_as_0118 (nf5) with built-in alphas variations for NLO aMC@NLO samples
+        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
         firstPdfWeight = 9;
         lastPdfWeight = 108;
         firstAlphasWeight = 109;
@@ -2087,6 +2084,7 @@ void RazorTuplizer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup
       }   
       else if (pdfidx == 292000) {
         //NNPdf30_nlo_as_0118_nf4 with built-in alphas variations for NLO aMC@NLO samples
+        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_nf_4_hessian_60.csv"));
         firstPdfWeight = 9;
         lastPdfWeight = 108;
         firstAlphasWeight = 109;

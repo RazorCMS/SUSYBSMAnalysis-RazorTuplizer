@@ -55,7 +55,7 @@ using namespace std;
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/ElectronMVAEstimatorRun2NonTrig.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
-// #include "PhysicsTools/HepMCCandAlgos/interface/PDFWeightsHelper.h"
+#include "SUSYBSMAnalysis/RazorTuplizer/interface/RazorPDFWeightsHelper.h"
 
 //ROOT includes
 #include "TTree.h"
@@ -612,7 +612,7 @@ protected:
   int  triggerHLTPrescale[NTriggersMAX];
   
   //pdf weight helper
-//   PDFWeightsHelper pdfweightshelper;
+  RazorPDFWeightsHelper pdfweightshelper;
 
 };
 
