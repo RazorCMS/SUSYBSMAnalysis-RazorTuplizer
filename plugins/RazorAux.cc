@@ -350,3 +350,54 @@ TLorentzVector RazorTuplizer::photonP4FromVtx( TVector3 vtx, TVector3 phoPos, do
   phoP4.SetVectM( phoP3, .0 );
   return phoP4;
 };
+
+bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel) {
+  bool result = false;
+
+  double NHF = jet->neutralHadronEnergyFraction();
+  double NEMF = jet->neutralEmEnergyFraction();
+  int NumConst = jet->chargedMultiplicity() + jet->neutralMultiplicity() ;
+  double CHF = jet->chargedHadronEnergyFraction();
+  double MUF = jet->muonEnergyFraction();
+  double CEMF = jet->chargedEmEnergyFraction();
+  int NumNeutralParticles =jet->neutralMultiplicity();
+  int CHM = jet->chargedMultiplicity();
+
+  //Loose
+  if (cutLevel == 0) {
+    if ( fabs(jet->eta()) <= 2.4) {
+      if ( NHF  < 0.99 && NEMF < 0.99 && NumConst > 1 
+	   && CHF > 0 && CHM > 0 && CEMF < 0.99 ) result = true;	   
+    } else if( fabs(jet->eta()) <= 3.0)  {
+      if ( NHF  < 0.99 && NEMF < 0.99 && NumConst > 1 ) result = true;	  
+    } else {
+      if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+    }
+  } 
+
+  //Tight
+  else if (cutLevel == 1) {
+    if ( fabs(jet->eta()) <= 2.4) {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 
+	   && CHF > 0 && CHM > 0 && CEMF < 0.99 ) result = true;	   
+    } else if( fabs(jet->eta()) <= 3.0)  {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 ) result = true;	  
+    } else {
+      if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+    }
+  }
+
+  //Tight Lep Veto
+  else if (cutLevel == 2) {
+    if ( fabs(jet->eta()) <= 2.4) {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 
+	   && CHF > 0 && CHM > 0 && CEMF < 0.99 && MUF < 0.8 ) result = true;	   
+    } else if( fabs(jet->eta()) <= 3.0)  {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 ) result = true;	  
+    } else {
+      if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+    }
+  }
+
+  return result;
+}

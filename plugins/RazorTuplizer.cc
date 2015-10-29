@@ -1574,6 +1574,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 bool RazorTuplizer::fillJets(){
   for (const pat::Jet &j : *jets) {
     if (j.pt() < 10) continue;
+
     jetE[nJets] = j.correctedP4(0).E();
     jetPt[nJets] = j.correctedP4(0).Pt();
     jetEta[nJets] = j.correctedP4(0).Eta();
@@ -1585,8 +1586,8 @@ bool RazorTuplizer::fillJets(){
     jetPileupE[nJets] = j.pileup();
     jetPileupId[nJets] = j.userFloat("pileupJetId:fullDiscriminant");
     jetPileupIdFlag[nJets] = 0;
-    jetPassIDLoose[nJets] = true;
-    jetPassIDTight[nJets] = true;
+    jetPassIDLoose[nJets] = passJetID(&j, 0);
+    jetPassIDTight[nJets] = passJetID(&j, 1);
     jetPassMuFrac[nJets]  = ( j.muonEnergyFraction() < 0.80 );
     jetPassEleFrac[nJets]  = ( j.electronEnergyFraction() < 0.90 );
     if (useGen_) {
@@ -1596,7 +1597,7 @@ bool RazorTuplizer::fillJets(){
       jetPartonFlavor[nJets] = -999;
       jetHadronFlavor[nJets] = -999;
     }
-
+ 
     //extra jet information (may be only needed for debugging)
     jetChargedEMEnergyFraction[nJets] = j.chargedEmEnergyFraction();
     jetNeutralEMEnergyFraction[nJets] = j.neutralEmEnergyFraction();
