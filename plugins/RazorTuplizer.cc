@@ -465,8 +465,12 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterEnergy", pho_superClusterEnergy, "pho_superClusterEnergy[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterPhi", pho_superClusterPhi, "pho_superClusterPhi[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterX", pho_superClusterX, "pho_superClusterX[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterY", pho_superClusterY, "pho_superClusterY[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterZ", pho_superClusterZ, "pho_superClusterZ[nPhotons]/F");
   RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/O");
   RazorEvents->Branch("pho_passHLTFilter", &pho_passHLTFilter, Form("pho_passHLTFilter[nPhotons][%d]/O",MAX_PhotonHLTFilters));
 }
@@ -835,8 +839,12 @@ void RazorTuplizer::resetBranches(){
         pho_RegressionE[i] = -99.0;
         pho_RegressionEUncertainty[i] = -99.0;
         pho_IDMVA[i] = -99.0;
-        pho_superClusterEta[i] = -99.0;
-        pho_superClusterPhi[i] = -99.0;
+	pho_superClusterEnergy[i] = -99.0;
+        pho_superClusterEta[i]    = -99.0;
+        pho_superClusterPhi[i]    = -99.0;
+	pho_superClusterX[i]      = -99.0;
+	pho_superClusterY[i]      = -99.0;
+	pho_superClusterZ[i]      = -99.0;
         pho_hasPixelSeed[i] = false;
 	for (int q=0;q<MAX_PhotonHLTFilters;q++) pho_passHLTFilter[i][q] = false;
 
@@ -1388,10 +1396,14 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
 
-    phoE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::ecal_standard);
-    phoPt[nPhotons] = pho.pt();
-    //phoEta[nPhotons] = pho.eta(); //correct this for the vertex
-    //phoPhi[nPhotons] = pho.phi(); //correct this for the vertex
+    //-------------------------------------------------
+    //default photon 4-mometum already vertex corrected
+    //-------------------------------------------------
+    //phoE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::ecal_standard);
+    phoE[nPhotons]   = pho.energy();
+    phoPt[nPhotons]  = pho.pt();
+    phoEta[nPhotons] = pho.eta(); //correct this for the vertex
+    phoPhi[nPhotons] = pho.phi(); //correct this for the vertex
 
     phoSigmaIetaIeta[nPhotons] = pho.see();
     phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();    
@@ -1537,19 +1549,37 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_IDMVA[nPhotons] = myPhotonMVA->mvaValue( pho,  *rhoAll, photonIsoSum, chargedIsoSum, worstIsolation,
 						 lazyToolnoZS, false);
 				       
-    pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
-    pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
-   
+    //pho_RegressionE[nPhotons] = pho.getCorrectedEnergy(reco::Photon::P4type::regression1);
+    //pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError(reco::Photon::P4type::regression1);
+    
+    //---------------------
+    //Use Latest Regression
+    //---------------------
+    pho_RegressionE[nPhotons]            = pho.getCorrectedEnergy( pho.getCandidateP4type() );
+    pho_RegressionEUncertainty[nPhotons] = pho.getCorrectedEnergyError( pho.getCandidateP4type() );
+    
+    //default photon 4-momentum is already corrected.
     //compute photon corrected 4-mometum 
-    TVector3 phoPos( pho.superCluster()->x(), pho.superCluster()->y(), pho.superCluster()->z() );
-    TVector3 vtxPos( pvX, pvY, pvZ );
-    TLorentzVector phoP4 = photonP4FromVtx( vtxPos, phoPos, pho_RegressionE[nPhotons] );
-    phoEta[nPhotons] = phoP4.Eta();
-    phoPhi[nPhotons] = phoP4.Phi();
-
-    pho_superClusterEta[nPhotons] = pho.superCluster()->eta();
-    pho_superClusterPhi[nPhotons] = pho.superCluster()->phi();
-    pho_hasPixelSeed[nPhotons] = pho.hasPixelSeed();
+    /*
+      TVector3 phoPos( pho.superCluster()->x(), pho.superCluster()->y(), pho.superCluster()->z() );
+      TVector3 vtxPos( pvX, pvY, pvZ );
+      TLorentzVector phoP4 = photonP4FromVtx( vtxPos, phoPos, pho_RegressionE[nPhotons] );
+      std::cout << "etaDefault: " << phoEta[nPhotons] << " CP: " << phoP4.Eta() << " phiDefault: " 
+      << phoPhi[nPhotons] << " CP: " << phoP4.Phi() << std::endl;
+      phoEta[nPhotons] = phoP4.Eta();
+      phoPhi[nPhotons] = phoP4.Phi();
+    */
+    
+    //-----------------------
+    // super cluster position
+    //-----------------------  
+    pho_superClusterEnergy[nPhotons] = pho.superCluster()->energy();
+    pho_superClusterEta[nPhotons]    = pho.superCluster()->eta();
+    pho_superClusterPhi[nPhotons]    = pho.superCluster()->phi();
+    pho_superClusterX[nPhotons]      = pho.superCluster()->x();
+    pho_superClusterY[nPhotons]      = pho.superCluster()->y();
+    pho_superClusterZ[nPhotons]      = pho.superCluster()->z();
+    pho_hasPixelSeed[nPhotons]       = pho.hasPixelSeed();
 
     //*************************************************
     //Trigger Object Matching

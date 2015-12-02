@@ -421,8 +421,12 @@ protected:
   float pho_RegressionE[OBJECTARRAYSIZE];
   float pho_RegressionEUncertainty[OBJECTARRAYSIZE];
   float pho_IDMVA[OBJECTARRAYSIZE];
+  float pho_superClusterEnergy[OBJECTARRAYSIZE];
   float pho_superClusterEta[OBJECTARRAYSIZE];
   float pho_superClusterPhi[OBJECTARRAYSIZE];
+  float pho_superClusterX[OBJECTARRAYSIZE];
+  float pho_superClusterY[OBJECTARRAYSIZE];
+  float pho_superClusterZ[OBJECTARRAYSIZE];
   bool pho_hasPixelSeed[OBJECTARRAYSIZE];
   bool pho_passHLTFilter[OBJECTARRAYSIZE][MAX_PhotonHLTFilters];
 
