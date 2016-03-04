@@ -1,13 +1,13 @@
 SUSYBSMAnalysis-RazorTuplizer
 =============================
 
-Razor ntuplizer for running over LHC Run 2 miniAOD
+Razor ntuplizer for running over LHC Run 2 miniAOD compatible with CMSSW_7_6_X
 
 Instructions for compiling in CMSSW
 --------------
 
-    cmsrel CMSSW_7_4_7
-    cd CMSSW_7_4_7/src
+    cmsrel CMSSW_7_6_3
+    cd CMSSW_7_6_3/src
     cmsenv
     git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
     scram b

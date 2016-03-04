@@ -12,7 +12,8 @@ process.load("Configuration.EventContent.EventContent_cff")
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
         #'/store/mc/RunIISpring15DR74/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/Asympt25ns_MCRUN2_74_V9-v2/00000/BC33D464-0F09-E511-92AC-0025905B8572.root'
-        '/store/mc/RunIISpring15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v3/60000/00181849-176A-E511-8B11-848F69FD4C94.root'
+        #'/store/mc/RunIISpring15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v3/60000/00181849-176A-E511-8B11-848F69FD4C94.root'
+        '/store/mc/RunIIFall15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/002253C9-DFB8-E511-8B0A-001A648F1C42.root'
    )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -36,7 +37,10 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 #global tag for CSA14 50ns 40 PU (more pessimistic alignment and calibration) scenario
 #process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
 #global tag for PHYS14 asymptotic 25ns scenario
-process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
+#process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
+
+process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_v12'
+#process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v1'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -59,8 +63,10 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     photonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorPhotonHLTFilterNames.dat"),
 
     vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+    #vertices = cms.InputTag("offlinePrimaryVertices"),
     
     muons = cms.InputTag("slimmedMuons"),
+    #muons = cms.InputTag("muons"),
     electrons = cms.InputTag("slimmedElectrons"),
     taus = cms.InputTag("slimmedTaus"),
     photons = cms.InputTag("slimmedPhotons"),
@@ -68,7 +74,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),
     mets = cms.InputTag("slimmedMETs"),
-    metsNoHF = cms.InputTag("slimmedMETsNoHF"),
+    #metsNoHF = cms.InputTag("slimmedMETsNoHF"),
+    metsNoHF = cms.InputTag("slimmedMETs"), 
     metsPuppi = cms.InputTag("slimmedMETsPuppi"),
     packedPfCands = cms.InputTag("packedPFCandidates"),
 
