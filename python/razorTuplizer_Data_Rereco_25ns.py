@@ -11,14 +11,10 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'/store/data/Run2015D/SingleMuon/MINIAOD/PromptReco-v3/000/256/677/00000/CEAE1A74-3A5F-E511-821F-02163E013938.root'
-        #'/store/data/Run2015D/HTMHT/MINIAOD/PromptReco-v3/000/256/936/00000/5CDEE11A-2F62-E511-B317-02163E014526.root'     
-        #'/store/data/Run2015D/SingleMuon/MINIAOD/PromptReco-v4/000/258/159/00000/700FDBE1-246C-E511-ABD5-02163E0143C4.root'
-        #'file:/tmp/sixie/700FDBE1-246C-E511-ABD5-02163E0143C4.root'
-        '/store/data/Run2015D/SingleMuon/MINIAOD/05Oct2015-v1/10000/0433E4CA-8B6F-E511-BAF9-0025905A60BC.root'
+        '/store/data/Run2015D/SingleMuon/MINIAOD/16Dec2015-v1/10000/00006301-CAA8-E511-AD39-549F35AD8BC9.root'
     )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(2000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
@@ -35,7 +31,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 #------ Declare the correct global tag ------#
 
 #Global Tag for Run2015D
-process.GlobalTag.globaltag = '74X_dataRun2_Prompt_v2'
+process.GlobalTag.globaltag = '76X_dataRun2_16Dec2015_v0'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
