@@ -653,7 +653,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
-  iEvent.getByToken(metNoHFToken_, metsNoHF);
+  //iEvent.getByToken(metNoHFToken_, metsNoHF);
   iEvent.getByToken(metPuppiToken_, metsPuppi);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
@@ -1736,11 +1736,11 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
     }
   
   const pat::MET &MetPuppi = metsPuppi->front();
-  const pat::MET &MetNoHF = metsNoHF->front();
+  //const pat::MET &MetNoHF = metsNoHF->front();
   metPuppiPt = MetPuppi.pt();
   metPuppiPhi = MetPuppi.phi();
-  metNoHFPt = MetNoHF.pt();
-  metNoHFPhi = MetNoHF.phi();
+  //metNoHFPt = MetNoHF.pt();
+  //metNoHFPhi = MetNoHF.phi();
   
   //MET filters
   if (!isFastsim_) {
