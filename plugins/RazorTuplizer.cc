@@ -1274,9 +1274,9 @@ bool RazorTuplizer::fillTaus(){
     tau_IsLoose[nTaus] = bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits"));
     tau_IsMedium[nTaus] = bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits"));
     tau_IsTight[nTaus] = bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits"));
-    tau_passEleVetoLoose[nTaus] = bool(tau.tauID("againstElectronLooseMVA5"));
-    tau_passEleVetoMedium[nTaus] = bool(tau.tauID("againstElectronMediumMVA5"));
-    tau_passEleVetoTight[nTaus] = bool(tau.tauID("againstElectronTightMVA5"));
+    tau_passEleVetoLoose[nTaus] = bool(tau.tauID("againstElectronLooseMVA6"));
+    tau_passEleVetoMedium[nTaus] = bool(tau.tauID("againstElectronMediumMVA6"));
+    tau_passEleVetoTight[nTaus] = bool(tau.tauID("againstElectronTightMVA6"));
     tau_passMuVetoLoose[nTaus] = bool(tau.tauID("againstMuonLoose3"));
     //tau_passMuVetoMedium[nTaus] = bool(tau.tauID("")); //doesn't exist anymore in miniAOD 2015 v2
     tau_passMuVetoTight[nTaus] = bool(tau.tauID("againstMuonTight3") );  
@@ -1284,10 +1284,10 @@ bool RazorTuplizer::fillTaus(){
     tau_chargedIsoPtSum[nTaus] = tau.tauID("chargedIsoPtSum");
     tau_neutralIsoPtSum[nTaus] = tau.tauID("neutralIsoPtSum");
     tau_puCorrPtSum[nTaus] = tau.tauID("puCorrPtSum");
-    tau_eleVetoMVA[nTaus] = tau.tauID("againstElectronMVA5raw") ;
-    tau_eleVetoCategory[nTaus] = tau.tauID("againstElectronMVA5category");
+    tau_eleVetoMVA[nTaus] = tau.tauID("againstElectronMVA6Raw") ;
+    tau_eleVetoCategory[nTaus] = tau.tauID("againstElectronMVA6category");
     //tau_muonVetoMVA[nTaus] = tau.tauID("againstMuonMVAraw"); //doesn't exist anymore in miniAOD 2015 v2
-    tau_isoMVAnewDMwLT[nTaus] = tau.tauID("byIsolationMVA3newDMwLTraw");
+    tau_isoMVAnewDMwLT[nTaus] = tau.tauID("byIsolationMVArun2v1DBnewDMwLTraw");
     //tau_isoMVAnewDMwoLT[nTaus] = tau.tauID("byIsolationMVA3newDMwoLTraw") ; //doesn't exist anymore in miniAOD 2015 v2 
 
     tau_ID[nTaus] = 
@@ -1296,19 +1296,19 @@ bool RazorTuplizer::fillTaus(){
       bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits")) +
       bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits")) +
       bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits")) +
-      bool(tau.tauID("againstElectronVLooseMVA5")) +
-      bool(tau.tauID("againstElectronLooseMVA5")) +
-      bool(tau.tauID("againstElectronMediumMVA5")) +
-      bool(tau.tauID("againstElectronTightMVA5")) +
-      bool(tau.tauID("againstElectronVTightMVA5")) +
+      bool(tau.tauID("againstElectronVLooseMVA6")) +
+      bool(tau.tauID("againstElectronLooseMVA6")) +
+      bool(tau.tauID("againstElectronMediumMVA6")) +
+      bool(tau.tauID("againstElectronTightMVA6")) +
+      bool(tau.tauID("againstElectronVTightMVA6")) +
       bool(tau.tauID("againstMuonLoose3")) +
       bool(tau.tauID("againstMuonTight3")) +
-      bool(tau.tauID("byVLooseIsolationMVA3newDMwLT")) +
-      bool(tau.tauID("byLooseIsolationMVA3newDMwLT")) +
-      bool(tau.tauID("byMediumIsolationMVA3newDMwLT")) +
-      bool(tau.tauID("byTightIsolationMVA3newDMwLT")) +
-      bool(tau.tauID("byVTightIsolationMVA3newDMwLT")) +
-      bool(tau.tauID("byVVTightIsolationMVA3newDMwLT"));
+      bool(tau.tauID("byVLooseIsolationMVArun2v1DBnewDMwLT")) +
+      bool(tau.tauID("byLooseIsolationMVArun2v1DBnewDMwLT")) +
+      bool(tau.tauID("byMediumIsolationMVArun2v1DBnewDMwLT")) +
+      bool(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) +
+      bool(tau.tauID("byVTightIsolationMVArun2v1DBnewDMwLT")) +
+      bool(tau.tauID("byVVTightIsolationMVArun2v1DBnewDMwLT"));
 
     tau_leadCandPt[nTaus] = 0;
     tau_leadCandID[nTaus] = 0;

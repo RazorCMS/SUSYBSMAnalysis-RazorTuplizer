@@ -11,11 +11,10 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'/store/mc/RunIISpring15DR74/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/Asympt25ns_MCRUN2_74_V9-v2/00000/BC33D464-0F09-E511-92AC-0025905B8572.root'
-        '/store/mc/RunIIFall15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/002253C9-DFB8-E511-8B0A-001A648F1C42.root'
+        '/store/relval/CMSSW_8_0_1/RelValTTbar_13/MINIAODSIM/PUpmx25ns_80X_mcRun2_asymptotic_v6-v1/10000/E8F67062-91E8-E511-A1A3-0CC47A78A436.root'
    )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
@@ -31,13 +30,7 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 
 #------ Declare the correct global tag ------#
 
-#global tag for CSA14 25ns 20 PU (asymptotic alignment and calibration) scenario
-#process.GlobalTag.globaltag = 'PLS170_V7AN1::All'
-#global tag for CSA14 50ns 40 PU (more pessimistic alignment and calibration) scenario
-#process.GlobalTag.globaltag = 'PLS170_V6AN1::All'
-#global tag for PHYS14 asymptotic 25ns scenario
-#process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
-process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_v12'
+process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_v6'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -75,23 +68,23 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     packedGenParticles = cms.InputTag("packedGenParticles"),
     prunedGenParticles = cms.InputTag("prunedGenParticles"),
-    genJets = cms.InputTag("slimmedGenJets", "", "PAT"),
+    genJets = cms.InputTag("slimmedGenJets", "", "RECO"),
 
     triggerBits = cms.InputTag("TriggerResults","","HLT"),
     triggerPrescales = cms.InputTag("patTrigger"),
     triggerObjects = cms.InputTag("selectedPatTrigger"),
-    metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
+    metFilterBits = cms.InputTag("TriggerResults", "", "RECO"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
     hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
     hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
-    puInfo = cms.InputTag("addPileupInfo", "", "HLT"), #uncomment if no pre-mixing
+    puInfo = cms.InputTag("slimmedAddPileupInfo", "", "RECO"), #uncomment if no pre-mixing
     #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
     hcalNoiseInfo = cms.InputTag("hcalnoise", "", "RECO"),
 
-    secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "PAT"),
+    secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "RECO"),
 
     rhoAll = cms.InputTag("fixedGridRhoAll", "", "RECO"),
     rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "RECO"),
@@ -102,18 +95,18 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     beamSpot = cms.InputTag("offlineBeamSpot", "", "RECO"),
 
-    ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "PAT"),
-    eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "PAT"),
-    esRecHits = cms.InputTag("reducedEgamma", "reducedESRecHits", "PAT"),
-    ebeeClusters = cms.InputTag("reducedEgamma", "reducedEBEEClusters", "PAT"),
-    esClusters = cms.InputTag("reducedEgamma", "reducedESClusters", "PAT"),
-    conversions = cms.InputTag("reducedEgamma", "reducedConversions", "PAT"),
-    singleLegConversions = cms.InputTag("reducedEgamma", "reducedSingleLegConversions", "PAT"),
-    gedGsfElectronCores = cms.InputTag("reducedEgamma", "reducedGedGsfElectronCores", "PAT"),
-    gedPhotonCores = cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "PAT"),
-    superClusters = cms.InputTag("reducedEgamma", "reducedSuperClusters", "PAT"),
+    ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "RECO"),
+    eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "RECO"),
+    esRecHits = cms.InputTag("reducedEgamma", "reducedESRecHits", "RECO"),
+    ebeeClusters = cms.InputTag("reducedEgamma", "reducedEBEEClusters", "RECO"),
+    esClusters = cms.InputTag("reducedEgamma", "reducedESClusters", "RECO"),
+    conversions = cms.InputTag("reducedEgamma", "reducedConversions", "RECO"),
+    singleLegConversions = cms.InputTag("reducedEgamma", "reducedSingleLegConversions", "RECO"),
+    gedGsfElectronCores = cms.InputTag("reducedEgamma", "reducedGedGsfElectronCores", "RECO"),
+    gedPhotonCores = cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "RECO"),
+    superClusters = cms.InputTag("reducedEgamma", "reducedSuperClusters", "RECO"),
 
-    lostTracks = cms.InputTag("lostTracks", "", "PAT")
+    lostTracks = cms.InputTag("lostTracks", "", "RECO")
 )
 
 #run
