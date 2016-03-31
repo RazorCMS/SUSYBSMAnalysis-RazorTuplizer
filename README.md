@@ -29,10 +29,12 @@ To run using CRAB3:
 
 
 
----------------------------------------------------------
-In order to use the Energy smearing and scale correction:
+--------------------------------------------------------
+In order to use the Energy smearing and scale correction
+--------------------------------------------------------
+
 https://twiki.cern.ch/twiki/bin/viewauth/CMS/EGMSmearer
----------------------------------------------------------
+
 
 cmsrel CMSSW_7_6_3_patch2
 cd CMSSW_7_6_3_patch2/src
