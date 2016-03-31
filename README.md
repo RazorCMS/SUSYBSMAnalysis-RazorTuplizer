@@ -17,7 +17,7 @@ Instructions for compiling in CMSSW
 Running the ntuplizer
 ---------------------
 
-cmsRun python/razorTuplizer_MC_25ns_MiniAODV2.py
+	cmsRun python/razorTuplizer_MC_25ns_MiniAODV2.py
 
     
 Before running, check python/razorTuplizer.py to make sure that the correct global tag is defined. (process.GlobalTag.globaltag = ...)
@@ -36,15 +36,15 @@ In order to use the Energy smearing and scale correction
 https://twiki.cern.ch/twiki/bin/viewauth/CMS/EGMSmearer
 
 
-cmsrel CMSSW_7_6_3_patch2
-cd CMSSW_7_6_3_patch2/src
-cmsenv
-git cms-merge-topic -u matteosan1:smearer_76X
-git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
-scram b
+	cmsrel CMSSW_7_6_3_patch2
+	cd CMSSW_7_6_3_patch2/src
+	cmsenv
+	git cms-merge-topic -u matteosan1:smearer_76X
+	git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
+	scram b
 
 --------------------------------------------
 Running the ntuplizer for photon corrections
 --------------------------------------------
 
-cmsRun python/razorTuplizer_MC_25ns_MiniAODV2_PhoCorr.py
+	cmsRun python/razorTuplizer_MC_25ns_MiniAODV2_PhoCorr.py
