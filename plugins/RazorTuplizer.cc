@@ -1405,6 +1405,11 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     phoEta[nPhotons] = pho.eta(); //correct this for the vertex
     phoPhi[nPhotons] = pho.phi(); //correct this for the vertex
 
+    /*std::cout << "phoE: " << pho.energy() << " phoCorr En:" << pho.getCorrectedEnergy(reco::Photon::P4type::regression2) << " un: " 
+	      << pho.getCorrectedEnergyError(reco::Photon::P4type::regression2) << " " 
+	      << pho.getCorrectedEnergyError( pho.getCandidateP4type() ) << std::endl;
+    */
+
     phoSigmaIetaIeta[nPhotons] = pho.see();
     phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();    
 

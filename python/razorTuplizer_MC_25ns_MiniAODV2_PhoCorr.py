@@ -19,9 +19,19 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
 process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("razorNtuple.root"),
+    fileName = cms.string("razorNtuple_phoCorr.root"),
     closeFileFast = cms.untracked.bool(True)
 )
+
+#Random Number Generator Service for Photon Smearing
+process.RandomNumberGeneratorService = cms.Service(
+    "RandomNumberGeneratorService",
+    calibratedPatPhotons = cms.PSet(
+        initialSeed = cms.untracked.uint32(1),
+        engineName = cms.untracked.string('TRandom3')
+        ),
+    )
+
 
 #load run conditions
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -41,11 +51,15 @@ process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFil
 
 process.selectedPhotons = cms.EDFilter("PATPhotonSelector",
                                        src = cms.InputTag("slimmedPhotons"),
-                                       cut = cms.string("pt > 8 && chargedHadronIso()/pt < 0.3"),
+                                       cut = cms.string("pt > 8"),
                                        )
 
 process.load('EgammaAnalysis.ElectronTools.calibratedPhotonsRun2_cfi')
 process.calibratedPatPhotons.photons = "selectedPhotons"
+process.calibratedPatPhotons.isMC = cms.bool(True)
+process.calibratedPatPhotons.updateEnergyError = cms.bool(True)
+process.calibratedPatPhotons.applyCorrections = cms.int32(1)
+process.calibratedPatPhotons.verbose = cms.bool(True)
 
 #------ Analyzer ------#
 
@@ -67,7 +81,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     #muons = cms.InputTag("muons"),
     electrons = cms.InputTag("slimmedElectrons"),
     taus = cms.InputTag("slimmedTaus"),
-    photons = cms.InputTag("slimmedPhotons"),
+    photons = cms.InputTag("calibratedPatPhotons"),
     jets = cms.InputTag("slimmedJets"),
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),
@@ -135,5 +149,10 @@ runMetCorAndUncFromMiniAOD(process,
                            )
 #########
 
-process.p = cms.Path( process.HBHENoiseFilterResultProducer*                                                                                   
-                      process.ntuples)           
+#run
+process.p = cms.Path( process.HBHENoiseFilterResultProducer*
+                      process.selectedPhotons*
+                      process.calibratedPatPhotons*
+                      process.ntuples)
+
+#process.p = cms.Path( process.HBHENoiseFilterResultProducer*                                                                                  #                      process.ntuples)           
