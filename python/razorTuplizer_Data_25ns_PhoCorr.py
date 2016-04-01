@@ -10,16 +10,16 @@ process.load("Configuration.EventContent.EventContent_cff")
 
 #load input files
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(      
-        '/store/mc/RunIIFall15MiniAODv2/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/002253C9-DFB8-E511-8B0A-001A648F1C42.root'
-   )
+    fileNames = cms.untracked.vstring(
+        '/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/000298CD-87A6-E511-9E56-002590593878.root'
+    )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
 process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("razorNtuple_phoCorr.root"),
+    fileName = cms.string("razorNtuple.root"),
     closeFileFast = cms.untracked.bool(True)
 )
 
@@ -32,15 +32,15 @@ process.RandomNumberGeneratorService = cms.Service(
         ),
     )
 
-
 #load run conditions
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.load('Configuration.Geometry.GeometryIdeal_cff')
-process.load('Configuration.StandardSequences.MagneticField_38T_cff')
+process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #------ Declare the correct global tag ------#
 
-process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_v12'
+#Global Tag for Run2015D
+process.GlobalTag.globaltag = '76X_dataRun2_16Dec2015_v0'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -48,7 +48,6 @@ process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
 process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
 process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
 process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
-
 
 #---photon filter---#
 process.selectedPhotons = cms.EDFilter("PATPhotonSelector",
@@ -58,7 +57,7 @@ process.selectedPhotons = cms.EDFilter("PATPhotonSelector",
 #---photon corrections---#
 process.load('EgammaAnalysis.ElectronTools.calibratedPhotonsRun2_cfi')
 process.calibratedPatPhotons.photons = "selectedPhotons"
-process.calibratedPatPhotons.isMC = cms.bool(True)
+process.calibratedPatPhotons.isMC = cms.bool(False)
 process.calibratedPatPhotons.updateEnergyError = cms.bool(True)
 process.calibratedPatPhotons.applyCorrections = cms.int32(1)
 process.calibratedPatPhotons.verbose = cms.bool(True)
@@ -67,8 +66,8 @@ process.calibratedPatPhotons.verbose = cms.bool(True)
 
 #list input collections
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
-    isData = cms.bool(False),    
-    useGen = cms.bool(True),
+    isData = cms.bool(True),    
+    useGen = cms.bool(False),
     isFastsim = cms.bool(False),
     enableTriggerInfo = cms.bool(True),                                 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
@@ -77,10 +76,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     photonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorPhotonHLTFilterNames.dat"),
 
     vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
-    #vertices = cms.InputTag("offlinePrimaryVertices"),
     
     muons = cms.InputTag("slimmedMuons"),
-    #muons = cms.InputTag("muons"),
     electrons = cms.InputTag("slimmedElectrons"),
     taus = cms.InputTag("slimmedTaus"),
     photons = cms.InputTag("calibratedPatPhotons"),
@@ -88,30 +85,29 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),
     mets = cms.InputTag("slimmedMETs"),
-    #metsNoHF = cms.InputTag("slimmedMETsNoHF"),
-    metsNoHF = cms.InputTag("slimmedMETs"), 
+    metsNoHF = cms.InputTag("slimmedMETsNoHF"),
     metsPuppi = cms.InputTag("slimmedMETsPuppi"),
     packedPfCands = cms.InputTag("packedPFCandidates"),
 
     packedGenParticles = cms.InputTag("packedGenParticles"),
     prunedGenParticles = cms.InputTag("prunedGenParticles"),
-    genJets = cms.InputTag("slimmedGenJets", "", "PAT"),
+    genJets = cms.InputTag("slimmedGenJets", "", "RECO"),
 
     triggerBits = cms.InputTag("TriggerResults","","HLT"),
     triggerPrescales = cms.InputTag("patTrigger"),
     triggerObjects = cms.InputTag("selectedPatTrigger"),
-    metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
+    metFilterBits = cms.InputTag("TriggerResults", "", "RECO"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
     hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
     hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
-    puInfo = cms.InputTag("slimmedAddPileupInfo", "", "PAT"), #uncomment if no pre-mixing
+    puInfo = cms.InputTag("addPileupInfo", "", "HLT"), #uncomment if no pre-mixing
     #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
     hcalNoiseInfo = cms.InputTag("hcalnoise", "", "RECO"),
 
-    secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "PAT"),
+    secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "RECO"),
 
     rhoAll = cms.InputTag("fixedGridRhoAll", "", "RECO"),
     rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "RECO"),
@@ -122,39 +118,22 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     beamSpot = cms.InputTag("offlineBeamSpot", "", "RECO"),
 
-    ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "PAT"),
-    eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "PAT"),
-    esRecHits = cms.InputTag("reducedEgamma", "reducedESRecHits", "PAT"),
-    ebeeClusters = cms.InputTag("reducedEgamma", "reducedEBEEClusters", "PAT"),
-    esClusters = cms.InputTag("reducedEgamma", "reducedESClusters", "PAT"),
-    conversions = cms.InputTag("reducedEgamma", "reducedConversions", "PAT"),
-    singleLegConversions = cms.InputTag("reducedEgamma", "reducedSingleLegConversions", "PAT"),
-    gedGsfElectronCores = cms.InputTag("reducedEgamma", "reducedGedGsfElectronCores", "PAT"),
-    gedPhotonCores = cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "PAT"),
-    superClusters = cms.InputTag("reducedEgamma", "reducedSuperClusters", "PAT"),
+    ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "RECO"),
+    eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "RECO"),
+    esRecHits = cms.InputTag("reducedEgamma", "reducedESRecHits", "RECO"),
+    ebeeClusters = cms.InputTag("reducedEgamma", "reducedEBEEClusters", "RECO"),
+    esClusters = cms.InputTag("reducedEgamma", "reducedESClusters", "RECO"),
+    conversions = cms.InputTag("reducedEgamma", "reducedConversions", "RECO"),
+    singleLegConversions = cms.InputTag("reducedEgamma", "reducedSingleLegConversions", "RECO"),
+    gedGsfElectronCores = cms.InputTag("reducedEgamma", "reducedGedGsfElectronCores", "RECO"),
+    gedPhotonCores = cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "RECO"),
+    superClusters = cms.InputTag("reducedEgamma", "reducedSuperClusters", "RECO"),
 
-    lostTracks = cms.InputTag("lostTracks", "", "PAT")
+    lostTracks = cms.InputTag("lostTracks", "", "RECO")
 )
-
-#########
-runOnData=False #data/MC switch
-usePrivateSQlite=False #use external JECs (sqlite file)
-useHFCandidates=True #create an additionnal NoHF slimmed MET collection if the option is set to false
-
-from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
-
-#default configuration for miniAOD reprocessing, change the isData flag to run on data
-#for a full met computation, remove the pfCandColl input
-runMetCorAndUncFromMiniAOD(process,
-                           isData=runOnData,
-                           # repro74X=runOnOld74XMAOD #only for 74X X<12 miniAODs 
-                           )
-#########
 
 #run
 process.p = cms.Path( process.HBHENoiseFilterResultProducer*
                       process.selectedPhotons*
                       process.calibratedPatPhotons*
                       process.ntuples)
-
-#process.p = cms.Path( process.HBHENoiseFilterResultProducer*                                                                                  #                      process.ntuples)           
