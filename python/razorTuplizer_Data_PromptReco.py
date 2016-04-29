@@ -11,7 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/data/Run2015D/SingleMuon/MINIAOD/16Dec2015-v1/10000/00006301-CAA8-E511-AD39-549F35AD8BC9.root'
+        'file:88BF317B-500A-E611-86D6-02163E014126.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
@@ -31,7 +31,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 #------ Declare the correct global tag ------#
 
 #Global Tag for Run2015D
-process.GlobalTag.globaltag = '76X_dataRun2_16Dec2015_v0'
+process.GlobalTag.globaltag = '80X_dataRun2_Prompt_v8'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
