@@ -90,3 +90,7 @@
 # HLT_Photon22
 38 hltEG22HEFilter
 
+#HLT_DoublePhoton60
+#  hltL1sL1SingleEG40ORL1SingleEG35ORL1SingleJet200
+39 hltEG60HEFilter
+40 hltDiEG60HEUnseededFilter
