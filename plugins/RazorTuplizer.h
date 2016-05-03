@@ -403,6 +403,7 @@ protected:
   int   isoPFCandidatePdgId[OBJECTARRAYSIZE];
 
   //Photons
+  static const int MAX_NPV = 200;
   int nPhotons;
   float phoE[OBJECTARRAYSIZE];
   float phoPt[OBJECTARRAYSIZE];
@@ -412,6 +413,7 @@ protected:
   float phoFull5x5SigmaIetaIeta[OBJECTARRAYSIZE];
   float phoR9[OBJECTARRAYSIZE];
   float pho_HoverE[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPtAllVertices[OBJECTARRAYSIZE][MAX_NPV];
   float pho_sumChargedHadronPt[OBJECTARRAYSIZE];
   float pho_sumNeutralHadronEt[OBJECTARRAYSIZE];
   float pho_sumPhotonEt[OBJECTARRAYSIZE];
