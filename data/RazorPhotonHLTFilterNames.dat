@@ -22,71 +22,76 @@
 9 hltEG18Iso60CaloId15b35eHE10R9Id50b80eTrackIsoUnseededpixSeedLastFilter
 10 hltDiEG18R9Id85b90eORIso60CaloId15b35eANDHE10R9Id50b80eMass70CombMasspixSeedLastFilter
 
-#HLT_DoublePhoton85
+#HLT_DoublePhoton60
 11 hltL1sL1SingleEG40ORL1SingleEG35ORL1SingleJet200
-12 hltEG85HEFilter
-13 hltDiEG85HEUnseededFilter
+12 hltEG60HEFilter
+13 hltDiEG60HEUnseededFilter
+
+#HLT_DoublePhoton85
+## hltL1sL1SingleEG40ORL1SingleEG35ORL1SingleJet200
+14 hltEG85HEFilter
+15 hltDiEG85HEUnseededFilter
 
 #HLT_Diphoton30_18_R9Id85_OR_Iso50T80LCaloId24b40e_AND_HE10P0_R9Id50b80e_Mass95 (25ns & 50ns MC)
-14 hltL1sL1SingleEG25ORL1DoubleEG1510
-15 hltEG30LRId85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eLegCombLastFilter
-16 hltEG18Iso50T80LCaloId24b40eHE10P0R9Id50b80eTrackIsoUnseededLastFilter
-17 hltDiEG18R9Id85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eMass95CombMassLastFilter
+16 hltL1sL1SingleEG25ORL1DoubleEG1510
+17 hltEG30LRId85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eLegCombLastFilter
+18 hltEG18Iso50T80LCaloId24b40eHE10P0R9Id50b80eTrackIsoUnseededLastFilter
+19 hltDiEG18R9Id85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eMass95CombMassLastFilter
 
 #HLT_Diphoton30_18_R9Id85_OR_Iso50T80LCaloId24b40e_AND_HE10P0_R9Id50b80e_PixelSeed_Mass70 (25ns & 50ns MC)
-18 hltL1sL1SingleEG25ORL1DoubleEG1510
-19 hltEG30LRId85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eLegCombpixSeedLastFilter
-20 hltEG18Iso50T80LCaloId24b40eHE10P0R9Id50b80eTrackIsoUnseededpixSeedLastFilter
-21 hltDiEG18R9Id85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eMass70CombMasspixSeedLastFilter
+20 hltL1sL1SingleEG25ORL1DoubleEG1510
+21 hltEG30LRId85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eLegCombpixSeedLastFilter
+22 hltEG18Iso50T80LCaloId24b40eHE10P0R9Id50b80eTrackIsoUnseededpixSeedLastFilter
+23 hltDiEG18R9Id85ORIso50T80LCaloId24b40eANDHE10P0R9Id50b80eMass70CombMasspixSeedLastFilter
 
 # HLT_Photon165_R9Id90_HE10_IsoM
-22 hltEG165R9Id90HE10IsoMTrackIsoFilter
+24 hltEG165R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon120_R9Id90_HE10_IsoM
-23 hltEG120R9Id90HE10IsoMTrackIsoFilter
+25 hltEG120R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon90_R9Id90_HE10_IsoM
-24 hltEG90R9Id90HE10IsoMTrackIsoFilter
+26 hltEG90R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon75_R9Id90_HE10_IsoM
-25 hltEG75R9Id90HE10IsoMTrackIsoFilter
+27 hltEG75R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon50_R9Id90_HE10_IsoM
-26 hltEG50R9Id90HE10IsoMTrackIsoFilter
+28 hltEG50R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon36_R9Id90_HE10_IsoM
-27 hltEG36R9Id90HE10IsoMTrackIsoFilter
+29 hltEG36R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon30_R9Id90_HE10_IsoM
-28 hltEG30R9Id90HE10IsoMTrackIsoFilter
+30 hltEG30R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon22_R9Id90_HE10_IsoM
-29 hltEG22R9Id90HE10IsoMTrackIsoFilter
+31 hltEG22R9Id90HE10IsoMTrackIsoFilter
 
 # HLT_Photon165_HE10
-30 hltEG165HE10Filter
+32 hltEG165HE10Filter
 
 # HLT_Photon175
-31 hltEG175HEFilter
+33 hltEG175HEFilter
 
 # HLT_Photon120
-32 hltEG120HEFilter
+34 hltEG120HEFilter
 
 # HLT_Photon90
-33 hltEG90HEFilter
+35 hltEG90HEFilter
 
 # HLT_Photon75
-34 hltEG75HEFilter
+36 hltEG75HEFilter
 
 # HLT_Photon50
-35 hltEG50HEFilter
+37 hltEG50HEFilter
 
 # HLT_Photon36
-36 hltEG36HEFilter
+38 hltEG36HEFilter
 
 # HLT_Photon30
-37 hltEG30HEFilter
+39 hltEG30HEFilter
 
 # HLT_Photon22
-38 hltEG22HEFilter
+40 hltEG22HEFilter
 
