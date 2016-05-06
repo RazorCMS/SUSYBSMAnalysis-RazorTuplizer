@@ -1,51 +1,41 @@
 #HLT_Ele23_WPLoose_Gsf
-0     hltL1sL1SingleEG20ORL1SingleEG15
+0     hltL1sSingleEG40IorSingleIsoEG22erIorSingleIsoEG24erIorSingleIsoEG24IorSingleIsoEG26
 1     hltEle23WPLooseGsfTrackIsoFilter
-#HLT_Ele23_WP75_Gsf_v1 (50ns MC)
-2     hltL1sL1SingleEG20
-3     hltEle23WP75GsfTrackIsoFilter
-#HLT_Ele27_eta2p1_WPLoose_Gsf , HLT_Ele27_eta2p1_WPTight_Gsf
-4     hltL1sL1SingleIsoEG22erOrSingleEG25
+#HLT_Ele27_WPLoose_Gsf, HLT_Ele27_WPTight_Gsf, HLT_Ele27_eta2p1_WPLoose_Gsf , HLT_Ele27_eta2p1_WPTight_Gsf
+4     hltL1sSingleEG40IorSingleIsoEG22erIorSingleIsoEG24er
 5     hltEle27WPLooseGsfTrackIsoFilter
 6     hltEle27WPTightGsfTrackIsoFilter
-#HLT_Ele27_WP85_Gsf (50ns MC)
-7     hltL1sL1SingleEG25
-8     hltL1EG25Ele27WP85GsfTrackIsoFilter
-#HLT_Ele27_eta2p1_WP75_Gsf (50ns MC)
-9     hltL1sL1SingleIsoEG22erOREG25
-10    hltEle27WP75GsfTrackIsoFilter
+7     hltEle27erWPLooseGsfTrackIsoFilter
+8     hltEle27erWPTightGsfTrackIsoFilter
 #HLT_Ele32_eta2p1_WPLoose_Gsf, HLT_Ele32_eta2p1_WPTight_Gsf_v1
-11    hltL1sL1SingleIsoEG30erOrSingleEG40
+#     hltL1sSingleEG40IorSingleIsoEG22erIorSingleIsoEG24er
 12    hltEle32WPLooseGsfTrackIsoFilter
 13    hltEle32WPTightGsfTrackIsoFilter
-#HLT_Ele32_eta2p1_WP75_Gsf_v1 (50ns MC)
-14    hltL1sL1SingleIsoEG30erOREG35
-15    hltEle32WP75GsfTrackIsoFilter
 #HLT_Ele105_CaloIdVT_GsfTrkIdT_v2
-16    hltL1sL1SingleEG40ORL1SingleEG35ORL1SingleJet200
+16    hltL1sSingleEG40IorSingleJet200
 17    hltEle105CaloIdVTGsfTrkIdTGsfDphiFilter
 #HLT_Ele115_CaloIdVT_GsfTrkIdT_v1
 18    hltL1sL1SingleEG40ORL1SingleEG35
 19    hltEle115CaloIdVTGsfTrkIdTGsfDphiFilter
 #HLT_DoubleEle33_CaloIdL_GsfTrkIdVL
-20     hltL1sL1SingleEG40OR35OR30OR25ORL1DoubleEG2210ORL1SingleJet200
+20     hltL1sSingleEG40IorSingleEG30IorSingleEG26IorDoubleEG2210IorDoubleEG2417IorSingleJet200
 21     hltEle33CaloIdLGsfTrkIdVLDPhiFilter
 22     hltDiEle33CaloIdLGsfTrkIdVLDPhiUnseededFilter
 #HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
-23     hltL1sL1DoubleEG2210
+23     hltL1sSingleEG40IorSingleIsoEG22erIorSingleIsoEG24IorDoubleEG1817IorDoubleEG2212
 24     hltEle23Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg1Filter
 25     hltEle23Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg2Filter
 26     hltEle23Ele12CaloIdLTrackIdLIsoVLDZFilter
 #HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
-27     hltL1sL1DoubleEG1510
+27     hltL1sEle23Ele12CaloIdLTrackIdLIsoVL
 28     hltEle17Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg1Filter
 29     hltEle17Ele12CaloIdLTrackIdLIsoVLTrackIsoLeg2Filter
 30     hltEle17Ele12CaloIdLTrackIdLIsoVLDZFilter
 #HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL
-30     hltL1sL1Mu5EG20
+30     hltL1sMu5EG20IorMu5IsoEG18
 31     hltMu8TrkIsoVVLEle23CaloIdLTrackIdLIsoVLElectronlegTrackIsoFilter
 #HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL
-32     hltL1sL1Mu5EG15
+32     hltL1sMu5EG15
 33     hltMu8TrkIsoVVLEle17CaloIdLTrackIdLIsoVLElectronlegTrackIsoFilter
 #HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL
 34     hltL1sL1Mu20EG10
@@ -54,7 +44,7 @@
 36     hltL1sL1Mu12EG10
 37     hltMu17TrkIsoVVLEle12CaloIdLTrackIdLIsoVLElectronlegTrackIsoFilter
 #HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL
-38     hltL1sL1SingleMu16ORSingleMu25
+38     hltL1sSingleMu22IorSingleMu25IorMu20EG15IorMu5EG20
 39     hltEle30CaloIdLGsfTrkIdVLDPhiUnseededFilter
 #HLT_Ele15_IsoVVVL_BTagCSV0p72_PFHT400,HLT_Ele15_IsoVVVL_PFHT350_PFMET70,HLT_Ele15_IsoVVVL_PFHT600,HLT_Ele15_PFHT300
 40     hltL1sL1SingleEG5Open
@@ -68,29 +58,13 @@
 #HLT_Ele12_CaloIdL_TrackIdL_IsoVL
 46     hltL1sL1SingleEG10
 47     hltEle12CaloIdLTrackIdLIsoVLTrackIsoFilter
-#HLT_Ele25WP60_Ele8_Mass55
-48     hltL1sL1SingleEG25
-49     hltEle25WP60Ele8TrackIsoFilter
-50     hltEle25WP60Ele8PixelMatchUnseededFilter
-51     hltEle25WP60Ele8Mass55Filter
-#HLT_Ele25WP60_SC4_Mass55
-52     hltL1sL1SingleEG25
-53     hltEle25WP60SC4TrackIsoFilter
-54     hltEle25WP60SC4EtUnseededFilter
-55     hltEle25WP60SC4Mass55Filter
 #HLT_Ele30WP60_SC4_Mass55
-56     hltL1sL1SingleEG25OrSingleIsoEG30er
+56     hltL1sSingleEG40OrSingleEGIso24OrSingleIsoEG22er
 57     hltEle30WP60SC4TrackIsoFilter
-58     hltEle30WP60SC4HcalIsoFilter
-59     hltEle30WP60SC4HcalIsoFilter
+58     hltEle30WP60SC4EtUnseededFilter
+59     hltEle30WP60SC4Mass55Filter
 #HLT_Ele30WP60_Ele8_Mass55
-#hltL1sL1SingleEG25OrSingleIsoEG30er
+#      hltL1sSingleEG40OrSingleEGIso24OrSingleIsoEG22er
 60     hltEle30WP60Ele8TrackIsoFilter
 61     hltEle30WP60Ele8PixelMatchUnseededFilter
 62     hltEle30WP60Ele8Mass55Filter
-# HLT_Ele22_eta2p1_WP75_Gsf (25ns MC)
-63     hltL1sL1SingleIsoEG20er
-64     hltSingleEle22WP75GsfTrackIsoFilter
-# HLT_Ele27_WPLoose_Gsf (Data)
-65     hltL1sL1SingleIsoEG20OrSingleEG20OrSingleEG25
-66     hltL1sL1SingleIsoEG20OrSingleEG20OrSingleEG25
