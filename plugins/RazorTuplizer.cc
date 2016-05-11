@@ -461,6 +461,12 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumWorstVertexChargedHadronPt", pho_sumWorstVertexChargedHadronPt, "pho_sumWorstVertexChargedHadronPt[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoChargedHadronIso", pho_pfIsoChargedHadronIso, "pho_pfIsoChargedHadronIso[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoChargedHadronIsoWrongVtx", pho_pfIsoChargedHadronIsoWrongVtx, "pho_pfIsoChargedHadronIsoWrongVtx[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoNeutralHadronIso", pho_pfIsoNeutralHadronIso, "pho_pfIsoNeutralHadronIso[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoPhotonIso", pho_pfIsoPhotonIso, "pho_pfIsoPhotonIso[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoModFrixione", pho_pfIsoModFrixione, "pho_pfIsoModFrixione[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoSumPUPt", pho_pfIsoSumPUPt, "pho_pfIsoSumPUPt[nPhotons]/F");
   RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/O");
   RazorEvents->Branch("pho_passEleVeto", pho_passEleVeto, "pho_passEleVeto[nPhotons]/O");
   RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
@@ -836,6 +842,12 @@ void RazorTuplizer::resetBranches(){
 	pho_sumNeutralHadronEt[i] = -99.0;
         pho_sumPhotonEt[i] = -99.0;
 	pho_sumWorstVertexChargedHadronPt[i] = -99.0;
+	pho_pfIsoChargedHadronIso[i] = -99.0;
+	pho_pfIsoChargedHadronIsoWrongVtx[i] = -99.0;
+	pho_pfIsoNeutralHadronIso[i] = -99.0;
+	pho_pfIsoPhotonIso[i] = -99.0;
+	pho_pfIsoModFrixione[i] = -99.0;
+	pho_pfIsoSumPUPt[i] = -99.0;       
 	pho_isConversion[i] = false;
         pho_passEleVeto[i] = false;    
         pho_RegressionE[i] = -99.0;
@@ -1424,11 +1436,16 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
 									   conversions, beamSpot->position());
 
-    //Don't use default miniAOD quantities for now
-    // pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
-    // pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
-    // pho_sumPhotonEt[nPhotons] = pho.photonIso();
-
+    //**********************************************************
+    // Fill default miniAOD isolation quantities
+    //**********************************************************
+    pho_pfIsoChargedHadronIso[nPhotons] = pho.chargedHadronIso();
+    pho_pfIsoChargedHadronIsoWrongVtx[nPhotons] = pho.chargedHadronIsoWrongVtx();
+    pho_pfIsoNeutralHadronIso[nPhotons] = pho.neutralHadronIso();
+    pho_pfIsoPhotonIso[nPhotons] = pho.photonIso();
+    pho_pfIsoModFrixione[nPhotons] = pho.getPflowIsolationVariables().modFrixione;
+    pho_pfIsoSumPUPt[nPhotons] = pho.sumPUPt();
+    
     //**********************************************************
     //Compute PF isolation
     //absolute uncorrected isolations with footprint removal
