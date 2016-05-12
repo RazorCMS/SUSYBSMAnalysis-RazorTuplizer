@@ -1714,8 +1714,8 @@ bool RazorTuplizer::fillJetsAK8(){
     //fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedLinks");
     //fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredLinks");
     fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSPrunedMass");                                                     
-    fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
-    fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  
+    //fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
+    //fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  
     fatJetTau1[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau1");
     fatJetTau2[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau2");
     fatJetTau3[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau3");
