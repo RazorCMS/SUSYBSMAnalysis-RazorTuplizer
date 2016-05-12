@@ -11,10 +11,10 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:88BF317B-500A-E611-86D6-02163E014126.root'
+        '/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v1/000/272/775/00000/4EA77143-2A16-E611-81F2-02163E01412F.root'
     )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
