@@ -11,7 +11,7 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/data/Run2015D/SingleMuon/MINIAOD/16Dec2015-v1/10000/00006301-CAA8-E511-AD39-549F35AD8BC9.root'
+        '/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/000298CD-87A6-E511-9E56-002590593878.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
@@ -22,6 +22,15 @@ process.TFileService = cms.Service("TFileService",
     fileName = cms.string("razorNtuple.root"),
     closeFileFast = cms.untracked.bool(True)
 )
+
+#Random Number Generator Service for Photon Smearing
+process.RandomNumberGeneratorService = cms.Service(
+    "RandomNumberGeneratorService",
+    calibratedPatPhotons = cms.PSet(
+        initialSeed = cms.untracked.uint32(1),
+        engineName = cms.untracked.string('TRandom3')
+        ),
+    )
 
 #load run conditions
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
@@ -39,6 +48,19 @@ process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
 process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
 process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
 process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
+
+#---photon filter---#
+process.selectedPhotons = cms.EDFilter("PATPhotonSelector",
+                                       src = cms.InputTag("slimmedPhotons"),
+                                       cut = cms.string("pt > 8"),
+                                       )
+#---photon corrections---#
+process.load('EgammaAnalysis.ElectronTools.calibratedPhotonsRun2_cfi')
+process.calibratedPatPhotons.photons = "selectedPhotons"
+process.calibratedPatPhotons.isMC = cms.bool(False)
+process.calibratedPatPhotons.updateEnergyError = cms.bool(True)
+process.calibratedPatPhotons.applyCorrections = cms.int32(1)
+process.calibratedPatPhotons.verbose = cms.bool(True)
 
 #------ Analyzer ------#
 
@@ -58,7 +80,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     muons = cms.InputTag("slimmedMuons"),
     electrons = cms.InputTag("slimmedElectrons"),
     taus = cms.InputTag("slimmedTaus"),
-    photons = cms.InputTag("slimmedPhotons"),
+    photons = cms.InputTag("calibratedPatPhotons"),
     jets = cms.InputTag("slimmedJets"),
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),
@@ -112,4 +134,6 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
 #run
 process.p = cms.Path( process.HBHENoiseFilterResultProducer*
+                      process.selectedPhotons*
+                      process.calibratedPatPhotons*
                       process.ntuples)

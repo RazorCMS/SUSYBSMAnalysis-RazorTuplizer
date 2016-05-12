@@ -403,6 +403,7 @@ protected:
   int   isoPFCandidatePdgId[OBJECTARRAYSIZE];
 
   //Photons
+  static const int MAX_NPV = 200;
   int nPhotons;
   float phoE[OBJECTARRAYSIZE];
   float phoPt[OBJECTARRAYSIZE];
@@ -412,10 +413,17 @@ protected:
   float phoFull5x5SigmaIetaIeta[OBJECTARRAYSIZE];
   float phoR9[OBJECTARRAYSIZE];
   float pho_HoverE[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPtAllVertices[OBJECTARRAYSIZE][MAX_NPV];
   float pho_sumChargedHadronPt[OBJECTARRAYSIZE];
   float pho_sumNeutralHadronEt[OBJECTARRAYSIZE];
   float pho_sumPhotonEt[OBJECTARRAYSIZE];
   float pho_sumWorstVertexChargedHadronPt[OBJECTARRAYSIZE];
+  float pho_pfIsoChargedHadronIso[OBJECTARRAYSIZE];
+  float pho_pfIsoChargedHadronIsoWrongVtx[OBJECTARRAYSIZE];
+  float pho_pfIsoNeutralHadronIso[OBJECTARRAYSIZE];
+  float pho_pfIsoPhotonIso[OBJECTARRAYSIZE];
+  float pho_pfIsoModFrixione[OBJECTARRAYSIZE];
+  float pho_pfIsoSumPUPt[OBJECTARRAYSIZE];
   bool  pho_isConversion[OBJECTARRAYSIZE];
   bool  pho_passEleVeto[OBJECTARRAYSIZE];
   float pho_RegressionE[OBJECTARRAYSIZE];
