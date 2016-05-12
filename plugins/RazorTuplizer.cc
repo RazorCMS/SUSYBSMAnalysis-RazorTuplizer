@@ -456,10 +456,17 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("phoFull5x5SigmaIetaIeta", phoFull5x5SigmaIetaIeta, "phoFull5x5SigmaIetaIeta[nPhotons]/F");
   RazorEvents->Branch("phoR9", phoR9, "phoR9[nPhotons]/F");
   RazorEvents->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
-  RazorEvents->Branch("pho_sumChargedHadronPt", pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPtAllVertices", &pho_sumChargedHadronPtAllVertices, Form("pho_sumChargedHadronPtAllVertices[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_sumChargedHadronPt", &pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumWorstVertexChargedHadronPt", pho_sumWorstVertexChargedHadronPt, "pho_sumWorstVertexChargedHadronPt[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoChargedHadronIso", pho_pfIsoChargedHadronIso, "pho_pfIsoChargedHadronIso[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoChargedHadronIsoWrongVtx", pho_pfIsoChargedHadronIsoWrongVtx, "pho_pfIsoChargedHadronIsoWrongVtx[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoNeutralHadronIso", pho_pfIsoNeutralHadronIso, "pho_pfIsoNeutralHadronIso[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoPhotonIso", pho_pfIsoPhotonIso, "pho_pfIsoPhotonIso[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoModFrixione", pho_pfIsoModFrixione, "pho_pfIsoModFrixione[nPhotons]/F");
+  RazorEvents->Branch("pho_pfIsoSumPUPt", pho_pfIsoSumPUPt, "pho_pfIsoSumPUPt[nPhotons]/F");
   RazorEvents->Branch("pho_isConversion", pho_isConversion, "pho_isConversion[nPhotons]/O");
   RazorEvents->Branch("pho_passEleVeto", pho_passEleVeto, "pho_passEleVeto[nPhotons]/O");
   RazorEvents->Branch("pho_RegressionE", pho_RegressionE, "pho_RegressionE[nPhotons]/F");
@@ -830,10 +837,17 @@ void RazorTuplizer::resetBranches(){
         phoFull5x5SigmaIetaIeta[i] = -99.0;
         phoR9[i] = -99.0;
         pho_HoverE[i] = -99.0;
-        pho_sumChargedHadronPt[i] = -99.0;
-        pho_sumNeutralHadronEt[i] = -99.0;
+ 	for (int q=0;q<MAX_NPV;q++) pho_sumChargedHadronPtAllVertices[i][q] = -99.0;
+	pho_sumChargedHadronPt[i] = -99.0;
+	pho_sumNeutralHadronEt[i] = -99.0;
         pho_sumPhotonEt[i] = -99.0;
 	pho_sumWorstVertexChargedHadronPt[i] = -99.0;
+	pho_pfIsoChargedHadronIso[i] = -99.0;
+	pho_pfIsoChargedHadronIsoWrongVtx[i] = -99.0;
+	pho_pfIsoNeutralHadronIso[i] = -99.0;
+	pho_pfIsoPhotonIso[i] = -99.0;
+	pho_pfIsoModFrixione[i] = -99.0;
+	pho_pfIsoSumPUPt[i] = -99.0;       
 	pho_isConversion[i] = false;
         pho_passEleVeto[i] = false;    
         pho_RegressionE[i] = -99.0;
@@ -1405,6 +1419,11 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     phoEta[nPhotons] = pho.eta(); //correct this for the vertex
     phoPhi[nPhotons] = pho.phi(); //correct this for the vertex
 
+    /*std::cout << "phoE: " << pho.energy() << " phoCorr En:" << pho.getCorrectedEnergy(reco::Photon::P4type::regression2) << " un: " 
+	      << pho.getCorrectedEnergyError(reco::Photon::P4type::regression2) << " " 
+	      << pho.getCorrectedEnergyError( pho.getCandidateP4type() ) << std::endl;
+    */
+
     phoSigmaIetaIeta[nPhotons] = pho.see();
     phoFull5x5SigmaIetaIeta[nPhotons] = pho.full5x5_sigmaIetaIeta();    
 
@@ -1417,11 +1436,16 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
 									   conversions, beamSpot->position());
 
-    //Don't use default miniAOD quantities for now
-    // pho_sumChargedHadronPt[nPhotons] = pho.chargedHadronIso();
-    // pho_sumNeutralHadronEt[nPhotons] = pho.neutralHadronIso();
-    // pho_sumPhotonEt[nPhotons] = pho.photonIso();
-
+    //**********************************************************
+    // Fill default miniAOD isolation quantities
+    //**********************************************************
+    pho_pfIsoChargedHadronIso[nPhotons] = pho.chargedHadronIso();
+    pho_pfIsoChargedHadronIsoWrongVtx[nPhotons] = pho.chargedHadronIsoWrongVtx();
+    pho_pfIsoNeutralHadronIso[nPhotons] = pho.neutralHadronIso();
+    pho_pfIsoPhotonIso[nPhotons] = pho.photonIso();
+    pho_pfIsoModFrixione[nPhotons] = pho.getPflowIsolationVariables().modFrixione;
+    pho_pfIsoSumPUPt[nPhotons] = pho.sumPUPt();
+    
     //**********************************************************
     //Compute PF isolation
     //absolute uncorrected isolations with footprint removal
@@ -1429,6 +1453,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     const float coneSizeDR = 0.3;
     const float dxyMax = 0.1;
     const float dzMax = 0.2;
+    float chargedIsoSumAllVertices[MAX_NPV];
+    for (int q=0;q<MAX_NPV;++q) chargedIsoSumAllVertices[q] = 0.0;
     float chargedIsoSum = 0;
     float neutralHadronIsoSum = 0;
     float photonIsoSum = 0;
@@ -1474,17 +1500,35 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	// for charged hadrons, additionally check consistency
 	// with the PV
 	float dxy = -999, dz = -999;
+
+	//For the primary vertex
 	dz = candidate.pseudoTrack().dz(myPV->position());
 	dxy =candidate.pseudoTrack().dxy(myPV->position());
-	if (fabs(dz) > dzMax) continue;
-	if(fabs(dxy) > dxyMax) continue;
-	// The candidate is eligible, increment the isolaiton
-	chargedIsoSum += candidate.pt();
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax) {
+	  chargedIsoSum += candidate.pt();
+	}
+
+	//loop over all vertices
+	for(unsigned int q = 0; q < vertices->size() && q < MAX_NPV; q++){
+	  if(!(vertices->at(q).isValid() && !vertices->at(q).isFake())) continue;
+
+	  dz = candidate.pseudoTrack().dz(vertices->at(q).position());
+	  dxy =candidate.pseudoTrack().dxy(vertices->at(q).position());
+	  if (fabs(dz) > dzMax) continue;
+	  if(fabs(dxy) > dxyMax) continue;
+	  // The candidate is eligible, increment the isolation
+	  chargedIsoSumAllVertices[q] += candidate.pt();
+	}
       }
       if( thisCandidateType == reco::PFCandidate::h0 )
 	neutralHadronIsoSum += candidate.pt();
       if( thisCandidateType == reco::PFCandidate::gamma )
 	photonIsoSum += candidate.pt();
+    }
+
+    //fill the proper variables
+    for(unsigned int q = 0; q < vertices->size() && q < MAX_NPV; q++) {
+      pho_sumChargedHadronPtAllVertices[nPhotons][q] = chargedIsoSumAllVertices[q];
     }
     pho_sumChargedHadronPt[nPhotons] = chargedIsoSum;
     pho_sumNeutralHadronEt[nPhotons] = neutralHadronIsoSum;
