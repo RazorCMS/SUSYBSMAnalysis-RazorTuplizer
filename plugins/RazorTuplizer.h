@@ -65,6 +65,7 @@ using namespace std;
 //------ Array Size Constants ------//
 #define OBJECTARRAYSIZE 99
 #define GENPARTICLEARRAYSIZE 500
+#define MAX_NPV 200
 
 //------ Class declaration ------//
 
@@ -80,6 +81,7 @@ public:
   //enable desired output variables
   virtual void setBranches();
   virtual void enableEventInfoBranches();
+  virtual void enablePVAllBranches();
   virtual void enablePileUpBranches();
   virtual void enableMuonBranches();
   virtual void enableElectronBranches();
@@ -96,6 +98,7 @@ public:
   
   //select objects and fill tree branches
   virtual bool fillEventInfo(const edm::Event& iEvent);
+  virtual bool fillPVAll();
   virtual bool fillPileUp();//Fill summary PU info
   virtual bool fillMuons();//Fills looseID muon 4-momentum only. PT > 5GeV
   virtual bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
@@ -285,6 +288,15 @@ protected:
 
   //------ Variables for tree ------//
 
+  //PVAll (full list of primary vertices for analysis-level vtx selection)
+  int nPVAll;
+  float pvAllX[MAX_NPV];
+  float pvAllY[MAX_NPV];
+  float pvAllZ[MAX_NPV];
+  float pvAllLogSumPtSq[MAX_NPV];
+  float pvAllSumPx[MAX_NPV];
+  float pvAllSumPy[MAX_NPV];
+  
   //PU
   int nBunchXing;
   int BunchXing[OBJECTARRAYSIZE];
@@ -403,7 +415,6 @@ protected:
   int   isoPFCandidatePdgId[OBJECTARRAYSIZE];
 
   //Photons
-  static const int MAX_NPV = 200;
   int nPhotons;
   float phoE[OBJECTARRAYSIZE];
   float phoPt[OBJECTARRAYSIZE];
@@ -437,6 +448,11 @@ protected:
   float pho_superClusterZ[OBJECTARRAYSIZE];
   bool pho_hasPixelSeed[OBJECTARRAYSIZE];
   bool pho_passHLTFilter[OBJECTARRAYSIZE][MAX_PhotonHLTFilters];
+  int pho_convType[OBJECTARRAYSIZE];
+  float pho_convTrkZ[OBJECTARRAYSIZE];
+  float pho_convTrkClusZ[OBJECTARRAYSIZE];
+  float pho_vtxSumPx[OBJECTARRAYSIZE][MAX_NPV];
+  float pho_vtxSumPy[OBJECTARRAYSIZE][MAX_NPV];
 
   //AK4 Jets
   int nJets;
