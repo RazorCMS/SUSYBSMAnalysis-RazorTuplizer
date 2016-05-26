@@ -293,6 +293,7 @@ RazorTuplizer::~RazorTuplizer()
 //------ Enable the desired set of branches ------//
 void RazorTuplizer::setBranches(){
   enableEventInfoBranches();
+  enablePVAllBranches();
   enablePileUpBranches();
   enableMuonBranches();
   enableElectronBranches();
@@ -323,6 +324,16 @@ void RazorTuplizer::enableEventInfoBranches(){
   RazorEvents->Branch("fixedGridRhoFastjetCentralCalo", &fixedGridRhoFastjetCentralCalo, "fixedGridRhoFastjetCentralCalo/F");
   RazorEvents->Branch("fixedGridRhoFastjetCentralChargedPileUp", &fixedGridRhoFastjetCentralChargedPileUp, "fixedGridRhoFastjetCentralChargedPileUp/F");
   RazorEvents->Branch("fixedGridRhoFastjetCentralNeutral", &fixedGridRhoFastjetCentralNeutral, "fixedGridRhoFastjetCentralNeutral/F");
+}
+
+void RazorTuplizer::enablePVAllBranches() {
+  RazorEvents->Branch("nPVAll", &nPVAll,"nPVAll/I");
+  RazorEvents->Branch("pvAllX", pvAllX,"pvAllX[nPVAll]/F");
+  RazorEvents->Branch("pvAllY", pvAllY,"pvAllY[nPVAll]/F");
+  RazorEvents->Branch("pvAllZ", pvAllZ,"pvAllZ[nPVAll]/F");
+  RazorEvents->Branch("pvAllLogSumPtSq", pvAllLogSumPtSq,"pvAllLogSumPtSq[nPVAll]/F");
+  RazorEvents->Branch("pvAllSumPx", pvAllSumPx,"pvAllSumPx[nPVAll]/F");
+  RazorEvents->Branch("pvAllSumPy", pvAllSumPy,"pvAllSumPy[nPVAll]/F");
 }
 
 void RazorTuplizer::enablePileUpBranches(){
@@ -456,7 +467,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("phoFull5x5SigmaIetaIeta", phoFull5x5SigmaIetaIeta, "phoFull5x5SigmaIetaIeta[nPhotons]/F");
   RazorEvents->Branch("phoR9", phoR9, "phoR9[nPhotons]/F");
   RazorEvents->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
-  RazorEvents->Branch("pho_sumChargedHadronPtAllVertices", &pho_sumChargedHadronPtAllVertices, Form("pho_sumChargedHadronPtAllVertices[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_sumChargedHadronPtAllVertices", &pho_sumChargedHadronPtAllVertices,Form("pho_sumChargedHadronPtAllVertices[nPhotons][%d]/F",MAX_NPV));
   RazorEvents->Branch("pho_sumChargedHadronPt", &pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
@@ -480,6 +491,12 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_superClusterZ", pho_superClusterZ, "pho_superClusterZ[nPhotons]/F");
   RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/O");
   RazorEvents->Branch("pho_passHLTFilter", &pho_passHLTFilter, Form("pho_passHLTFilter[nPhotons][%d]/O",MAX_PhotonHLTFilters));
+  RazorEvents->Branch("pho_convType", pho_convType, "pho_convType[nPhotons]/I");
+  RazorEvents->Branch("pho_convTrkZ", pho_convTrkZ, "pho_convTrkZ[nPhotons]/F");
+  RazorEvents->Branch("pho_convTrkClusZ", pho_convTrkClusZ, "pho_convTrkClusZ[nPhotons]/F");
+  RazorEvents->Branch("pho_vtxSumPx", &pho_vtxSumPx,Form("pho_vtxSumPx[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_vtxSumPy", &pho_vtxSumPy,Form("pho_vtxSumPy[nPhotons][%d]/F",MAX_NPV));
+
 }
 
 void RazorTuplizer::enableJetBranches(){
@@ -716,7 +733,17 @@ void RazorTuplizer::resetBranches(){
       triggerHLTPrescale[i] = 0;
     }
 
-    for(int i = 0; i < 99; i++){
+    for (int i=0; i < MAX_NPV; ++i) {
+      //pvAll
+      pvAllX[i] = 0.;
+      pvAllY[i] = 0.;
+      pvAllZ[i] = 0.;
+      pvAllLogSumPtSq[i] = 0.;
+      pvAllSumPx[i] = 0.;
+      pvAllSumPy[i] = 0.;
+    }
+    
+    for(int i = 0; i < 99; i++){      
         //PU
         BunchXing[i] = -99;
         nPU[i] = -99;
@@ -837,7 +864,6 @@ void RazorTuplizer::resetBranches(){
         phoFull5x5SigmaIetaIeta[i] = -99.0;
         phoR9[i] = -99.0;
         pho_HoverE[i] = -99.0;
- 	for (int q=0;q<MAX_NPV;q++) pho_sumChargedHadronPtAllVertices[i][q] = -99.0;
 	pho_sumChargedHadronPt[i] = -99.0;
 	pho_sumNeutralHadronEt[i] = -99.0;
         pho_sumPhotonEt[i] = -99.0;
@@ -861,6 +887,15 @@ void RazorTuplizer::resetBranches(){
 	pho_superClusterZ[i]      = -99.0;
         pho_hasPixelSeed[i] = false;
 	for (int q=0;q<MAX_PhotonHLTFilters;q++) pho_passHLTFilter[i][q] = false;
+        pho_convType[i] = -99;
+        pho_convTrkZ[i] = -99.;
+        pho_convTrkClusZ[i] = -99.;
+        
+        for (int ipv=0; ipv < MAX_NPV; ++ipv) {
+          pho_sumChargedHadronPtAllVertices[i][ipv] = -99.0;
+          pho_vtxSumPx[i][ipv] = 0.;
+          pho_vtxSumPy[i][ipv] = 0.;
+        }
 
         //Jet
         jetE[i] = 0.0;
@@ -1065,6 +1100,58 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   fixedGridRhoFastjetCentralChargedPileUp = *rhoFastjetCentralChargedPileUp;
   fixedGridRhoFastjetCentralNeutral = *rhoFastjetCentralNeutral;
 
+  return true;
+}
+
+bool RazorTuplizer::fillPVAll() {
+  
+  nPVAll = std::min(int(vertices->size()),int(MAX_NPV));
+  
+  for (int ipv = 0; ipv < nPVAll; ++ipv) {
+    const reco::Vertex &vtx = vertices->at(ipv);
+    pvAllX[ipv] = vtx.x();
+    pvAllY[ipv] = vtx.y();
+    pvAllZ[ipv] = vtx.z();
+  }
+  
+  double pvAllSumPtSqD[MAX_NPV];
+  double pvAllSumPxD[MAX_NPV];
+  double pvAllSumPyD[MAX_NPV];
+  
+  for (int ipv=0; ipv<nPVAll; ++ipv) {
+    pvAllSumPtSqD[ipv] = 0.;
+    pvAllSumPxD[ipv] = 0.;
+    pvAllSumPyD[ipv] = 0.;
+  }
+  
+  for (const pat::PackedCandidate &pfcand : *packedPFCands) {
+    if (pfcand.charge()==0) continue;
+    double mindz = std::numeric_limits<double>::max();
+    int ipvmin = -1;
+    for (int ipv = 0; ipv < nPVAll; ++ipv) {
+      const reco::Vertex &vtx = vertices->at(ipv);
+      double dz = std::abs(pfcand.dz(vtx.position()));
+      if (dz<mindz) {
+        mindz = dz;
+        ipvmin = ipv;
+      }
+    }
+        
+    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
+      pvAllSumPtSqD[ipvmin] += pfcand.pt()*pfcand.pt();
+      pvAllSumPxD[ipvmin] += pfcand.px();
+      pvAllSumPyD[ipvmin] += pfcand.py();
+    }
+  }
+  
+  for (int ipv=0; ipv<nPVAll; ++ipv) {
+    pvAllLogSumPtSq[ipv] = log(pvAllSumPtSqD[ipv]);
+    pvAllSumPx[ipv] = pvAllSumPxD[ipv];
+    pvAllSumPy[ipv] = pvAllSumPyD[ipv];    
+  }
+  
+  
+  
   return true;
 }
 
@@ -1509,7 +1596,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	}
 
 	//loop over all vertices
-	for(unsigned int q = 0; q < vertices->size() && q < MAX_NPV; q++){
+	for(int q = 0; q < nPVAll; q++){
 	  if(!(vertices->at(q).isValid() && !vertices->at(q).isFake())) continue;
 
 	  dz = candidate.pseudoTrack().dz(vertices->at(q).position());
@@ -1527,7 +1614,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     }
 
     //fill the proper variables
-    for(unsigned int q = 0; q < vertices->size() && q < MAX_NPV; q++) {
+    for(int q = 0; q < nPVAll; q++) {
       pho_sumChargedHadronPtAllVertices[nPhotons][q] = chargedIsoSumAllVertices[q];
     }
     pho_sumChargedHadronPt[nPhotons] = chargedIsoSum;
@@ -1636,10 +1723,141 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	if (trigObject.hasFilterLabel(photonHLTFilterNames[q].c_str())) pho_passHLTFilter[nPhotons][q] = true;
       }
     }
+    
+    //conversion matching for beamspot pointing
+    const reco::Conversion *convmatch = 0;
+    double drmin = std::numeric_limits<double>::max();
+    //double leg conversions
+    for (const reco::Conversion &conv : *conversions) {
+      if (conv.refittedPairMomentum().rho()<10.) continue;
+      if (!conv.conversionVertex().isValid()) continue;
+      if (TMath::Prob(conv.conversionVertex().chi2(),  conv.conversionVertex().ndof())<1e-6) continue;
+      
+      math::XYZVector mom(conv.refittedPairMomentum());      
+      math::XYZPoint scpos(pho.superCluster()->position());
+      math::XYZPoint cvtx(conv.conversionVertex().position());
+      math::XYZVector cscvector = scpos - cvtx;
+      
+      double dr = reco::deltaR(mom,cscvector);
+      
+      if (dr<drmin && dr<0.1) {
+        drmin = dr;
+        convmatch = &conv;
+      }
+    }
+    if (!convmatch) {
+      drmin = std::numeric_limits<double>::max();
+      //single leg conversions
+      for (const reco::Conversion &conv : *singleLegConversions) {      
+        math::XYZVector mom(conv.tracksPin()[0]);      
+        math::XYZPoint scpos(pho.superCluster()->position());
+        math::XYZPoint cvtx(conv.conversionVertex().position());
+        math::XYZVector cscvector = scpos - cvtx;
+        
+        double dr = reco::deltaR(mom,cscvector);
+        
+        if (dr<drmin && dr<0.1) {
+          drmin = dr;
+          convmatch = &conv;
+        }
+      }
+    }
+    
+    //matched conversion, compute conversion type
+    //and extrapolation to beamline
+    if (convmatch) {
+      int ntracks = convmatch->nTracks();
+      
+      math::XYZVector mom(ntracks==2 ? convmatch->refittedPairMomentum() : convmatch->tracksPin()[0]);      
+      math::XYZPoint scpos(pho.superCluster()->position());
+      math::XYZPoint cvtx(convmatch->conversionVertex().position());
+      math::XYZVector cscvector = scpos - cvtx;
+
+      double z = cvtx.z();
+      double rho = cvtx.rho();
+
+      int legtype = ntracks==2 ? 0 : 1;
+      int dettype = pho.isEB() ? 0 : 1;
+      int postype =0;
+      
+      if (pho.isEB()) {
+        if (rho<15.) {
+          postype = 0;
+        }
+        else if (rho>=15. && rho<60.) {
+          postype = 1;
+        }
+        else {
+          postype = 2;
+        }
+      }
+      else {
+        if (std::abs(z) < 50.) {
+          postype = 0;
+        }
+        else if (std::abs(z) >= 50. && std::abs(z) < 100.) {
+          postype = 1;
+        }
+        else {
+          postype = 2;
+        }
+      }
+      
+      pho_convType[nPhotons] = legtype + 2*dettype + 4*postype;
+      pho_convTrkZ[nPhotons] = cvtx.z() - ((cvtx.x()-beamSpot->x0())*mom.x()+(cvtx.y()-beamSpot->y0())*mom.y())/mom.rho() * mom.z()/mom.rho();
+      pho_convTrkClusZ[nPhotons] = cvtx.z() - ((cvtx.x()-beamSpot->x0())*cscvector.x()+(cvtx.y()-beamSpot->y0())*cscvector.y())/cscvector.rho() * cscvector.z()/cscvector.rho();
+    }
 
     nPhotons++;
   }
-
+  
+  double pho_vtxSumPxD[OBJECTARRAYSIZE][MAX_NPV];
+  double pho_vtxSumPyD[OBJECTARRAYSIZE][MAX_NPV];
+  
+  for (int ipho = 0; ipho<nPhotons; ++ipho) {
+    for (int ipv = 0; ipv<nPVAll; ++ipv) {
+      pho_vtxSumPxD[ipho][ipv] = 0.;
+      pho_vtxSumPyD[ipho][ipv] = 0.;
+    }
+  }
+  
+  
+  //fill information on tracks to exclude around photons for vertex selection purposes
+  for (const pat::PackedCandidate &pfcand : *packedPFCands) {
+    if (pfcand.charge()==0) continue;
+    double mindz = std::numeric_limits<double>::max();
+    int ipvmin = -1;
+    for (int ipv = 0; ipv < nPVAll; ++ipv) {
+      const reco::Vertex &vtx = vertices->at(ipv);
+      double dz = std::abs(pfcand.dz(vtx.position()));
+      if (dz<mindz) {
+        mindz = dz;
+        ipvmin = ipv;
+      }
+    }
+    
+    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
+      const reco::Vertex &vtx = vertices->at(ipvmin);
+      for (int ipho = 0; ipho < nPhotons; ++ipho) {
+        const pat::Photon &pho = photons->at(ipho);
+        math::XYZVector phodir(pho.superCluster()->x()-vtx.x(),pho.superCluster()->y()-vtx.y(),pho.superCluster()->z()-vtx.z());
+        double dr = reco::deltaR(phodir, pfcand);
+        if (dr<0.05) {
+          pho_vtxSumPxD[ipho][ipvmin] += pfcand.px();
+          pho_vtxSumPyD[ipho][ipvmin] += pfcand.py();
+        }
+      }
+    }
+  }
+  
+  for (int ipho = 0; ipho<nPhotons; ++ipho) {
+    for (int ipv = 0; ipv<nPVAll; ++ipv) {
+      pho_vtxSumPx[ipho][ipv] = pho_vtxSumPxD[ipho][ipv];
+      pho_vtxSumPy[ipho][ipv] = pho_vtxSumPyD[ipho][ipv];
+    }
+  }
+  
+  
   delete lazyToolnoZS;
   return true;
 };
@@ -2202,6 +2420,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   //filler methods should fill relevant tree variables and return false if the event should be rejected
   bool isGoodEvent = 
     fillEventInfo(iEvent)
+    && fillPVAll()
     && fillMuons() 
     && fillElectrons()
     && fillTaus()
