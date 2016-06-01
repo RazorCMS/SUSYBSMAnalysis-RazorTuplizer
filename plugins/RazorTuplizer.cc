@@ -484,6 +484,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEnergy", pho_superClusterEnergy, "pho_superClusterEnergy[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterRawEnergy", pho_superClusterRawEnergy, "pho_superClusterRawEnergy[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterPhi", pho_superClusterPhi, "pho_superClusterPhi[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterX", pho_superClusterX, "pho_superClusterX[nPhotons]/F");
@@ -880,6 +881,7 @@ void RazorTuplizer::resetBranches(){
         pho_RegressionEUncertainty[i] = -99.0;
         pho_IDMVA[i] = -99.0;
 	pho_superClusterEnergy[i] = -99.0;
+	pho_superClusterRawEnergy[i] = -99.0;
         pho_superClusterEta[i]    = -99.0;
         pho_superClusterPhi[i]    = -99.0;
 	pho_superClusterX[i]      = -99.0;
@@ -1705,6 +1707,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     // super cluster position
     //-----------------------  
     pho_superClusterEnergy[nPhotons] = pho.superCluster()->energy();
+    pho_superClusterRawEnergy[nPhotons] = pho.superCluster()->rawEnergy();
     pho_superClusterEta[nPhotons]    = pho.superCluster()->eta();
     pho_superClusterPhi[nPhotons]    = pho.superCluster()->phi();
     pho_superClusterX[nPhotons]      = pho.superCluster()->x();

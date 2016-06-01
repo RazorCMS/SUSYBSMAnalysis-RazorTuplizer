@@ -441,6 +441,7 @@ protected:
   float pho_RegressionEUncertainty[OBJECTARRAYSIZE];
   float pho_IDMVA[OBJECTARRAYSIZE];
   float pho_superClusterEnergy[OBJECTARRAYSIZE];
+  float pho_superClusterRawEnergy[OBJECTARRAYSIZE];
   float pho_superClusterEta[OBJECTARRAYSIZE];
   float pho_superClusterPhi[OBJECTARRAYSIZE];
   float pho_superClusterX[OBJECTARRAYSIZE];
