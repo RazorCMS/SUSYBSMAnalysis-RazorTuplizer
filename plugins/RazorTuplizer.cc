@@ -1765,7 +1765,9 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     
     //matched conversion, compute conversion type
     //and extrapolation to beamline
-    if (convmatch) {
+    //*FIXME* Both of these additional two requirements are inconsistent and make the conversion
+    //selection depend on poorly defined criteria, but we keep them for sync purposes
+    if (convmatch && pho.hasConversionTracks() && conversions->size()>0) {
       int ntracks = convmatch->nTracks();
       
       math::XYZVector mom(ntracks==2 ? convmatch->refittedPairMomentum() : convmatch->tracksPin()[0]);      
