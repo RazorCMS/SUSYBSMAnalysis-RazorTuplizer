@@ -3,6 +3,16 @@ SUSYBSMAnalysis-RazorTuplizer
 
 Razor ntuplizer for running over LHC Run 2 miniAOD compatible with CMSSW_7_6_X
 
+---------------------------------------
+!!!! Including new bad track MET filter
+ ---------------------------------------
+
+As of 26/06/2016 (80X miniAOD v2), need to first run
+
+git cms-merge-topic -u cms-met:CMSSW_8_0_X-METFilterUpdate
+
+to get new bad charged candidate and bad muon MET filters.
+
 -----------------------------------
 Instructions for compiling in CMSSW
 -----------------------------------

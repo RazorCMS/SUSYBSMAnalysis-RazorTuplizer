@@ -40,6 +40,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   hbheNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheNoiseFilter"))),
   hbheTightNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheTightNoiseFilter"))),
   hbheIsoNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheIsoNoiseFilter"))),
+  badChargedCandidateFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("BadChargedCandidateFilter"))),
+  badMuonFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("BadMuonFilter"))),
   lheRunInfoTag_(iConfig.getParameter<edm::InputTag>("lheInfo")),
   lheRunInfoToken_(consumes<LHERunInfoProduct,edm::InRun>(lheRunInfoTag_)),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
@@ -595,6 +597,8 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
   RazorEvents->Branch("Flag_HBHETightNoiseFilter", &Flag_HBHETightNoiseFilter, "Flag_HBHETightNoiseFilter/O");
   RazorEvents->Branch("Flag_HBHEIsoNoiseFilter", &Flag_HBHEIsoNoiseFilter, "Flag_HBHEIsoNoiseFilter/O");
+  RazorEvents->Branch("Flag_badChargedCandidateFilter", &Flag_badChargedCandidateFilter, "Flag_badChargedCandidateFilter/O");
+  RazorEvents->Branch("Flag_badMuonFilter", &Flag_badMuonFilter, "Flag_badMuonFilter/O");
   RazorEvents->Branch("Flag_CSCTightHaloFilter", &Flag_CSCTightHaloFilter, "Flag_CSCTightHaloFilter/O");
   RazorEvents->Branch("Flag_hcalLaserEventFilter", &Flag_hcalLaserEventFilter, "Flag_hcalLaserEventFilter/O");
   RazorEvents->Branch("Flag_EcalDeadCellTriggerPrimitiveFilter", &Flag_EcalDeadCellTriggerPrimitiveFilter, "Flag_EcalDeadCellTriggerPrimitiveFilter/O");
@@ -703,6 +707,8 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(hbheNoiseFilterToken_, hbheNoiseFilter);
   iEvent.getByToken(hbheTightNoiseFilterToken_, hbheTightNoiseFilter);
   iEvent.getByToken(hbheIsoNoiseFilterToken_, hbheIsoNoiseFilter);
+  iEvent.getByToken(badChargedCandidateFilterToken_, badChargedCandidateFilter);
+  iEvent.getByToken(badMuonFilterToken_, badMuonFilter);
 
   if (useGen_) {
     iEvent.getByToken(prunedGenParticlesToken_,prunedGenParticles);
@@ -983,6 +989,8 @@ void RazorTuplizer::resetBranches(){
     Flag_HBHENoiseFilter = false;
     Flag_HBHETightNoiseFilter = false;
     Flag_HBHEIsoNoiseFilter = false;
+    Flag_badChargedCandidateFilter = false;
+    Flag_badMuonFilter = false;
     Flag_CSCTightHaloFilter = false;
     Flag_hcalLaserEventFilter = false;
     Flag_EcalDeadCellTriggerPrimitiveFilter = false;
@@ -2057,6 +2065,8 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
     Flag_HBHENoiseFilter = *hbheNoiseFilter;
     Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
     Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
+    Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
+    Flag_badMuonFilter = *badMuonFilter;
   }
 
   return true;

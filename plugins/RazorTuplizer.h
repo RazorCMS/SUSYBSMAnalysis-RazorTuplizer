@@ -203,6 +203,8 @@ protected:
   edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
   edm::EDGetTokenT<bool> hbheTightNoiseFilterToken_;
   edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
+  edm::EDGetTokenT<bool> badChargedCandidateFilterToken_;
+  edm::EDGetTokenT<bool> badMuonFilterToken_;
   edm::InputTag lheRunInfoTag_;
   edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
@@ -257,6 +259,8 @@ protected:
   edm::Handle<bool> hbheNoiseFilter;
   edm::Handle<bool> hbheTightNoiseFilter;
   edm::Handle<bool> hbheIsoNoiseFilter;
+  edm::Handle<bool> badChargedCandidateFilter;
+  edm::Handle<bool> badMuonFilter;
   edm::Handle<vector<reco::VertexCompositePtrCandidate> > secondaryVertices;
   edm::Handle<double> rhoAll;
   edm::Handle<double> rhoFastjetAll;
@@ -562,6 +566,8 @@ protected:
   bool Flag_HBHENoiseFilter;
   bool Flag_HBHETightNoiseFilter;
   bool Flag_HBHEIsoNoiseFilter;
+  bool Flag_badChargedCandidateFilter;
+  bool Flag_badMuonFilter;
   bool Flag_CSCTightHaloFilter;
   bool Flag_hcalLaserEventFilter;
   bool Flag_EcalDeadCellTriggerPrimitiveFilter;

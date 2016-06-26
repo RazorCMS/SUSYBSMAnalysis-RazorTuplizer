@@ -40,6 +40,14 @@ process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
 process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
 process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
 
+process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
+process.BadChargedCandidateFilter.muons = cms.InputTag("slimmedMuons")
+process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+
+process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
+process.BadPFMuonFilter.muons = cms.InputTag("slimmedMuons")
+process.BadPFMuonFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+
 #------ Analyzer ------#
 
 #list input collections
@@ -78,6 +86,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
     hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
     hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
+    BadChargedCandidateFilter = cms.InputTag("BadChargedCandidateFilter",""),
+    BadMuonFilter = cms.InputTag("BadPFMuonFilter",""),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
@@ -112,4 +122,6 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
 #run
 process.p = cms.Path( process.HBHENoiseFilterResultProducer*
+                      process.BadChargedCandidateFilter*
+                      process.BadPFMuonFilter*
                       process.ntuples)
