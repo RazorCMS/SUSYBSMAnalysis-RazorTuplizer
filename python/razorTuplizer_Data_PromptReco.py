@@ -11,7 +11,8 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v1/000/272/775/00000/4EA77143-2A16-E611-81F2-02163E01412F.root'
+#        '/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v1/000/272/775/00000/4EA77143-2A16-E611-81F2-02163E01412F.root'
+        '/store/data/Run2016B/HTMHT/MINIAOD/PromptReco-v2/000/275/309/00000/2A61A026-CA37-E611-90CE-02163E011E19.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -43,10 +44,12 @@ process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFil
 process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
 process.BadChargedCandidateFilter.muons = cms.InputTag("slimmedMuons")
 process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
 
 process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
 process.BadPFMuonFilter.muons = cms.InputTag("slimmedMuons")
 process.BadPFMuonFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+process.BadPFMuonFilter.taggingMode = cms.bool(True)
 
 #------ Analyzer ------#
 
