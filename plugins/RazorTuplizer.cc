@@ -2033,7 +2033,7 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_trackingFailureFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_goodVertices") == 0)
 	Flag_goodVertices = metFilterBits->accept(i);
-      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_CSCTightHaloFilter") == 0)
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_globalTightHalo2016Filter") == 0)
 	Flag_CSCTightHaloFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOGFilters") == 0)
 	Flag_trkPOGFilters = metFilterBits->accept(i);
