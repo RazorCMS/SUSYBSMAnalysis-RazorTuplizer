@@ -46,6 +46,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   lheRunInfoToken_(consumes<LHERunInfoProduct,edm::InRun>(lheRunInfoTag_)),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genInfo"))),
+  genLumiHeaderToken_(consumes<GenLumiInfoHeader>(iConfig.getParameter<edm::InputTag>("genLumiHeader"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("puInfo"))),
   hcalNoiseInfoToken_(consumes<HcalNoiseSummary>(iConfig.getParameter<edm::InputTag>("hcalNoiseInfo"))),
   secondaryVerticesToken_(consumes<vector<reco::VertexCompositePtrCandidate> >(iConfig.getParameter<edm::InputTag>("secondaryVertices"))),
@@ -641,12 +642,11 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genQScale", &genQScale, "genQScale/F");
   RazorEvents->Branch("genAlphaQCD", &genAlphaQCD, "genAlphaQCD/F");
   RazorEvents->Branch("genAlphaQED", &genAlphaQED, "genAlphaQED/F");
-  lheComments = new std::vector<std::string>; lheComments->clear();
   scaleWeights = new std::vector<float>; scaleWeights->clear();
   pdfWeights = new std::vector<float>; pdfWeights->clear();
   alphasWeights = new std::vector<float>; alphasWeights->clear();
   if (isFastsim_) {
-    RazorEvents->Branch("lheComments", "std::vector<std::string>",&lheComments);
+    RazorEvents->Branch("lheComments", "std::string",&lheComments);
   }
   RazorEvents->Branch("scaleWeights", "std::vector<float>",&scaleWeights);
   RazorEvents->Branch("pdfWeights", "std::vector<float>",&pdfWeights);
@@ -716,6 +716,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
     iEvent.getByToken(genJetsToken_,genJets);
     iEvent.getByToken(lheInfoToken_, lheInfo);
     iEvent.getByToken(genInfoToken_,genInfo);
+    iEvent.getByToken(genLumiHeaderToken_,genLumiHeader);
     iEvent.getByToken(puInfoToken_,puInfo);
   }
   
@@ -1051,7 +1052,7 @@ void RazorTuplizer::resetBranches(){
     genQScale = -999;
     genAlphaQCD = -999;
     genAlphaQED = -999;
-    lheComments->clear(); 
+    lheComments = ""; 
     scaleWeights->clear();
     pdfWeights->clear();
     alphasWeights->clear();
@@ -2150,12 +2151,9 @@ bool RazorTuplizer::fillMC(){
     }
         
     //fill lhe comment lines with SUSY model parameter information
-    if (lheInfo.isValid() && isFastsim_) {
-      std::vector<std::string>::const_iterator c_begin = lheInfo->comments_begin();
-      std::vector<std::string>::const_iterator c_end = lheInfo->comments_end();
-      for( std::vector<std::string>::const_iterator cit=c_begin; cit!=c_end; ++cit) {
-        lheComments->push_back(*cit);
-      } 
+    if (genLumiHeader.isValid() && isFastsim_) {
+      lheComments = genLumiHeader->configDescription();    
+      cout << "header: " << lheComments << "\n";
     }
     
     //fill sum of weights histograms

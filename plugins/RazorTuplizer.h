@@ -49,6 +49,8 @@ using namespace std;
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoHeader.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaEleEstimatorCSA14.h"
@@ -209,6 +211,7 @@ protected:
   edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
+  edm::EDGetTokenT<GenLumiInfoHeader> genLumiHeaderToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
   edm::EDGetTokenT<HcalNoiseSummary> hcalNoiseInfoToken_;
   edm::EDGetTokenT<vector<reco::VertexCompositePtrCandidate> > secondaryVerticesToken_;
@@ -254,6 +257,7 @@ protected:
   edm::Handle<reco::GenJetCollection> genJets;
   edm::Handle<LHEEventProduct> lheInfo;
   edm::Handle<GenEventInfoProduct> genInfo;
+  edm::Handle<GenLumiInfoHeader> genLumiHeader;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
   edm::Handle<HcalNoiseSummary> hcalNoiseInfo;
   edm::Handle<bool> hbheNoiseFilter;
@@ -599,7 +603,7 @@ protected:
   float genQScale;
   float genAlphaQCD;
   float genAlphaQED;
-  vector<string> *lheComments;
+  string lheComments;
   vector<float> *scaleWeights;
   vector<float> *pdfWeights;
   vector<float> *alphasWeights;
