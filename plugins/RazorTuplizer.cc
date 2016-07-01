@@ -46,7 +46,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   lheRunInfoToken_(consumes<LHERunInfoProduct,edm::InRun>(lheRunInfoTag_)),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genInfo"))),
-  genLumiHeaderToken_(consumes<GenLumiInfoHeader>(iConfig.getParameter<edm::InputTag>("genLumiHeader"))),
+  //genLumiHeaderToken_(consumes<GenLumiInfoHeader>(iConfig.getParameter<edm::InputTag>("genLumiHeader"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("puInfo"))),
   hcalNoiseInfoToken_(consumes<HcalNoiseSummary>(iConfig.getParameter<edm::InputTag>("hcalNoiseInfo"))),
   secondaryVerticesToken_(consumes<vector<reco::VertexCompositePtrCandidate> >(iConfig.getParameter<edm::InputTag>("secondaryVertices"))),
@@ -716,7 +716,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
     iEvent.getByToken(genJetsToken_,genJets);
     iEvent.getByToken(lheInfoToken_, lheInfo);
     iEvent.getByToken(genInfoToken_,genInfo);
-    iEvent.getByToken(genLumiHeaderToken_,genLumiHeader);
+    //iEvent.getByToken(genLumiHeaderToken_,genLumiHeader);
     iEvent.getByToken(puInfoToken_,puInfo);
   }
   
@@ -2052,10 +2052,10 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_eeBadScFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_METFilters") == 0)
 	Flag_METFilters = metFilterBits->accept(i);
-      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
-      //   Flag_HBHENoiseFilter = metFilterBits->accept(i);
-      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseIsoFilter") == 0)
-      //   HBHEIsoNoiseFilter = metFilterBits->accept(i);
+       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
+         Flag_HBHENoiseFilter = metFilterBits->accept(i);
+       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseIsoFilter") == 0)
+         Flag_HBHEIsoNoiseFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
 	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
@@ -2063,9 +2063,9 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
     } //loop over met filters
 
     //use custom hbhefilter, because miniAOD filters are problematic.
-    Flag_HBHENoiseFilter = *hbheNoiseFilter;
-    Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
-    Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
+    //Flag_HBHENoiseFilter = *hbheNoiseFilter;
+    //Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
+    //Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
     Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
     Flag_badMuonFilter = *badMuonFilter;
   }
@@ -2151,10 +2151,10 @@ bool RazorTuplizer::fillMC(){
     }
         
     //fill lhe comment lines with SUSY model parameter information
-    if (genLumiHeader.isValid() && isFastsim_) {
-      lheComments = genLumiHeader->configDescription();    
-      cout << "header: " << lheComments << "\n";
-    }
+    //if (genLumiHeader.isValid() && isFastsim_) {
+    //lheComments = genLumiHeader->configDescription();    
+    //cout << "header: " << lheComments << "\n";
+    //}
     
     //fill sum of weights histograms
     sumWeights->Fill(0.,genWeight);
