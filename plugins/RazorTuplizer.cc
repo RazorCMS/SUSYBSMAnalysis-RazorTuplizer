@@ -2052,10 +2052,10 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_eeBadScFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_METFilters") == 0)
 	Flag_METFilters = metFilterBits->accept(i);
-      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
-      //   Flag_HBHENoiseFilter = metFilterBits->accept(i);
-      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseIsoFilter") == 0)
-      //   HBHEIsoNoiseFilter = metFilterBits->accept(i);
+       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
+         Flag_HBHENoiseFilter = metFilterBits->accept(i);
+       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseIsoFilter") == 0)
+         Flag_HBHEIsoNoiseFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
 	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
@@ -2063,9 +2063,9 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
     } //loop over met filters
 
     //use custom hbhefilter, because miniAOD filters are problematic.
-    Flag_HBHENoiseFilter = *hbheNoiseFilter;
-    Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
-    Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
+    //Flag_HBHENoiseFilter = *hbheNoiseFilter;
+    //Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
+    //Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
     Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
     Flag_badMuonFilter = *badMuonFilter;
   }
