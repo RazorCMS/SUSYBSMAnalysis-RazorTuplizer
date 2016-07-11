@@ -46,7 +46,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   lheRunInfoToken_(consumes<LHERunInfoProduct,edm::InRun>(lheRunInfoTag_)),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genInfo"))),
-  genLumiHeaderToken_(consumes<GenLumiInfoHeader>(iConfig.getParameter<edm::InputTag>("genLumiHeader"))),
+  //genLumiHeaderToken_(consumes<GenLumiInfoHeader>(iConfig.getParameter<edm::InputTag>("genLumiHeader"))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("puInfo"))),
   hcalNoiseInfoToken_(consumes<HcalNoiseSummary>(iConfig.getParameter<edm::InputTag>("hcalNoiseInfo"))),
   secondaryVerticesToken_(consumes<vector<reco::VertexCompositePtrCandidate> >(iConfig.getParameter<edm::InputTag>("secondaryVertices"))),
@@ -716,7 +716,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
     iEvent.getByToken(genJetsToken_,genJets);
     iEvent.getByToken(lheInfoToken_, lheInfo);
     iEvent.getByToken(genInfoToken_,genInfo);
-    iEvent.getByToken(genLumiHeaderToken_,genLumiHeader);
+    //iEvent.getByToken(genLumiHeaderToken_,genLumiHeader);
     iEvent.getByToken(puInfoToken_,puInfo);
   }
   
@@ -2151,10 +2151,10 @@ bool RazorTuplizer::fillMC(){
     }
         
     //fill lhe comment lines with SUSY model parameter information
-    if (genLumiHeader.isValid() && isFastsim_) {
-      lheComments = genLumiHeader->configDescription();    
-      cout << "header: " << lheComments << "\n";
-    }
+    // if (genLumiHeader.isValid() && isFastsim_) {
+    //   lheComments = genLumiHeader->configDescription();    
+    //   cout << "header: " << lheComments << "\n";
+    // }
     
     //fill sum of weights histograms
     sumWeights->Fill(0.,genWeight);
