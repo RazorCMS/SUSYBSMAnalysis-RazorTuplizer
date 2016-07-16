@@ -623,6 +623,7 @@ protected:
   float gParticlePt[GENPARTICLEARRAYSIZE];
   float gParticleEta[GENPARTICLEARRAYSIZE];
   float gParticlePhi[GENPARTICLEARRAYSIZE];
+  bool gParticleIsPromptFinalState[GENPARTICLEARRAYSIZE];
 
   //razor variables
   float MR, RSQ;

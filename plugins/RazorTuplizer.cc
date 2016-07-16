@@ -663,6 +663,7 @@ void RazorTuplizer::enableGenParticleBranches(){
   RazorEvents->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
   RazorEvents->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
   RazorEvents->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
+  RazorEvents->Branch("gParticleIsPromptFinalState", gParticleIsPromptFinalState, "gParticleIsPromptFinalState[nGenParticle]/O");
 }
 
 //------ Load the miniAOD objects and reset tree variables for each event ------//
@@ -965,6 +966,7 @@ void RazorTuplizer::resetBranches(){
         gParticlePt[i] = -99999.0;
         gParticleEta[i] = -99999.0;
         gParticlePhi[i] = -99999.0;
+	gParticleIsPromptFinalState[i] = false;
 
     }
 
@@ -2243,7 +2245,21 @@ bool RazorTuplizer::fillGenParticles(){
        || (abs((*prunedGenParticles)[i].pdgId()) >= 1000001 && abs((*prunedGenParticles)[i].pdgId()) <= 1000039)
        ){
       prunedV.push_back(&(*prunedGenParticles)[i]);
-    }    
+    }
+
+    // //Debug Printouts
+    // cout << "GenParticle " << i << " : " << (*prunedGenParticles)[i].pdgId() << " "
+    // 	 << (*prunedGenParticles)[i].status() << " : " 
+    // 	 << (*prunedGenParticles)[i].pt() << " " << (*prunedGenParticles)[i].eta() << " " << (*prunedGenParticles)[i].phi() << " : ";
+
+    // if ((*prunedGenParticles)[i].mother(0)) {
+    //   cout << (*prunedGenParticles)[i].mother(0)->pdgId() << " ";
+    // } else {
+    //   cout << " - ";
+    // }
+    // cout << " | " << (*prunedGenParticles)[i].isPromptFinalState() << " ";
+    // cout << "\n";
+
   }
 
   //Total number of gen particles
@@ -2258,6 +2274,7 @@ bool RazorTuplizer::fillGenParticles(){
     gParticlePhi[i] = prunedV[i]->phi();
     gParticleMotherId[i] = 0;
     gParticleMotherIndex[i] = -1;
+    gParticleIsPromptFinalState[i] = ((reco::GenParticle*)prunedV[i])->isPromptFinalState();
     if(prunedV[i]->numberOfMothers() > 0){
       
       //find the ID of the first mother that has a different ID than the particle itself
