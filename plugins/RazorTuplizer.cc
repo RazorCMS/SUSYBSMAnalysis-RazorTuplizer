@@ -564,6 +564,8 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metNoHFPhi", &metNoHFPhi, "metNoHFPhi/F");
   RazorEvents->Branch("metPuppiPt", &metPuppiPt, "metPuppiPt/F");
   RazorEvents->Branch("metPuppiPhi", &metPuppiPhi, "metPuppiPhi/F");
+  RazorEvents->Branch("metCaloPt", &metCaloPt, "metCaloPt/F");
+  RazorEvents->Branch("metCaloPhi", &metCaloPhi, "metCaloPhi/F");
 
   RazorEvents->Branch("metType1PtJetResUp", &metType1PtJetResUp, "metType1PtJetResUp/F");
   RazorEvents->Branch("metType1PtJetResDown", &metType1PtJetResDown, "metType1PtJetResDown/F");
@@ -987,6 +989,8 @@ void RazorTuplizer::resetBranches(){
     metNoHFPhi = -99.0;
     metPuppiPt = -99.0;
     metPuppiPhi = -99.0;
+    metCaloPt = -999;
+    metCaloPhi = -999;
     Flag_HBHENoiseFilter = false;
     Flag_HBHETightNoiseFilter = false;
     Flag_HBHEIsoNoiseFilter = false;
@@ -1969,6 +1973,8 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metType1Phi = Met.phi();
   metType0Plus1Pt = 0;
   metType0Plus1Phi = 0;
+  metCaloPt = Met.caloMETPt();
+  metCaloPhi = Met.caloMETPhi();
 
   if(!isData_)
     {

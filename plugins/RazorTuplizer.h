@@ -527,6 +527,8 @@ protected:
   float metNoHFPhi;
   float metPuppiPt;
   float metPuppiPhi;
+  float metCaloPt;
+  float metCaloPhi;
 
   float metType1PtJetResUp;
   float metType1PtJetResDown;
