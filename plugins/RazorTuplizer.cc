@@ -373,6 +373,13 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_activityMiniIsoAnnulus", muon_activityMiniIsoAnnulus, "muon_activityMiniIsoAnnulus[nMuons]/F");
   RazorEvents->Branch("muon_passSingleMuTagFilter", muon_passSingleMuTagFilter, "muon_passSingleMuTagFilter[nMuons]/O");
   RazorEvents->Branch("muon_passHLTFilter", &muon_passHLTFilter, Form("muon_passHLTFilter[nMuons][%d]/O",MAX_MuonHLTFilters));
+  RazorEvents->Branch("muon_validFractionTrackerHits", muon_validFractionTrackerHits, "muon_validFractionTrackerHits[nMuons]/F");
+  RazorEvents->Branch("muon_isGlobal", muon_isGlobal,"muon_isGlobal[nMuons]/O");
+  RazorEvents->Branch("muon_normChi2", muon_normChi2,"muon_normChi2[nMuons]/F");
+  RazorEvents->Branch("muon_chi2LocalPosition", muon_chi2LocalPosition,"muon_chi2LocalPosition[nMuons]/F");
+  RazorEvents->Branch("muon_kinkFinder", muon_kinkFinder,"muon_kinkFinder[nMuons]/F");
+  RazorEvents->Branch("muon_segmentCompatability", muon_segmentCompatability,"muon_segmentCompatability[nMuons]/F");
+  RazorEvents->Branch("muonIsICHEPMedium", muonIsICHEPMedium,"muonIsICHEPMedium[nMuons]/O");
 }
 
 void RazorTuplizer::enableElectronBranches(){
@@ -785,6 +792,13 @@ void RazorTuplizer::resetBranches(){
 	muon_activityMiniIsoAnnulus[i] = -99.0;
 	muon_passSingleMuTagFilter[i] = false;
 	for (int q=0;q<MAX_MuonHLTFilters;q++) muon_passHLTFilter[i][q] = false;
+	muon_validFractionTrackerHits[i] = -99.0;
+        muon_isGlobal[i] = false;
+        muon_normChi2[i] = -99.0;
+        muon_chi2LocalPosition[i] = -99.0;
+        muon_kinkFinder[i] = -99.0;
+        muon_segmentCompatability[i] = -99.0;
+        muonIsICHEPMedium[i] = false;
 
         //Electron
         eleE[i] = 0.0;
@@ -1234,6 +1248,15 @@ bool RazorTuplizer::fillMuons(){
     muon_photonAndNeutralHadronMiniIso[nMuons] = std::get<1>(PFMiniIso);
     muon_chargedPileupMiniIso[nMuons] = std::get<2>(PFMiniIso);
     muon_activityMiniIsoAnnulus[nMuons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.4, 0.05, 0.2, 10.);
+    muon_validFractionTrackerHits[nMuons] = (mu.innerTrack().isNonnull() ? mu.track()->validFraction() : -99.0);
+    muon_isGlobal[nMuons] = muon::isGoodMuon(mu,muon::AllGlobalMuons);
+    muon_normChi2[nMuons] = ( muon::isGoodMuon(mu,muon::AllGlobalMuons) ? mu.globalTrack()->normalizedChi2() : -99.0);
+    muon_chi2LocalPosition[nMuons] = mu.combinedQuality().chi2LocalPosition;
+    muon_kinkFinder[nMuons] = mu.combinedQuality().trkKink;
+    muon_segmentCompatability[nMuons] = muon::segmentCompatibility(mu);
+
+    bool isGoodGlobal = mu.isGlobalMuon() && mu.globalTrack()->normalizedChi2() < 3 && mu.combinedQuality().chi2LocalPosition < 12 && mu.combinedQuality().trkKink < 20;
+    muonIsICHEPMedium[nMuons] = muon::isLooseMuon(mu) && muon_validFractionTrackerHits[nMuons] > 0.49 && muon::segmentCompatibility(mu) > (isGoodGlobal ? 0.303 : 0.451);
 
     //*************************************************
     //Trigger Object Matching

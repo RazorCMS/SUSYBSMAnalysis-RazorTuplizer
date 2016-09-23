@@ -338,6 +338,13 @@ protected:
   float muon_activityMiniIsoAnnulus[OBJECTARRAYSIZE];
   bool  muon_passSingleMuTagFilter[OBJECTARRAYSIZE];
   bool  muon_passHLTFilter[OBJECTARRAYSIZE][MAX_MuonHLTFilters];
+  float muon_validFractionTrackerHits[OBJECTARRAYSIZE];
+  bool  muon_isGlobal[OBJECTARRAYSIZE];
+  float muon_normChi2[OBJECTARRAYSIZE];
+  float muon_chi2LocalPosition[OBJECTARRAYSIZE];
+  float muon_kinkFinder[OBJECTARRAYSIZE];
+  float muon_segmentCompatability[OBJECTARRAYSIZE];
+  bool muonIsICHEPMedium[OBJECTARRAYSIZE];
 
   //Electrons
   int nElectrons;
