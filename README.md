@@ -1,25 +1,16 @@
 SUSYBSMAnalysis-RazorTuplizer
 =============================
 
-Razor ntuplizer for running over LHC Run 2 miniAOD compatible with CMSSW_7_6_X
-
----------------------------------------
-!!!! Including new bad track MET filter
- ---------------------------------------
-
-As of 26/06/2016 (80X miniAOD v2), need to first run
-
-git cms-merge-topic -u cms-met:CMSSW_8_0_X-METFilterUpdate
-
-to get new bad charged candidate and bad muon MET filters.
+Razor ntuplizer for running over LHC Run 2 miniAOD compatible with CMSSW_8_0_X
 
 -----------------------------------
 Instructions for compiling in CMSSW
 -----------------------------------
 
-    cmsrel CMSSW_7_6_3
-    cd CMSSW_7_6_3/src
+    cmsrel CMSSW_8_0_12
+    cd CMSSW_8_0_12/src
     cmsenv
+    git cms-merge-topic -u cms-met:CMSSW_8_0_X-METFilterUpdate
     git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
     scram b
 
@@ -37,21 +28,16 @@ To run using CRAB3:
     source /cvmfs/cms.cern.ch/crab3/crab.sh
     crab submit -c crabConfigRazorTuplizer.py
 
+---------------------------------------
+Including new bad track MET filter
+---------------------------------------
 
+As of 26/06/2016 (80X miniAOD v2), need to first run
 
---------------------------------------------------------
-In order to use the Energy smearing and scale correction
---------------------------------------------------------
+git cms-merge-topic -u cms-met:CMSSW_8_0_X-METFilterUpdate
 
-https://twiki.cern.ch/twiki/bin/viewauth/CMS/EGMSmearer
+to get new bad charged candidate and bad muon MET filters.
 
-
-	cmsrel CMSSW_7_6_3_patch2
-	cd CMSSW_7_6_3_patch2/src
-	cmsenv
-	git cms-merge-topic -u matteosan1:smearer_76X
-	git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
-	scram b
 
 --------------------------------------------
 Running the ntuplizer for photon corrections
