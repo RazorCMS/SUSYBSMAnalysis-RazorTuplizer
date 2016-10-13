@@ -65,7 +65,7 @@ using namespace std;
 #include "TLorentzVector.h"
 
 //------ Array Size Constants ------//
-#define OBJECTARRAYSIZE 99
+#define OBJECTARRAYSIZE 200
 #define GENPARTICLEARRAYSIZE 500
 #define MAX_NPV 200
 
