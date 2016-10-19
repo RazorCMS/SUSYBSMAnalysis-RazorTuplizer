@@ -152,6 +152,7 @@ public:
 protected:
   virtual void beginJob() override;
   virtual void beginRun(const edm::Run&, const edm::EventSetup&) override;
+  virtual void beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const&) override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
 
@@ -207,11 +208,8 @@ protected:
   edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
   edm::EDGetTokenT<bool> badChargedCandidateFilterToken_;
   edm::EDGetTokenT<bool> badMuonFilterToken_;
-  edm::InputTag lheRunInfoTag_;
-  edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
-  edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
-  //edm::EDGetTokenT<GenLumiInfoHeader> genLumiHeaderToken_;
+  edm::EDGetTokenT<GenLumiInfoHeader> genLumiHeaderToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
   edm::EDGetTokenT<HcalNoiseSummary> hcalNoiseInfoToken_;
   edm::EDGetTokenT<vector<reco::VertexCompositePtrCandidate> > secondaryVerticesToken_;
@@ -255,9 +253,8 @@ protected:
   edm::Handle<edm::View<reco::GenParticle> > prunedGenParticles;
   edm::Handle<edm::View<pat::PackedGenParticle> > packedGenParticles;
   edm::Handle<reco::GenJetCollection> genJets;
-  edm::Handle<LHEEventProduct> lheInfo;
   edm::Handle<GenEventInfoProduct> genInfo;
-  //edm::Handle<GenLumiInfoHeader> genLumiHeader;
+  edm::Handle<GenLumiInfoHeader> genLumiHeader;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
   edm::Handle<HcalNoiseSummary> hcalNoiseInfo;
   edm::Handle<bool> hbheNoiseFilter;

@@ -11,7 +11,8 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/mc/RunIISpring16MiniAODv2/SMS-T1tttt_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/00000/00775AA9-5132-E611-A4FE-001E675049F5.root'
+        #'/store/mc/RunIISpring16MiniAODv2/SMS-T1tttt_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/00000/00775AA9-5132-E611-A4FE-001E675049F5.root'
+        '/store/mc/RunIISpring16MiniAODv2/SMS-T1ttbb_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/00000/0255C014-BF4A-E611-9056-001E67F3370D.root'
 
    )
 )
@@ -92,21 +93,23 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     BadMuonFilter = cms.InputTag("BadPFMuonFilter",""),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
-    genInfo = cms.InputTag("generator", "", "SIM"),
+    genInfo = cms.InputTag("generator", "", "HLT"),
+    genLumiHeader = cms.InputTag("generator", "", "HLT"),
+                                 
     puInfo = cms.InputTag("slimmedAddPileupInfo", "", "PAT"), #uncomment if no pre-mixing
     #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
     hcalNoiseInfo = cms.InputTag("hcalnoise", "", "PAT"),
 
     secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "PAT"),
 
-    rhoAll = cms.InputTag("fixedGridRhoAll", "", "RECO"),
-    rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "RECO"),
-    rhoFastjetAllCalo = cms.InputTag("fixedGridRhoFastjetAllCalo", "", "RECO"),
-    rhoFastjetCentralCalo = cms.InputTag("fixedGridRhoFastjetCentralCalo", "", "RECO"),
-    rhoFastjetCentralChargedPileUp = cms.InputTag("fixedGridRhoFastjetCentralChargedPileUp", "", "RECO"),
-    rhoFastjetCentralNeutral = cms.InputTag("fixedGridRhoFastjetCentralNeutral", "", "RECO"),
+    rhoAll = cms.InputTag("fixedGridRhoAll", "", "HLT"),
+    rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "HLT"),
+    rhoFastjetAllCalo = cms.InputTag("fixedGridRhoFastjetAllCalo", "", "HLT"),
+    rhoFastjetCentralCalo = cms.InputTag("fixedGridRhoFastjetCentralCalo", "", "HLT"),
+    rhoFastjetCentralChargedPileUp = cms.InputTag("fixedGridRhoFastjetCentralChargedPileUp", "", "HLT"),
+    rhoFastjetCentralNeutral = cms.InputTag("fixedGridRhoFastjetCentralNeutral", "", "HLT"),
 
-    beamSpot = cms.InputTag("offlineBeamSpot", "", "RECO"),
+    beamSpot = cms.InputTag("offlineBeamSpot", "", "HLT"),
 
     ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "PAT"),
     eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "PAT"),
