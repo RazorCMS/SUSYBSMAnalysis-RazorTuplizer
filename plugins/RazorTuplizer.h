@@ -208,6 +208,9 @@ protected:
   edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
   edm::EDGetTokenT<bool> badChargedCandidateFilterToken_;
   edm::EDGetTokenT<bool> badMuonFilterToken_;
+  edm::InputTag lheRunInfoTag_;
+  edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
+  edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
   edm::EDGetTokenT<GenLumiInfoHeader> genLumiHeaderToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
@@ -253,6 +256,7 @@ protected:
   edm::Handle<edm::View<reco::GenParticle> > prunedGenParticles;
   edm::Handle<edm::View<pat::PackedGenParticle> > packedGenParticles;
   edm::Handle<reco::GenJetCollection> genJets;
+  edm::Handle<LHEEventProduct> lheInfo;
   edm::Handle<GenEventInfoProduct> genInfo;
   edm::Handle<GenLumiInfoHeader> genLumiHeader;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
