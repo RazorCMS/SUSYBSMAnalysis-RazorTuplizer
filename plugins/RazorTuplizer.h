@@ -59,6 +59,19 @@ using namespace std;
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/RazorPDFWeightsHelper.h"
 
+#include "DataFormats/JetReco/interface/PFJetCollection.h"
+#include "DataFormats/METReco/interface/PFMET.h"
+#include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
+#include "DataFormats/ParticleFlowReco/interface/PFClusterFwd.h"
+#include "DataFormats/METReco/interface/PFMETCollection.h"
+#include "DataFormats/TauReco/interface/PFTau.h"
+#include "DataFormats/JetReco/interface/PFJet.h"
+#include "DataFormats/JetReco/interface/GenJet.h"
+#include "DataFormats/JetReco/interface/BasicJetCollection.h"
+#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
+
+#include "DataFormats/DetId/interface/DetId.h"
+
 //ROOT includes
 #include "TTree.h"
 #include "TFile.h"
@@ -132,11 +145,11 @@ public:
   //follows the particle's ancestry back and finds the "oldest" particle with the same ID
   const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
   //electron veto for photons (for use until an official recipe exists)
-  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<reco::GsfElectron> > &eleCol,
 				const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
 				float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
   
-  double getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const reco::Candidate* lepton);
+  double getLeptonPtRel(edm::Handle<reco::PFJetCollection> jets, const reco::Candidate* lepton);
 
   tuple<double,double,double> getPFMiniIsolation(edm::Handle<pat::PackedCandidateCollection> pfcands,
 						 const reco::Candidate* ptcl,
@@ -147,7 +160,7 @@ public:
 					double dROuterSize = 0.4,
 					double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0);
   TLorentzVector photonP4FromVtx( TVector3 vtx, TVector3 phoPos, double E );
-  bool passJetID( const pat::Jet *jet, int cutLevel);
+  bool passJetID( const reco::PFJet *jet, int cutLevel);
 
 protected:
   virtual void beginJob() override;
@@ -185,36 +198,45 @@ protected:
 
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
-  edm::EDGetTokenT<pat::MuonCollection> muonsToken_;
-  edm::EDGetTokenT<pat::ElectronCollection> electronsToken_;
-  edm::EDGetTokenT<pat::TauCollection> tausToken_;
-  edm::EDGetTokenT<pat::PhotonCollection> photonsToken_;
-  edm::EDGetTokenT<pat::JetCollection> jetsToken_;
-  edm::EDGetTokenT<pat::JetCollection> jetsPuppiToken_;
-  edm::EDGetTokenT<pat::JetCollection> jetsAK8Token_;
-  edm::EDGetTokenT<pat::PackedCandidateCollection> packedPFCandsToken_;
-  edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenParticlesToken_;
-  edm::EDGetTokenT<edm::View<pat::PackedGenParticle> > packedGenParticlesToken_;
+  //edm::InputTag tracksTag_; 
+  //edm::InputTag trackTimeTag_; 
+  //edm::InputTag trackTimeResoTag_; 
+  edm::EDGetTokenT<edm::View<reco::Track> > tracksTag_;
+  edm::EDGetTokenT<edm::ValueMap<float> > trackTimeTag_;
+  edm::EDGetTokenT<edm::ValueMap<float>> trackTimeResoTag_;
+  
+  edm::EDGetTokenT<reco::MuonCollection> muonsToken_;
+  edm::EDGetTokenT<reco::GsfElectronCollection> electronsToken_;
+  edm::EDGetTokenT<reco::PFTauCollection> tausToken_;
+  edm::EDGetTokenT<reco::PhotonCollection> photonsToken_;
+  edm::EDGetTokenT<reco::PFJetCollection> jetsToken_;
+  edm::EDGetTokenT<reco::PFJetCollection> jetsPuppiToken_;
+  edm::EDGetTokenT<reco::PFJetCollection> jetsAK8Token_;
+  edm::EDGetTokenT<reco::PFCandidateCollection> PFCandsToken_;
+  edm::EDGetTokenT<reco::PFClusterCollection> PFClustersToken_;
+//  edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenParticlesToken_;
+  edm::EDGetTokenT<reco::GenParticleCollection> genParticlesToken_;
   edm::EDGetTokenT<reco::GenJetCollection> genJetsToken_;
   edm::EDGetTokenT<edm::TriggerResults> triggerBitsToken_;
-  edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjectsToken_;
-  edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
-  edm::EDGetTokenT<pat::METCollection> metToken_;
-  edm::EDGetTokenT<pat::METCollection> metNoHFToken_;
-  edm::EDGetTokenT<pat::METCollection> metPuppiToken_;
+  edm::EDGetTokenT<edm::HepMCProduct> hepMCToken_;
+//  edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjectsToken_;
+//  edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
+  edm::EDGetTokenT<reco::PFMETCollection> metToken_;
+  edm::EDGetTokenT<reco::PFMETCollection> metNoHFToken_;
+  edm::EDGetTokenT<reco::PFMETCollection> metPuppiToken_;
   edm::EDGetTokenT<edm::TriggerResults> metFilterBitsToken_;
-  edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
-  edm::EDGetTokenT<bool> hbheTightNoiseFilterToken_;
-  edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
-  edm::EDGetTokenT<bool> badChargedCandidateFilterToken_;
-  edm::EDGetTokenT<bool> badMuonFilterToken_;
-  edm::InputTag lheRunInfoTag_;
-  edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
-  edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
+  //edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
+  //edm::EDGetTokenT<bool> hbheTightNoiseFilterToken_;
+  //edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
+  //edm::EDGetTokenT<bool> badChargedCandidateFilterToken_;
+  //edm::EDGetTokenT<bool> badMuonFilterToken_;
+//  edm::InputTag lheRunInfoTag_;
+//  edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
+//  edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
   edm::EDGetTokenT<GenLumiInfoHeader> genLumiHeaderToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
-  edm::EDGetTokenT<HcalNoiseSummary> hcalNoiseInfoToken_;
+//  edm::EDGetTokenT<HcalNoiseSummary> hcalNoiseInfoToken_;
   edm::EDGetTokenT<vector<reco::VertexCompositePtrCandidate> > secondaryVerticesToken_;
   edm::EDGetTokenT<double> rhoAllToken_;
   edm::EDGetTokenT<double> rhoFastjetAllToken_;
@@ -232,40 +254,45 @@ protected:
   edm::EDGetTokenT<vector<reco::Conversion> > singleLegConversionsToken_;
   edm::EDGetTokenT<vector<reco::GsfElectronCore> > gedGsfElectronCoresToken_;
   edm::EDGetTokenT<vector<reco::PhotonCore> > gedPhotonCoresToken_;
-  edm::EDGetTokenT<vector<reco::SuperCluster> > superClustersToken_;
-  edm::EDGetTokenT<vector<pat::PackedCandidate> > lostTracksToken_;
+//  edm::EDGetTokenT<vector<reco::SuperCluster> > superClustersToken_;
+//  edm::EDGetTokenT<vector<reco::PFCandidate> > lostTracksToken_;
   
   
   //EDM handles for each miniAOD input object
   edm::Handle<edm::TriggerResults> triggerBits;
-  edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
-  edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
+  edm::Handle<edm::HepMCProduct> hepMC;
+//  edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+//  edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
   edm::Handle<edm::TriggerResults> metFilterBits;
   edm::Handle<reco::VertexCollection> vertices;
-  edm::Handle<pat::PackedCandidateCollection> packedPFCands;
-  edm::Handle<pat::MuonCollection> muons;
-  edm::Handle<pat::ElectronCollection> electrons;
-  edm::Handle<pat::PhotonCollection> photons;
-  edm::Handle<pat::TauCollection> taus;
-  edm::Handle<pat::JetCollection> jets;
-  edm::Handle<pat::JetCollection> jetsPuppi;
-  edm::Handle<pat::JetCollection> jetsAK8;
-  edm::Handle<pat::METCollection> mets;
-  edm::Handle<pat::METCollection> metsNoHF;
-  edm::Handle<pat::METCollection> metsPuppi;
-  edm::Handle<edm::View<reco::GenParticle> > prunedGenParticles;
-  edm::Handle<edm::View<pat::PackedGenParticle> > packedGenParticles;
+  edm::Handle<edm::View<reco::Track> > tracks;
+  edm::Handle<edm::ValueMap<float> > times;
+  edm::Handle<edm::ValueMap<float> > timeResos;
+  edm::Handle<reco::PFCandidateCollection> pfCands;
+  edm::Handle<reco::PFClusterCollection> pfClusters;
+  edm::Handle<reco::MuonCollection> muons;
+  edm::Handle<reco::GsfElectronCollection> electrons;
+  edm::Handle<reco::PhotonCollection> photons;
+  edm::Handle<reco::PFTauCollection> taus;
+  edm::Handle<reco::PFJetCollection> jets;
+  edm::Handle<reco::PFJetCollection> jetsPuppi;
+  edm::Handle<reco::PFJetCollection> jetsAK8;
+  edm::Handle<reco::PFMETCollection> mets;
+//  edm::Handle<reco::PFMETCollection> metsNoHF;
+  edm::Handle<reco::PFMETCollection> metsPuppi;
+//  edm::Handle<edm::View<reco::GenParticle> > prunedGenParticles;
+  edm::Handle<reco::GenParticleCollection> genParticles;
   edm::Handle<reco::GenJetCollection> genJets;
-  edm::Handle<LHEEventProduct> lheInfo;
+//  edm::Handle<LHEEventProduct> lheInfo;
   edm::Handle<GenEventInfoProduct> genInfo;
   edm::Handle<GenLumiInfoHeader> genLumiHeader;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
-  edm::Handle<HcalNoiseSummary> hcalNoiseInfo;
-  edm::Handle<bool> hbheNoiseFilter;
-  edm::Handle<bool> hbheTightNoiseFilter;
-  edm::Handle<bool> hbheIsoNoiseFilter;
-  edm::Handle<bool> badChargedCandidateFilter;
-  edm::Handle<bool> badMuonFilter;
+//  edm::Handle<HcalNoiseSummary> hcalNoiseInfo;
+  //edm::Handle<bool> hbheNoiseFilter;
+  //edm::Handle<bool> hbheTightNoiseFilter;
+  //edm::Handle<bool> hbheIsoNoiseFilter;
+  //edm::Handle<bool> badChargedCandidateFilter;
+  //edm::Handle<bool> badMuonFilter;
   edm::Handle<vector<reco::VertexCompositePtrCandidate> > secondaryVertices;
   edm::Handle<double> rhoAll;
   edm::Handle<double> rhoFastjetAll;
@@ -283,8 +310,8 @@ protected:
   edm::Handle<vector<reco::Conversion>> singleLegConversions;
   edm::Handle<vector<reco::GsfElectronCore> > gedGsfElectronCores;
   edm::Handle<vector<reco::PhotonCore> > gedPhotonCores;
-  edm::Handle<vector<reco::SuperCluster> > superClusters;
-  edm::Handle<vector<pat::PackedCandidate> > lostTracks;
+//  edm::Handle<vector<reco::SuperCluster> > superClusters;
+//  edm::Handle<vector<reco::PFCandidate> > lostTracks;
   const reco::Vertex *myPV;
 
   //output tree
@@ -300,11 +327,21 @@ protected:
   //PVAll (full list of primary vertices for analysis-level vtx selection)
   int nPVAll;
   float pvAllX[MAX_NPV];
+  float pvAllXError[MAX_NPV];
   float pvAllY[MAX_NPV];
+  float pvAllYError[MAX_NPV];
   float pvAllZ[MAX_NPV];
+  float pvAllZError[MAX_NPV];
+  float pvAllT[MAX_NPV];
+  float pvAllTError[MAX_NPV];
   float pvAllLogSumPtSq[MAX_NPV];
   float pvAllSumPx[MAX_NPV];
   float pvAllSumPy[MAX_NPV];
+ 
+   //computed with additional cut on deltat between the track and the primary vertex
+   float pvAllLogSumPtSq_dt[MAX_NPV];
+   float pvAllSumPx_dt[MAX_NPV];
+   float pvAllSumPy_dt[MAX_NPV];
   
   //PU
   int nBunchXing;
@@ -463,13 +500,25 @@ protected:
   float pho_superClusterX[OBJECTARRAYSIZE];
   float pho_superClusterY[OBJECTARRAYSIZE];
   float pho_superClusterZ[OBJECTARRAYSIZE];
+  float pho_superClusterSeedX[OBJECTARRAYSIZE];
+  float pho_superClusterSeedY[OBJECTARRAYSIZE];
+  float pho_superClusterSeedZ[OBJECTARRAYSIZE];
+  float pho_superClusterSeedT[OBJECTARRAYSIZE];
+  float pho_superClusterSeedXError[OBJECTARRAYSIZE];
+  float pho_superClusterSeedYError[OBJECTARRAYSIZE];
+  float pho_superClusterSeedZError[OBJECTARRAYSIZE];
+  float pho_superClusterSeedTError[OBJECTARRAYSIZE];
+
+
   bool pho_hasPixelSeed[OBJECTARRAYSIZE];
   bool pho_passHLTFilter[OBJECTARRAYSIZE][MAX_PhotonHLTFilters];
   int pho_convType[OBJECTARRAYSIZE];
   float pho_convTrkZ[OBJECTARRAYSIZE];
   float pho_convTrkClusZ[OBJECTARRAYSIZE];
+  
   float pho_vtxSumPx[OBJECTARRAYSIZE][MAX_NPV];
   float pho_vtxSumPy[OBJECTARRAYSIZE][MAX_NPV];
+  
 
   //AK4 Jets
   int nJets;
@@ -580,8 +629,8 @@ protected:
   bool Flag_HBHENoiseFilter;
   bool Flag_HBHETightNoiseFilter;
   bool Flag_HBHEIsoNoiseFilter;
-  bool Flag_badChargedCandidateFilter;
-  bool Flag_badMuonFilter;
+  //bool Flag_badChargedCandidateFilter;
+  //bool Flag_badMuonFilter;
   bool Flag_CSCTightHaloFilter;
   bool Flag_hcalLaserEventFilter;
   bool Flag_EcalDeadCellTriggerPrimitiveFilter;
@@ -608,6 +657,7 @@ protected:
   float genVertexX;
   float genVertexY;
   float genVertexZ;
+  float genVertexT;
   float genWeight;
   unsigned int genSignalProcessID;
   float genQScale;

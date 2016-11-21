@@ -128,7 +128,7 @@ const reco::Candidate* RazorTuplizer::findOriginalMotherWithSameID(const reco::C
 //A copy from RecoEgamma/EgammaTools/src/ConversionTools.cc
 //temporary solution because I'm not sure how to convert a PAT electron handle
 //to a GSF electron handle
-bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<reco::GsfElectron> > &eleCol,
 					const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
 					float lxyMin, float probMin, unsigned int nHitsBeforeVtxMax) {
 
@@ -137,7 +137,7 @@ bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, co
  
    if (sc.isNull()) return false;
    
-   for (std::vector<pat::Electron>::const_iterator it = eleCol->begin(); it!=eleCol->end(); ++it) {
+   for (std::vector<reco::GsfElectron>::const_iterator it = eleCol->begin(); it!=eleCol->end(); ++it) {
      //match electron to supercluster
      if (it->superCluster()!=sc) continue;
  
@@ -291,11 +291,11 @@ double RazorTuplizer::ActivityPFMiniIsolationAnnulus(edm::Handle<pat::PackedCand
 //2) subtract lepton from jet
 //3) project lepton momentum perpendicular to closest jet
 //**************************************************************
-double RazorTuplizer::getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const reco::Candidate* lepton) {
+double RazorTuplizer::getLeptonPtRel(edm::Handle<reco::PFJetCollection> jets, const reco::Candidate* lepton) {
 
-    const pat::Jet *closestJet = 0;
+    const reco::PFJet *closestJet = 0;
     double minDR = 9999;
-    for (const pat::Jet &j : *jets) {
+    for (const reco::PFJet &j : *jets) {
       if (j.pt() < 20) continue;
       double tmpDR = deltaR(j.eta(),j.phi(),lepton->eta(),lepton->phi());
       if (tmpDR < minDR) {
@@ -321,16 +321,18 @@ double RazorTuplizer::getLeptonPtRel(edm::Handle<pat::JetCollection> jets, const
 	    && deltaR(candidate.eta() , candidate.phi(), lepton->eta() , lepton->phi()) < 0.001
 	    ) isPartOfLepton = true;
       }
+/*
       if (lepton->isElectron()) {
-	for (auto itr : ((pat::Electron*)lepton)->associatedPackedPFCandidates()) {
+	for (auto itr : ((reco::GsfElectron*)lepton)->associatedPackedPFCandidates()) {
 	  if ( &(*itr) == &candidate) {
 	    isPartOfLepton = true;
 	    break;	  
 	  }	
 	}
       }
-      //if the PF candidate is part of the muon, subtract its momentum from the jet momentum
-      if (isPartOfLepton) {
+*/
+      //if the PF candidate is part of the muon, subtract its momentum from the jet momentum  
+    if (isPartOfLepton) {
 	closestJetFourVector.SetPxPyPzE( closestJetFourVector.Px() - candidate.px(), 
 					 closestJetFourVector.Py() - candidate.py(),
 					 closestJetFourVector.Pz() - candidate.pz(),
@@ -351,7 +353,7 @@ TLorentzVector RazorTuplizer::photonP4FromVtx( TVector3 vtx, TVector3 phoPos, do
   return phoP4;
 };
 
-bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel) {
+bool RazorTuplizer::passJetID( const reco::PFJet *jet, int cutLevel) {
   bool result = false;
 
   double NHF = jet->neutralHadronEnergyFraction();
