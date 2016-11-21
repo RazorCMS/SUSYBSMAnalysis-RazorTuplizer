@@ -1431,24 +1431,16 @@ bool RazorTuplizer::fillTaus(){
     //tau_isoMVAnewDMwoLT[nTaus] = tau.tauID("byIsolationMVA3newDMwoLTraw") ; //doesn't exist anymore in miniAOD 2015 v2 
 
     tau_ID[nTaus] = 
-      bool(tau.tauID("decayModeFinding")) +
-      bool(tau.tauID("decayModeFindingNewDMs")) +
-      bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits")) +
-      bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits")) +
-      bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits")) +
-      bool(tau.tauID("againstElectronVLooseMVA6")) +
-      bool(tau.tauID("againstElectronLooseMVA6")) +
-      bool(tau.tauID("againstElectronMediumMVA6")) +
-      bool(tau.tauID("againstElectronTightMVA6")) +
-      bool(tau.tauID("againstElectronVTightMVA6")) +
-      bool(tau.tauID("againstMuonLoose3")) +
-      bool(tau.tauID("againstMuonTight3")) +
-      bool(tau.tauID("byVLooseIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byLooseIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byMediumIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byVTightIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byVVTightIsolationMVArun2v1DBnewDMwLT"));
+      1 * bool(tau.tauID("decayModeFinding")) +
+      2 * bool(tau.tauID("decayModeFindingNewDMs")) +
+      4 * bool(tau.tauID("againstElectronVLooseMVA6")) +
+      8 * bool(tau.tauID("againstElectronVTightMVA6")) +
+      16 * bool(tau.tauID("byVLooseIsolationMVArun2v1DBnewDMwLT")) +
+      32 * bool(tau.tauID("byLooseIsolationMVArun2v1DBnewDMwLT")) +
+      64 * bool(tau.tauID("byMediumIsolationMVArun2v1DBnewDMwLT")) +
+      128 * bool(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) +
+      256 * bool(tau.tauID("byVTightIsolationMVArun2v1DBnewDMwLT")) +
+      512 * bool(tau.tauID("byVVTightIsolationMVArun2v1DBnewDMwLT"));
 
     tau_leadCandPt[nTaus] = 0;
     tau_leadCandID[nTaus] = 0;
