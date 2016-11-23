@@ -20,7 +20,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   photonHLTFilterNamesFile_(iConfig.getParameter<string> ("photonHLTFilterNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
-  electronsToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
+  electronsToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   tausToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
   photonsToken_(consumes<pat::PhotonCollection>(iConfig.getParameter<edm::InputTag>("photons"))),
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
@@ -67,7 +67,11 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   gedGsfElectronCoresToken_(consumes<vector<reco::GsfElectronCore> >(iConfig.getParameter<edm::InputTag>("gedGsfElectronCores"))),
   gedPhotonCoresToken_(consumes<vector<reco::PhotonCore> >(iConfig.getParameter<edm::InputTag>("gedPhotonCores"))),
   superClustersToken_(consumes<vector<reco::SuperCluster> >(iConfig.getParameter<edm::InputTag>("superClusters"))),
-  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks")))
+  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks"))),
+  mvaGeneralPurposeValuesMapToken_(consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("mvaGeneralPurposeValuesMap"))),
+  mvaGeneralPurposeCategoriesMapToken_(consumes<edm::ValueMap<int> >(iConfig.getParameter<edm::InputTag>("mvaGeneralPurposeCategoriesMap"))),
+  mvaHZZValuesMapToken_(consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("mvaHZZValuesMap"))),
+  mvaHZZCategoriesMapToken_(consumes<edm::ValueMap<int> >(iConfig.getParameter<edm::InputTag>("mvaHZZCategoriesMap")))
 {
   //declare the TFileService for output
   edm::Service<TFileService> fs;
@@ -409,8 +413,10 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
   RazorEvents->Branch("ele_PassConvVeto", ele_PassConvVeto, "ele_PassConvVeto[nElectrons]/O");
   RazorEvents->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
-  RazorEvents->Branch("ele_IDMVATrig", ele_IDMVATrig, "ele_IDMVATrig[nElectrons]/F");
-  RazorEvents->Branch("ele_IDMVANonTrig", ele_IDMVANonTrig, "ele_IDMVANonTrig[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVAGeneralPurpose", ele_IDMVAGeneralPurpose, "ele_IDMVAGeneralPurpose[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVACategoryGeneralPurpose", ele_IDMVACategoryGeneralPurpose, "ele_IDMVACategoryGeneralPurpose[nElectrons]/I"); 
+  RazorEvents->Branch("ele_IDMVAHZZ", ele_IDMVAHZZ, "ele_IDMVAHZZ[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVACategoryHZZ", ele_IDMVACategoryHZZ, "ele_IDMVACategoryHZZ[nElectrons]/I"); 
   RazorEvents->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
   RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
   RazorEvents->Branch("ele_ptrel", ele_ptrel, "ele_ptrel[nElectrons]/F");
@@ -827,8 +833,10 @@ void RazorTuplizer::resetBranches(){
 	ele_MissHits[i] = -99;
         ele_PassConvVeto[i] = false;
         ele_OneOverEminusOneOverP[i] = -99.0;
-        ele_IDMVATrig[i] = -99.0;
-        ele_IDMVANonTrig[i] = -99.0;
+        ele_IDMVAGeneralPurpose[i] = -99.0;
+        ele_IDMVACategoryGeneralPurpose[i] = -1;
+        ele_IDMVAHZZ[i] = -99.0;
+        ele_IDMVACategoryHZZ[i] = -1;
         ele_RegressionE[i] = -99.0;
         ele_CombineP4[i] = -99.0;
 	ele_ptrel[i] = -99.0;
@@ -1293,68 +1301,85 @@ bool RazorTuplizer::fillMuons(){
   return true;
 };
 
-bool RazorTuplizer::fillElectrons(){
-  for(const pat::Electron &ele : *electrons){
-    if(ele.pt() < 5) continue;
-    eleE[nElectrons] = ele.energy();
-    elePt[nElectrons] = ele.pt();
-    eleEta[nElectrons] = ele.eta();
-    elePhi[nElectrons] = ele.phi();
-    eleCharge[nElectrons] = ele.charge();
-    eleE_SC[nElectrons] = ele.superCluster()->energy();
-    eleEta_SC[nElectrons] = ele.superCluster()->eta();
-    elePhi_SC[nElectrons] = ele.superCluster()->phi();
-    eleSigmaIetaIeta[nElectrons] = ele.sigmaIetaIeta();
-    eleFull5x5SigmaIetaIeta[nElectrons] = ele.full5x5_sigmaIetaIeta();
-    eleR9[nElectrons] = ele.r9();
-    ele_dEta[nElectrons] = ele.deltaEtaSuperClusterTrackAtVtx();
-    ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
-    ele_HoverE[nElectrons] = ele.hcalOverEcal();
-    ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(myPV->position());
-    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(myPV->position());
-    ele_ip3d[nElectrons] = ele.dB(pat::Electron::PV3D);
-    ele_ip3dSignificance[nElectrons] = ele.dB(pat::Electron::PV3D)/ele.edB(pat::Electron::PV3D);   
-    ele_pileupIso[nElectrons] = ele.pfIsolationVariables().sumPUPt;
-    ele_chargedIso[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
-    ele_photonIso[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
-    ele_neutralHadIso[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
-    ele_MissHits[nElectrons] = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
+
+  // Get MVA values and categories (optional)
+  edm::Handle<edm::ValueMap<float> > mvaGeneralPurposeValues;
+  edm::Handle<edm::ValueMap<int> > mvaGeneralPurposeCategories;
+  edm::Handle<edm::ValueMap<float> > mvaHZZValues;
+  edm::Handle<edm::ValueMap<int> > mvaHZZCategories;
+  iEvent.getByToken(mvaGeneralPurposeValuesMapToken_,mvaGeneralPurposeValues);
+  iEvent.getByToken(mvaGeneralPurposeCategoriesMapToken_,mvaGeneralPurposeCategories);
+  iEvent.getByToken(mvaHZZValuesMapToken_,mvaHZZValues);
+  iEvent.getByToken(mvaHZZCategoriesMapToken_,mvaHZZCategories);
+
+  // for(const pat::Electron &ele : *electrons){
+  for (size_t i = 0; i < electrons->size(); ++i){
+    const auto ele = electrons->ptrAt(i);
+
+    if(ele->pt() < 5) continue;
+    eleE[nElectrons] = ele->energy();
+    elePt[nElectrons] = ele->pt();
+    eleEta[nElectrons] = ele->eta();
+    elePhi[nElectrons] = ele->phi();
+    eleCharge[nElectrons] = ele->charge();
+    eleE_SC[nElectrons] = ele->superCluster()->energy();
+    eleEta_SC[nElectrons] = ele->superCluster()->eta();
+    elePhi_SC[nElectrons] = ele->superCluster()->phi();
+    eleSigmaIetaIeta[nElectrons] = ele->sigmaIetaIeta();
+    eleFull5x5SigmaIetaIeta[nElectrons] = ele->full5x5_sigmaIetaIeta();
+    eleR9[nElectrons] = ele->r9();
+    ele_dEta[nElectrons] = ele->deltaEtaSuperClusterTrackAtVtx();
+    ele_dPhi[nElectrons] = ele->deltaPhiSuperClusterTrackAtVtx();
+    ele_HoverE[nElectrons] = ele->hcalOverEcal();
+    ele_d0[nElectrons] = -ele->gsfTrack().get()->dxy(myPV->position());
+    ele_dZ[nElectrons] = ele->gsfTrack().get()->dz(myPV->position());
+    ele_ip3d[nElectrons] = ((edm::Ptr<pat::Electron>)(ele))->dB(pat::Electron::PV3D);
+    ele_ip3dSignificance[nElectrons] = ((edm::Ptr<pat::Electron>)(ele))->dB(pat::Electron::PV3D)/((edm::Ptr<pat::Electron>)(ele))->edB(pat::Electron::PV3D);   
+    ele_pileupIso[nElectrons] = ele->pfIsolationVariables().sumPUPt;
+    ele_chargedIso[nElectrons] = ele->pfIsolationVariables().sumChargedHadronPt;
+    ele_photonIso[nElectrons] = ele->pfIsolationVariables().sumPhotonEt;
+    ele_neutralHadIso[nElectrons] = ele->pfIsolationVariables().sumNeutralHadronEt;
+    ele_MissHits[nElectrons] = ele->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
 
     //*************************************************
     //Conversion Veto
     //*************************************************
     ele_PassConvVeto[nElectrons] = false;
     if( beamSpot.isValid() && conversions.isValid() ) {
-      ele_PassConvVeto[nElectrons] = !ConversionTools::hasMatchedConversion(ele,conversions,
-									    beamSpot->position());
+      ele_PassConvVeto[nElectrons] = !ConversionTools::hasMatchedConversion(*ele,conversions,
+    									    beamSpot->position());
     } else {
       cout << "\n\nERROR!!! conversions not found!!!\n";
     }
   
     // 1/E - 1/P
-    if( ele.ecalEnergy() == 0 ){
+    if( ele->ecalEnergy() == 0 ){
       ele_OneOverEminusOneOverP[nElectrons] = 1e30;
-    } else if( !std::isfinite(ele.ecalEnergy())){
+    } else if( !std::isfinite(ele->ecalEnergy())){
       ele_OneOverEminusOneOverP[nElectrons] = 1e30;
     } else {
-    ele_OneOverEminusOneOverP[nElectrons] = 1./ele.ecalEnergy()  -  ele.eSuperClusterOverP()/ele.ecalEnergy();    
+    ele_OneOverEminusOneOverP[nElectrons] = 1./ele->ecalEnergy()  -  ele->eSuperClusterOverP()/ele->ecalEnergy();    
     }
 
     //*************************************************
     //ID MVA
     //*************************************************
-    ele_IDMVATrig[nElectrons]    = myMVATrig->mvaValue(ele, false);
-    ele_IDMVANonTrig[nElectrons] = myMVANonTrig->mvaValue(ele,conversions, beamSpot->position(),false);
+    ele_IDMVAGeneralPurpose[nElectrons] = (*mvaGeneralPurposeValues)[ele];
+    ele_IDMVACategoryGeneralPurpose[nElectrons] = (*mvaGeneralPurposeCategories)[ele];
+    ele_IDMVAHZZ[nElectrons] = (*mvaHZZValues)[ele];
+    ele_IDMVACategoryHZZ[nElectrons] = (*mvaHZZCategories)[ele];
 
-    ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
-    ele_CombineP4[nElectrons]   = ele.ecalTrackRegressionEnergy();
 
-    ele_ptrel[nElectrons]   = getLeptonPtRel( jets, &ele );
-    tuple<double,double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
+    ele_RegressionE[nElectrons] = ((edm::Ptr<pat::Electron>)(ele))->ecalRegressionEnergy();
+    ele_CombineP4[nElectrons]   = ((edm::Ptr<pat::Electron>)(ele))->ecalTrackRegressionEnergy();
+
+    ele_ptrel[nElectrons]   = getLeptonPtRel( jets, &(*ele) );
+    tuple<double,double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&(*ele)), 0.05, 0.2, 10., false, false);
     ele_chargedMiniIso[nElectrons] = std::get<0>(PFMiniIso);
     ele_photonAndNeutralHadronMiniIso[nElectrons] = std::get<1>(PFMiniIso);
     ele_chargedPileupMiniIso[nElectrons] = std::get<2>(PFMiniIso);
-    ele_activityMiniIsoAnnulus[nElectrons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.4, 0.05, 0.2, 10.);
+    ele_activityMiniIsoAnnulus[nElectrons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&(*ele)), 0.4, 0.05, 0.2, 10.);
 
     //*************************************************
     //Trigger Object Matching
@@ -1365,16 +1390,16 @@ bool RazorTuplizer::fillElectrons(){
     bool passTPOneProbeFilter= false;
     bool passTPTwoProbeFilter= false;
     for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
-      if (deltaR(trigObject.eta(), trigObject.phi(),ele.eta(),ele.phi()) > 0.3) continue;
+      if (deltaR(trigObject.eta(), trigObject.phi(),ele->eta(),ele->phi()) > 0.3) continue;
 
       //check Single ele filters
       if (trigObject.hasFilterLabel("hltEle23WPLooseGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle27WPLooseGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle27WPTightGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle32WPLooseGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle32WPTightGsfTrackIsoFilter")
-	  ) {
-	passSingleEleTagFilter = true;
+    	  trigObject.hasFilterLabel("hltEle27WPLooseGsfTrackIsoFilter")  ||
+    	  trigObject.hasFilterLabel("hltEle27WPTightGsfTrackIsoFilter")  ||
+    	  trigObject.hasFilterLabel("hltEle32WPLooseGsfTrackIsoFilter")  ||
+    	  trigObject.hasFilterLabel("hltEle32WPTightGsfTrackIsoFilter")
+    	  ) {
+    	passSingleEleTagFilter = true;
       }
       
       //check Tag and Probe Filters
@@ -1385,7 +1410,7 @@ bool RazorTuplizer::fillElectrons(){
 
       //check all filters
       for ( int q=0; q<MAX_ElectronHLTFilters;q++) {
-	if (trigObject.hasFilterLabel(eleHLTFilterNames[q].c_str())) ele_passHLTFilter[nElectrons][q] = true;
+    	if (trigObject.hasFilterLabel(eleHLTFilterNames[q].c_str())) ele_passHLTFilter[nElectrons][q] = true;
       }
 
     }
@@ -1552,7 +1577,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_HoverE[nPhotons] = pho.hadTowOverEm();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
     pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
-									   conversions, beamSpot->position());
+							  conversions, beamSpot->position());
 
     //**********************************************************
     // Fill default miniAOD isolation quantities
@@ -2563,7 +2588,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     fillEventInfo(iEvent)
     && fillPVAll()
     && fillMuons() 
-    && fillElectrons()
+    && fillElectrons(iEvent)
     && fillTaus()
     && fillIsoPFCandidates()
     && fillPhotons(iEvent,iSetup)

@@ -103,7 +103,7 @@ public:
   virtual bool fillPVAll();
   virtual bool fillPileUp();//Fill summary PU info
   virtual bool fillMuons();//Fills looseID muon 4-momentum only. PT > 5GeV
-  virtual bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
+  virtual bool fillElectrons(const edm::Event& iEvent);//Fills Ele 4-momentum only. PT > 5GeV
   virtual bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
   virtual bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
   virtual bool fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup);//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
@@ -132,7 +132,7 @@ public:
   //follows the particle's ancestry back and finds the "oldest" particle with the same ID
   const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
   //electron veto for photons (for use until an official recipe exists)
-  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, edm::Handle<edm::View<reco::GsfElectron> > eleCol,
 				const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
 				float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
   
@@ -186,7 +186,7 @@ protected:
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
   edm::EDGetTokenT<pat::MuonCollection> muonsToken_;
-  edm::EDGetTokenT<pat::ElectronCollection> electronsToken_;
+  edm::EDGetTokenT<edm::View<reco::GsfElectron> > electronsToken_;
   edm::EDGetTokenT<pat::TauCollection> tausToken_;
   edm::EDGetTokenT<pat::PhotonCollection> photonsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
@@ -234,7 +234,11 @@ protected:
   edm::EDGetTokenT<vector<reco::PhotonCore> > gedPhotonCoresToken_;
   edm::EDGetTokenT<vector<reco::SuperCluster> > superClustersToken_;
   edm::EDGetTokenT<vector<pat::PackedCandidate> > lostTracksToken_;
-  
+  edm::EDGetTokenT<edm::ValueMap<float> > mvaGeneralPurposeValuesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<int> > mvaGeneralPurposeCategoriesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float> > mvaHZZValuesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<int> > mvaHZZCategoriesMapToken_;
+
   
   //EDM handles for each miniAOD input object
   edm::Handle<edm::TriggerResults> triggerBits;
@@ -244,7 +248,8 @@ protected:
   edm::Handle<reco::VertexCollection> vertices;
   edm::Handle<pat::PackedCandidateCollection> packedPFCands;
   edm::Handle<pat::MuonCollection> muons;
-  edm::Handle<pat::ElectronCollection> electrons;
+  // edm::Handle<pat::ElectronCollection> electrons;
+  edm::Handle<edm::View<reco::GsfElectron> > electrons;
   edm::Handle<pat::PhotonCollection> photons;
   edm::Handle<pat::TauCollection> taus;
   edm::Handle<pat::JetCollection> jets;
@@ -372,11 +377,13 @@ protected:
   float ele_chargedIso[OBJECTARRAYSIZE];
   float ele_photonIso[OBJECTARRAYSIZE];
   float ele_neutralHadIso[OBJECTARRAYSIZE];
-  int ele_MissHits[OBJECTARRAYSIZE];
-  bool ele_PassConvVeto[OBJECTARRAYSIZE];
+  int   ele_MissHits[OBJECTARRAYSIZE];
+  bool  ele_PassConvVeto[OBJECTARRAYSIZE];
   float ele_OneOverEminusOneOverP[OBJECTARRAYSIZE];
-  float ele_IDMVATrig[OBJECTARRAYSIZE];
-  float ele_IDMVANonTrig[OBJECTARRAYSIZE];
+  float ele_IDMVAGeneralPurpose[OBJECTARRAYSIZE];
+  int   ele_IDMVACategoryGeneralPurpose[OBJECTARRAYSIZE];
+  float ele_IDMVAHZZ[OBJECTARRAYSIZE];
+  int   ele_IDMVACategoryHZZ[OBJECTARRAYSIZE];
   float ele_RegressionE[OBJECTARRAYSIZE];
   float ele_CombineP4[OBJECTARRAYSIZE];
   float ele_ptrel[OBJECTARRAYSIZE];

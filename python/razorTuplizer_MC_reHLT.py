@@ -50,6 +50,19 @@ process.BadPFMuonFilter.muons = cms.InputTag("slimmedMuons")
 process.BadPFMuonFilter.PFCandidates = cms.InputTag("packedPFCandidates")
 process.BadPFMuonFilter.taggingMode = cms.bool(True)
 
+#------ Electron MVA Setup ------#
+# define which IDs we want to produce
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
+dataFormat = DataFormat.MiniAOD
+switchOnVIDElectronIdProducer(process, dataFormat)
+my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff','RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_HZZ_V1_cff']
+
+#add them to the VID producer
+for idmod in my_id_modules:
+    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+
+
+
 #------ Analyzer ------#
 
 #list input collections
@@ -119,11 +132,16 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     gedPhotonCores = cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "PAT"),
     superClusters = cms.InputTag("reducedEgamma", "reducedSuperClusters", "PAT"),
 
-    lostTracks = cms.InputTag("lostTracks", "", "PAT")
+    lostTracks = cms.InputTag("lostTracks", "", "PAT"),
+    mvaGeneralPurposeValuesMap     = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16GeneralPurposeV1Values"),
+    mvaGeneralPurposeCategoriesMap = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16GeneralPurposeV1Categories"),
+    mvaHZZValuesMap     = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16HZZV1Values"),
+    mvaHZZCategoriesMap = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16HZZV1Categories")
 )
 
 #run
-process.p = cms.Path( process.HBHENoiseFilterResultProducer*
+process.p = cms.Path( process.egmGsfElectronIDSequence *
+                      process.HBHENoiseFilterResultProducer*
                       process.BadChargedCandidateFilter*
                       process.BadPFMuonFilter*
                       process.ntuples)
