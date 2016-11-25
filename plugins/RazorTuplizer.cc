@@ -1430,7 +1430,7 @@ bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
 
 bool RazorTuplizer::fillTaus(){
   for (const pat::Tau &tau : *taus) {
-    if (tau.pt() < 20) continue;
+    if (tau.pt() < 18) continue;
     tauE[nTaus] = tau.energy();
     tauPt[nTaus] = tau.pt();
     tauEta[nTaus] = tau.eta();
