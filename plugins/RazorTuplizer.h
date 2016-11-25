@@ -335,13 +335,20 @@ protected:
   float pvAllT[MAX_NPV];
   float pvAllTError[MAX_NPV];
   float pvAllLogSumPtSq[MAX_NPV];
+  float pvAllSumPt[MAX_NPV];
   float pvAllSumPx[MAX_NPV];
   float pvAllSumPy[MAX_NPV];
+  float pvAllSumPz[MAX_NPV];
+  int pvNtrack[MAX_NPV];
+  int allNtrack;
  
    //computed with additional cut on deltat between the track and the primary vertex
    float pvAllLogSumPtSq_dt[MAX_NPV];
+   float pvAllSumPt_dt[MAX_NPV];
    float pvAllSumPx_dt[MAX_NPV];
    float pvAllSumPy_dt[MAX_NPV];
+   float pvAllSumPz_dt[MAX_NPV];
+   int pvNtrack_dt[MAX_NPV];
   
   //PU
   int nBunchXing;
@@ -657,6 +664,11 @@ protected:
   float genVertexX;
   float genVertexY;
   float genVertexZ;
+
+  float genVertexX2;
+  float genVertexY2;
+  float genVertexZ2;
+ 
   float genVertexT;
   float genWeight;
   unsigned int genSignalProcessID;

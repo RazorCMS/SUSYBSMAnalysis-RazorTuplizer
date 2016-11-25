@@ -346,12 +346,19 @@ void RazorTuplizer::enablePVAllBranches() {
   RazorEvents->Branch("pvAllT", pvAllT,"pvAllT[nPVAll]/F");
   RazorEvents->Branch("pvAllTError", pvAllTError,"pvAllTError[nPVAll]/F");
   RazorEvents->Branch("pvAllLogSumPtSq", pvAllLogSumPtSq,"pvAllLogSumPtSq[nPVAll]/F");
+  RazorEvents->Branch("pvAllSumPt", pvAllSumPt,"pvAllSumPt[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPx", pvAllSumPx,"pvAllSumPx[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPy", pvAllSumPy,"pvAllSumPy[nPVAll]/F");
+  RazorEvents->Branch("pvAllSumPz", pvAllSumPz,"pvAllSumPz[nPVAll]/F");
+  RazorEvents->Branch("pvNtrack", pvNtrack,"pvNtrack[nPVAll]/I");
+  RazorEvents->Branch("allNtrack", &allNtrack,"allNtrack/I");
 
   RazorEvents->Branch("pvAllLogSumPtSq_dt", pvAllLogSumPtSq_dt,"pvAllLogSumPtSq_dt[nPVAll]/F");
+  RazorEvents->Branch("pvAllSumPt_dt", pvAllSumPt_dt,"pvAllSumPt_dt[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPx_dt", pvAllSumPx_dt,"pvAllSumPx_dt[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPy_dt", pvAllSumPy_dt,"pvAllSumPy_dt[nPVAll]/F");
+  RazorEvents->Branch("pvAllSumPz_dt", pvAllSumPz_dt,"pvAllSumPz_dt[nPVAll]/F");
+  RazorEvents->Branch("pvNtrack_dt", pvNtrack_dt,"pvNtrack_dt[nPVAll]/I");
 
 }
 
@@ -678,6 +685,10 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genVertexZ", &genVertexZ, "genVertexZ/F");
   RazorEvents->Branch("genVertexX", &genVertexX, "genVertexX/F");
   RazorEvents->Branch("genVertexY", &genVertexY, "genVertexY/F");
+
+  RazorEvents->Branch("genVertexZ2", &genVertexZ2, "genVertexZ2/F");
+  RazorEvents->Branch("genVertexX2", &genVertexX2, "genVertexX2/F");
+  RazorEvents->Branch("genVertexY2", &genVertexY2, "genVertexY2/F");
   RazorEvents->Branch("genVertexT", &genVertexT, "genVertexT/F");
   RazorEvents->Branch("genWeight", &genWeight, "genWeight/F");
   RazorEvents->Branch("genSignalProcessID", &genSignalProcessID, "genSignalProcessID/i");
@@ -785,6 +796,8 @@ void RazorTuplizer::resetBranches(){
     nGenJets = 0;
     nGenParticle = 0;
 
+    allNtrack = 0;
+ 
     for(int i = 0; i < NTriggersMAX; i++){
       triggerDecision[i] = false;
       triggerHLTPrescale[i] = 0;
@@ -802,12 +815,18 @@ void RazorTuplizer::resetBranches(){
       pvAllTError[i] = 0.;
 
       pvAllLogSumPtSq[i] = 0.;
+      pvAllSumPt[i] = 0.;
       pvAllSumPx[i] = 0.;
       pvAllSumPy[i] = 0.;
+      pvAllSumPz[i] = 0.;
+      pvNtrack[i] = 0;
       
       pvAllLogSumPtSq_dt[i] = 0.;
+      pvAllSumPt_dt[i] = 0.;
       pvAllSumPx_dt[i] = 0.;
       pvAllSumPy_dt[i] = 0.;
+      pvAllSumPz_dt[i] = 0.;
+      pvNtrack_dt[i] = 0;
 
     }
     
@@ -1131,6 +1150,10 @@ void RazorTuplizer::resetBranches(){
     genVertexZ = -999;
     genVertexX = -999;
     genVertexY = -999;
+    
+    genVertexZ2 = -999;
+    genVertexX2 = -999;
+    genVertexY2 = -999;
     genVertexT = -999;
     genWeight = 1;
     genSignalProcessID = -999;
@@ -1218,27 +1241,36 @@ bool RazorTuplizer::fillPVAll() {
   }
   
   double pvAllSumPtSqD[MAX_NPV];
+  double pvAllSumPtD[MAX_NPV];
   double pvAllSumPxD[MAX_NPV];
   double pvAllSumPyD[MAX_NPV];
+  double pvAllSumPzD[MAX_NPV];
  
   double pvAllSumPtSqD_dt[MAX_NPV];
+  double pvAllSumPtD_dt[MAX_NPV];
   double pvAllSumPxD_dt[MAX_NPV];
   double pvAllSumPyD_dt[MAX_NPV];
+  double pvAllSumPzD_dt[MAX_NPV];
   
   for (int ipv=0; ipv<nPVAll; ++ipv) {
     pvAllSumPtSqD[ipv] = 0.;
+    pvAllSumPtD[ipv] = 0.;
     pvAllSumPxD[ipv] = 0.;
     pvAllSumPyD[ipv] = 0.;
+    pvAllSumPzD[ipv] = 0.;
 
     pvAllSumPtSqD_dt[ipv] = 0.;
+    pvAllSumPtD_dt[ipv] = 0.;
     pvAllSumPxD_dt[ipv] = 0.;
     pvAllSumPyD_dt[ipv] = 0.;
+    pvAllSumPzD_dt[ipv] = 0.;
  
   }
   
   //for (const reco::PFCandidate &pfcand : *pfCands) {
   for (const reco::PFCandidate &pfcand : *pfCands) {
     if (pfcand.charge()==0) continue;
+    allNtrack += 1;
     double mindz = std::numeric_limits<double>::max();
     int ipvmin = -1;
     for (int ipv = 0; ipv < nPVAll; ++ipv) {
@@ -1253,8 +1285,11 @@ bool RazorTuplizer::fillPVAll() {
         
     if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
       pvAllSumPtSqD[ipvmin] += pfcand.pt()*pfcand.pt();
+      pvAllSumPtD[ipvmin] += pfcand.pt();
       pvAllSumPxD[ipvmin] += pfcand.px();
       pvAllSumPyD[ipvmin] += pfcand.py();
+      pvAllSumPzD[ipvmin] += pfcand.pz();
+      pvNtrack[ipvmin] += 1;
     }
   //deltat cut between the track and the primary vertex: |deltat|<60ps
   //for pv: vtx.time()
@@ -1277,17 +1312,20 @@ bool RazorTuplizer::fillPVAll() {
      const float timeReso = (*timeResos)[pfcand.trackRef()] != 0.f ? (*timeResos)[pfcand.trackRef()] : 0.170f;	
      if(timeReso < 0.02)
 	{
-	   if(std::abs(time-vtx_ipvmin.t())>0.06)
+	   if(std::abs(time-vtx_ipvmin.t())<0.06)
 	   {
 		passDeltaTcut = true;
 	   } 
 	}
       }
   //  }
-    if (passDeltaTcut) {
+    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV && passDeltaTcut) {
       pvAllSumPtSqD_dt[ipvmin] += pfcand.pt()*pfcand.pt();
+      pvAllSumPtD_dt[ipvmin] += pfcand.pt();
       pvAllSumPxD_dt[ipvmin] += pfcand.px();
       pvAllSumPyD_dt[ipvmin] += pfcand.py();
+      pvAllSumPzD_dt[ipvmin] += pfcand.pz();
+      pvNtrack_dt[ipvmin] += 1;
     }
     
  
@@ -1295,12 +1333,16 @@ bool RazorTuplizer::fillPVAll() {
   
   for (int ipv=0; ipv<nPVAll; ++ipv) {
     pvAllLogSumPtSq[ipv] = log(pvAllSumPtSqD[ipv]);
+    pvAllSumPt[ipv] = pvAllSumPtD[ipv];
     pvAllSumPx[ipv] = pvAllSumPxD[ipv];
     pvAllSumPy[ipv] = pvAllSumPyD[ipv];    
+    pvAllSumPz[ipv] = pvAllSumPzD[ipv];    
   
     pvAllLogSumPtSq_dt[ipv] = log(pvAllSumPtSqD_dt[ipv]);
+    pvAllSumPt_dt[ipv] = pvAllSumPtD_dt[ipv];
     pvAllSumPx_dt[ipv] = pvAllSumPxD_dt[ipv];
     pvAllSumPy_dt[ipv] = pvAllSumPyD_dt[ipv];    
+    pvAllSumPz_dt[ipv] = pvAllSumPzD_dt[ipv];    
 
   }
   
@@ -1666,7 +1708,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
   noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
     
   for (const reco::Photon &pho : *photons) {
-    //if (pho.pt() < 20) continue;
+    if (pho.pt() < 20) continue;
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
 
@@ -2296,9 +2338,9 @@ bool RazorTuplizer::fillMC(){
 	for (unsigned int j=0; j<(*genParticles)[i].numberOfDaughters(); ++j) {
 	  const reco::Candidate *dau = (*genParticles)[i].daughter(j);
 	  if (dau) {
-	    genVertexX = dau->vx();
-	    genVertexY = dau->vy();
-	    genVertexZ = dau->vz();
+	    genVertexX2 = dau->vx();
+	    genVertexY2 = dau->vy();
+	    genVertexZ2 = dau->vz();
 	    foundGenVertex = true;
 	    break;
 	  }
@@ -2312,7 +2354,14 @@ bool RazorTuplizer::fillMC(){
     auto origin_vtx = (*this_mc->vertices_begin())->position();
     //xyz0Ptr->SetXYZ(origin.x() * mmToCm, origin.y() * mmToCm, origin.z() * mmToCm);
     //*t0Ptr = origin.t() * mmToNs;
-    genVertexT = origin_vtx.t();
+
+    const double mmToCm = 0.1;
+    genVertexX = origin_vtx.x()*mmToCm;
+    genVertexY = origin_vtx.y()*mmToCm;
+    genVertexZ = origin_vtx.z()*mmToCm;
+
+    const double mmToNs = 1.0/299792458e-6;
+    genVertexT = origin_vtx.t() * mmToNs;
  
     genWeight = genInfo->weight();
     genSignalProcessID = genInfo->signalProcessID();
