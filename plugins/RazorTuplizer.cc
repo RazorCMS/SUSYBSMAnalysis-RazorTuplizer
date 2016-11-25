@@ -1549,7 +1549,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
   noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
     
   for (const pat::Photon &pho : *photons) {
-    if (pho.pt() < 20) continue;
+    if (pho.pt() < 15) continue;
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
 
