@@ -11,15 +11,22 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-	'/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/PU25ns_81X_upgrade2023_realistic_v3_2023D3Timing13TeVPU140r1-v1/10000/069E588E-4AA1-E611-AEF1-0025905B856E.root'
-   )
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/10435CE1-6F99-E611-AC23-0CC47A7C3408.root',
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/1A46A005-6E99-E611-B16F-0CC47A7C3610.root',
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/30C026DA-6E99-E611-8DD2-0CC47A74525A.root',
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/5CA58547-6E99-E611-A36F-0CC47A4D767E.root',
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/621392D8-7099-E611-89B0-0CC47A78A4B8.root',
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/727722BA-7199-E611-8A33-0CC47A78A418.root',
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/9413D4D9-6E99-E611-97B1-0CC47A78A436.root',
+       '/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/F4EC4A02-6E99-E611-80A6-0CC47A4D7604.root' 
+)
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
 process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("razorNtuple.root"),
+    fileName = cms.string("razorNtuple_PU0_NoTiming.root"),
     closeFileFast = cms.untracked.bool(True)
 )
 
@@ -64,8 +71,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     muonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorMuonHLTFilterNames.dat"),
     photonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorPhotonHLTFilterNames.dat"),
 
-    vertices = cms.InputTag("offlinePrimaryVertices4D"), # for timing case
-    #vertices = cms.InputTag("offlinePrimaryVerticesWithBS"),  # for non-timing case
+    #vertices = cms.InputTag("offlinePrimaryVertices4D"), # for timing case
+    vertices = cms.InputTag("offlinePrimaryVerticesWithBS"),  # for non-timing case
     
     muons = cms.InputTag("muons"),
     electrons = cms.InputTag("gedGsfElectrons"),

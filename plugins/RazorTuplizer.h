@@ -80,7 +80,10 @@ using namespace std;
 //------ Array Size Constants ------//
 #define OBJECTARRAYSIZE 1000
 #define GENPARTICLEARRAYSIZE 500
-#define MAX_NPV 200
+#define MAX_NPV 600
+#define MAX_NTRACK 2000
+#define MAX_NPU 300
+#define MAX_NBX 40
 
 //------ Class declaration ------//
 
@@ -336,10 +339,39 @@ protected:
   float pvAllTError[MAX_NPV];
   float pvAllLogSumPtSq[MAX_NPV];
   float pvAllSumPt[MAX_NPV];
+/*
+  float allTrackPt[MAX_NTRACK];
+  float allTrackX[MAX_NTRACK];
+  float allTrackY[MAX_NTRACK];
+  float allTrackZ[MAX_NTRACK];
+*/
+/*
+  vector<float> pvTrackZ[MAX_NPV];
+  vector<float> pvTrackX[MAX_NPV];
+  vector<float> pvTrackY[MAX_NPV];
+  vector<float> pvTrackPt[MAX_NPV];
+  vector<float> pvTrackPx[MAX_NPV];
+  vector<float> pvTrackPy[MAX_NPV];
+  vector<float> pvTrackPz[MAX_NPV];
+*/
+  vector<float> allTrackX;
+  vector<float> allTrackY;
+  vector<float> allTrackZ;
+  vector<int> allTrackParticleId;
+  vector<int> allTrackQuality;
+  vector<float> allTrackPt;
+  vector<float> allTrackPtError;
+  vector<float> allTrackPx;
+  vector<float> allTrackPy;
+  vector<float> allTrackPz;
+
   float pvAllSumPx[MAX_NPV];
   float pvAllSumPy[MAX_NPV];
   float pvAllSumPz[MAX_NPV];
+  float pvPUz[MAX_NPV];
   int pvNtrack[MAX_NPV];
+  int pvNtrack_reco[MAX_NPV];
+  int pvIndex[MAX_NPV];
   int allNtrack;
  
    //computed with additional cut on deltat between the track and the primary vertex
@@ -353,8 +385,13 @@ protected:
   //PU
   int nBunchXing;
   int BunchXing[OBJECTARRAYSIZE];
+  int BunchXingIndex[OBJECTARRAYSIZE];
   int nPU[OBJECTARRAYSIZE];
   float nPUmean[OBJECTARRAYSIZE];
+
+  vector<float> puZposition_;
+  vector<Int_t> ntrks_lowpt_;
+  vector<Int_t> ntrks_highpt_;
 
   //Muons
   int nMuons;

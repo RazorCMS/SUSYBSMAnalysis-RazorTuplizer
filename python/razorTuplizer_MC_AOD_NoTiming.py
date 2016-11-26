@@ -64,8 +64,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     muonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorMuonHLTFilterNames.dat"),
     photonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorPhotonHLTFilterNames.dat"),
 
-    vertices = cms.InputTag("offlinePrimaryVertices4D"), # for timing case
-    #vertices = cms.InputTag("offlinePrimaryVerticesWithBS"),  # for non-timing case
+    #vertices = cms.InputTag("offlinePrimaryVertices4D"), # for timing case
+    vertices = cms.InputTag("offlinePrimaryVerticesWithBS"),  # for non-timing case
     
     muons = cms.InputTag("muons"),
     electrons = cms.InputTag("gedGsfElectrons"),

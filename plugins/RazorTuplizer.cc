@@ -350,8 +350,22 @@ void RazorTuplizer::enablePVAllBranches() {
   RazorEvents->Branch("pvAllSumPx", pvAllSumPx,"pvAllSumPx[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPy", pvAllSumPy,"pvAllSumPy[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPz", pvAllSumPz,"pvAllSumPz[nPVAll]/F");
+  RazorEvents->Branch("pvPUz", pvPUz,"pvPUz[nPVAll]/F");
   RazorEvents->Branch("pvNtrack", pvNtrack,"pvNtrack[nPVAll]/I");
+  RazorEvents->Branch("pvNtrack_reco", pvNtrack_reco,"pvNtrack_reco[nPVAll]/I");
+  RazorEvents->Branch("pvIndex", pvIndex,"pvIndex[nPVAll]/I");
   RazorEvents->Branch("allNtrack", &allNtrack,"allNtrack/I");
+
+  RazorEvents->Branch("allTrackX", "vector<float>", &allTrackX);
+  RazorEvents->Branch("allTrackY", "vector<float>", &allTrackY);
+  RazorEvents->Branch("allTrackZ", "vector<float>", &allTrackZ);
+  RazorEvents->Branch("allTrackParticleId", "vector<int>", &allTrackParticleId);
+  RazorEvents->Branch("allTrackQuality", "vector<int>", &allTrackQuality);
+  RazorEvents->Branch("allTrackPt", "vector<float>", &allTrackPt);
+  RazorEvents->Branch("allTrackPtError", "vector<float>", &allTrackPtError);
+  RazorEvents->Branch("allTrackPx", "vector<float>", &allTrackPx);
+  RazorEvents->Branch("allTrackPy", "vector<float>", &allTrackPy);
+  RazorEvents->Branch("allTrackPz", "vector<float>", &allTrackPz);
 
   RazorEvents->Branch("pvAllLogSumPtSq_dt", pvAllLogSumPtSq_dt,"pvAllLogSumPtSq_dt[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPt_dt", pvAllSumPt_dt,"pvAllSumPt_dt[nPVAll]/F");
@@ -365,8 +379,14 @@ void RazorTuplizer::enablePVAllBranches() {
 void RazorTuplizer::enablePileUpBranches(){
   RazorEvents->Branch("nBunchXing", &nBunchXing, "nBunchXing/I");
   RazorEvents->Branch("BunchXing", BunchXing, "BunchXing[nBunchXing]/I");
+  RazorEvents->Branch("BunchXingIndex", BunchXingIndex, "BunchXingIndex[nBunchXing]/I");
   RazorEvents->Branch("nPU", nPU, "nPU[nBunchXing]/I");
   RazorEvents->Branch("nPUmean", nPUmean, "nPUmean[nBunchXing]/F");
+  RazorEvents->Branch("puZposition", "vector<float>", &puZposition_);
+  RazorEvents->Branch("ntrks_lowpt", "vector<Int_t>", &ntrks_lowpt_);
+  RazorEvents->Branch("ntrks_highpt", "vector<Int_t>", &ntrks_highpt_);
+
+
 };
 
 void RazorTuplizer::enableMuonBranches(){
@@ -796,6 +816,23 @@ void RazorTuplizer::resetBranches(){
     nGenJets = 0;
     nGenParticle = 0;
 
+    ntrks_lowpt_.clear();
+    puZposition_.clear();
+    ntrks_highpt_.clear();
+
+
+    allTrackX.clear();
+    allTrackY.clear();
+    allTrackZ.clear();
+    allTrackParticleId.clear();
+    allTrackQuality.clear();
+    allTrackPt.clear();
+    allTrackPtError.clear();
+    allTrackPx.clear();
+    allTrackPy.clear();
+    allTrackPz.clear();
+
+
     allNtrack = 0;
  
     for(int i = 0; i < NTriggersMAX; i++){
@@ -819,7 +856,10 @@ void RazorTuplizer::resetBranches(){
       pvAllSumPx[i] = 0.;
       pvAllSumPy[i] = 0.;
       pvAllSumPz[i] = 0.;
+      pvPUz[i] = 0.;
       pvNtrack[i] = 0;
+      pvNtrack_reco[i] = 0;
+      pvIndex[i] = -99;
       
       pvAllLogSumPtSq_dt[i] = 0.;
       pvAllSumPt_dt[i] = 0.;
@@ -830,9 +870,11 @@ void RazorTuplizer::resetBranches(){
 
     }
     
+
     for(int i = 0; i < 99; i++){      
         //PU
         BunchXing[i] = -99;
+        BunchXingIndex[i] = -99;
         nPU[i] = -99;
         nPUmean[i] = -99.0;
 
@@ -1224,7 +1266,8 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
 bool RazorTuplizer::fillPVAll() {
   
   nPVAll = std::min(int(vertices->size()),int(MAX_NPV));
-  
+
+	 
   for (int ipv = 0; ipv < nPVAll; ++ipv) {
     const reco::Vertex &vtx = vertices->at(ipv);
     pvAllX[ipv] = vtx.x();
@@ -1251,8 +1294,9 @@ bool RazorTuplizer::fillPVAll() {
   double pvAllSumPxD_dt[MAX_NPV];
   double pvAllSumPyD_dt[MAX_NPV];
   double pvAllSumPzD_dt[MAX_NPV];
-  
-  for (int ipv=0; ipv<nPVAll; ++ipv) {
+ 
+  allNtrack = 0; 
+  for (int ipv=0; ipv<MAX_NPV; ++ipv) {
     pvAllSumPtSqD[ipv] = 0.;
     pvAllSumPtD[ipv] = 0.;
     pvAllSumPxD[ipv] = 0.;
@@ -1265,51 +1309,109 @@ bool RazorTuplizer::fillPVAll() {
     pvAllSumPyD_dt[ipv] = 0.;
     pvAllSumPzD_dt[ipv] = 0.;
  
+    pvPUz[ipv] = 0.;
+    pvNtrack[ipv] = 0;
+    pvNtrack_reco[ipv] = 0;
+    pvIndex[ipv] = -99;
+
+/*
+      pvTrackZ[ipv].clear();
+      pvTrackX[ipv].clear();
+      pvTrackY[ipv].clear();
+      pvTrackPt[ipv].clear();
+      pvTrackPx[ipv].clear();
+      pvTrackPy[ipv].clear();
+      pvTrackPz[ipv].clear();
+*/
   }
-  
+ 
+  for(int i=0;i<nPVAll;i++)
+	{
+		pvIndex[i] = i;
+	} 
+
+
+   for (int ipv = 0; ipv < nPVAll; ++ipv) {
+	const reco::Vertex &vtx = vertices->at(ipv);
+	pvNtrack_reco[ipv] = vtx.nTracks(0.0);
+
+	double mindz = std::numeric_limits<double>::max();
+
+  	for(const PileupSummaryInfo &pu : *puInfo){
+    		for(unsigned int j=0; j<pu.getPU_zpositions().size(); j++) {
+        		double dz = std::abs((pu.getPU_zpositions())[j] - vtx.z());  
+			if (dz<mindz){
+			{
+				mindz = dz;
+				pvPUz[ipv] = (pu.getPU_zpositions())[j];	
+			}
+			//	cout<<"jPu:  "<<j<<"  getPU_zpositions():  "<< (pu.getPU_zpositions())[j]<<std::endl;
+   			}
+		}
+		}
+	} 
+
   //for (const reco::PFCandidate &pfcand : *pfCands) {
   for (const reco::PFCandidate &pfcand : *pfCands) {
     if (pfcand.charge()==0) continue;
-    allNtrack += 1;
+ 
+    if(!times->contains(pfcand.trackRef().id())) continue; 
+    
+     allNtrack += 1;
+/*
+    allTrackParticleId.push_back(pfcand.particleId());
+    allTrackX.push_back(pfcand.trackRef()->vx());
+    allTrackY.push_back(pfcand.trackRef()->vy());
+    allTrackZ.push_back(pfcand.trackRef()->vz());
+    allTrackPt.push_back(pfcand.trackRef()->pt());
+    allTrackPx.push_back(pfcand.trackRef()->px());
+    allTrackPy.push_back(pfcand.trackRef()->py());
+    allTrackPz.push_back(pfcand.trackRef()->pz());
+    allTrackPtError.push_back(pfcand.trackRef()->ptError());
+    allTrackQuality.push_back(int(pfcand.trackRef()->quality(TrackBase::highPurity)));
+*/
+
     double mindz = std::numeric_limits<double>::max();
     int ipvmin = -1;
     for (int ipv = 0; ipv < nPVAll; ++ipv) {
       const reco::Vertex &vtx = vertices->at(ipv);
       //double dz = std::abs(pfcand.dz(vtx.position()));
-      double dz = std::abs(pfcand.vz()-vtx.z());
+      double dz = std::abs(pfcand.trackRef()->dz(vtx.position()));
       if (dz<mindz) {
         mindz = dz;
         ipvmin = ipv;
       }
     }
         
-    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
+    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV){
+
       pvAllSumPtSqD[ipvmin] += pfcand.pt()*pfcand.pt();
       pvAllSumPtD[ipvmin] += pfcand.pt();
       pvAllSumPxD[ipvmin] += pfcand.px();
       pvAllSumPyD[ipvmin] += pfcand.py();
       pvAllSumPzD[ipvmin] += pfcand.pz();
+
       pvNtrack[ipvmin] += 1;
+
+	/*
+      const reco::Vertex &vtx = vertices->at(ipvmin);
+      if(std::abs(vtx.z() - 0.0462162) < 0.0000001)
+	{
+    	if(times->contains(pfcand.trackRef().id()))   cout<<"special vtx: "<<ipvmin<<"   vtx.z()= "<< vtx.z() <<"   track.zxy = "<< pfcand.vz()<<", "<<pfcand.vx()<<", "<< pfcand.vy()<<"  track.PtPxPyPz = "<< pfcand.pt()<<", "<<pfcand.px()<<", "<<pfcand.py()<<", "<<pfcand.pz()<<"  pfcand.charge()= "<<pfcand.charge()<<"  pfcand.particleId()="<<pfcand.particleId()<<std::endl;
+	}	
+	*/
+
     }
   //deltat cut between the track and the primary vertex: |deltat|<60ps
   //for pv: vtx.time()
   //for tracks: https://github.com/lgray/cmssw/blob/muon_iso_timing/TimingAnalysis/MuonIsoTiming/plugins/MuonIsoTiming.cc#L278
-  //
   
   bool passDeltaTcut = false;
 
   const reco::Vertex &vtx_ipvmin = vertices->at(ipvmin);
-  
-  //auto ref = pfcand.trackRef();
- 
-  //for( unsigned i = 0; i < tracks->size(); ++i ) {
-  //auto ref = tracks->refAt(i);
-   //std::cout<<"PFcand here......"<<std::endl;
-//    if(times->find(pfcand.trackRef())!=times->end())
-    if(times->contains(pfcand.trackRef().id()))
-     {
-     const float time = (*times)[pfcand.trackRef()];
-     const float timeReso = (*timeResos)[pfcand.trackRef()] != 0.f ? (*timeResos)[pfcand.trackRef()] : 0.170f;	
+   
+  const float time = (*times)[pfcand.trackRef()];
+  const float timeReso = (*timeResos)[pfcand.trackRef()] != 0.f ? (*timeResos)[pfcand.trackRef()] : 0.170f;	
      if(timeReso < 0.02)
 	{
 	   if(std::abs(time-vtx_ipvmin.t())<0.06)
@@ -1317,17 +1419,16 @@ bool RazorTuplizer::fillPVAll() {
 		passDeltaTcut = true;
 	   } 
 	}
-      }
-  //  }
-    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV && passDeltaTcut) {
+ if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV && passDeltaTcut) {
+        {
       pvAllSumPtSqD_dt[ipvmin] += pfcand.pt()*pfcand.pt();
       pvAllSumPtD_dt[ipvmin] += pfcand.pt();
       pvAllSumPxD_dt[ipvmin] += pfcand.px();
       pvAllSumPyD_dt[ipvmin] += pfcand.py();
       pvAllSumPzD_dt[ipvmin] += pfcand.pz();
       pvNtrack_dt[ipvmin] += 1;
+	}
     }
-    
  
   }
   
@@ -1346,16 +1447,33 @@ bool RazorTuplizer::fillPVAll() {
 
   }
   
-  
-  
   return true;
 }
 
 bool RazorTuplizer::fillPileUp(){
   for(const PileupSummaryInfo &pu : *puInfo){
+    
+    BunchXingIndex[nBunchXing] = nBunchXing;
     BunchXing[nBunchXing] = pu.getBunchCrossing();
     nPU[nBunchXing] = pu.getPU_NumInteractions();
     nPUmean[nBunchXing] = pu.getTrueNumInteractions();
+
+   // std::cout<<"nBunchXing: "<<nBunchXing<<"   BunchXing: "<<pu.getBunchCrossing()<<std::endl; 
+
+    for(unsigned int j=0; j<pu.getPU_zpositions().size(); j++) {
+        puZposition_.push_back((pu.getPU_zpositions())[j]);  
+//	cout<<"jPu:  "<<j<<"  getPU_zpositions():  "<< (pu.getPU_zpositions())[j]<<std::endl;
+   	}
+    for(unsigned int j=0; j<pu.getPU_ntrks_lowpT().size(); j++) {
+        ntrks_lowpt_.push_back((pu.getPU_ntrks_lowpT())[j]);  
+//	cout<<"jPu:  "<<j<<"  getPU_ntrks_lowpT():  "<< (pu.getPU_ntrks_lowpT())[j]<<std::endl;
+    }
+
+    for(unsigned int j=0; j<pu.getPU_ntrks_highpT().size(); j++) {
+        ntrks_highpt_.push_back((pu.getPU_ntrks_highpT())[j]);  
+//	cout<<"jPu:  "<<j<<"  getPU_ntrks_highpT():  "<< (pu.getPU_ntrks_highpT())[j]<<std::endl;
+    }
+
     nBunchXing++;
     //std::cout << "BC: " << pu.getBunchCrossing() << std::endl;
   }
@@ -2050,7 +2168,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
   
 
   for (int ipho = 0; ipho<nPhotons; ++ipho) {
-    for (int ipv = 0; ipv<nPVAll; ++ipv) {
+    for (int ipv = 0; ipv<MAX_NPV; ++ipv) {
       pho_vtxSumPxD[ipho][ipv] = 0.;
       pho_vtxSumPyD[ipho][ipv] = 0.;
 
