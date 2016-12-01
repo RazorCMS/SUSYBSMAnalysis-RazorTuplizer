@@ -336,6 +336,9 @@ void RazorTuplizer::enableEventInfoBranches(){
 }
 
 void RazorTuplizer::enablePVAllBranches() {
+  RazorEvents->Branch("beamSpotX", &beamSpotX,"beamSpotX/F");
+  RazorEvents->Branch("beamSpotY", &beamSpotY,"beamSpotY/F");
+  RazorEvents->Branch("beamSpotZ", &beamSpotZ,"beamSpotZ/F");
   RazorEvents->Branch("nPVAll", &nPVAll,"nPVAll/I");
   RazorEvents->Branch("pvAllX", pvAllX,"pvAllX[nPVAll]/F");
   RazorEvents->Branch("pvAllXError", pvAllXError,"pvAllXError[nPVAll]/F");
@@ -356,16 +359,16 @@ void RazorTuplizer::enablePVAllBranches() {
   RazorEvents->Branch("pvIndex", pvIndex,"pvIndex[nPVAll]/I");
   RazorEvents->Branch("allNtrack", &allNtrack,"allNtrack/I");
 
-  RazorEvents->Branch("allTrackX", "vector<float>", &allTrackX);
-  RazorEvents->Branch("allTrackY", "vector<float>", &allTrackY);
-  RazorEvents->Branch("allTrackZ", "vector<float>", &allTrackZ);
-  RazorEvents->Branch("allTrackParticleId", "vector<int>", &allTrackParticleId);
-  RazorEvents->Branch("allTrackQuality", "vector<int>", &allTrackQuality);
+
+  allTrackdZ = new std::vector<float>; allTrackdZ->clear();
+  allTrackdT = new std::vector<float>; allTrackdT->clear();
+  allTrackPt = new std::vector<float>; allTrackPt->clear();
+  allTrackPvIndex = new std::vector<int>; allTrackPvIndex->clear();
+
+  RazorEvents->Branch("allTrackPvIndex", "vector<int>", &allTrackPvIndex);
+  RazorEvents->Branch("allTrackdT", "vector<float>", &allTrackdT);
   RazorEvents->Branch("allTrackPt", "vector<float>", &allTrackPt);
-  RazorEvents->Branch("allTrackPtError", "vector<float>", &allTrackPtError);
-  RazorEvents->Branch("allTrackPx", "vector<float>", &allTrackPx);
-  RazorEvents->Branch("allTrackPy", "vector<float>", &allTrackPy);
-  RazorEvents->Branch("allTrackPz", "vector<float>", &allTrackPz);
+  RazorEvents->Branch("allTrackdZ", "vector<float>", &allTrackdZ);
 
   RazorEvents->Branch("pvAllLogSumPtSq_dt", pvAllLogSumPtSq_dt,"pvAllLogSumPtSq_dt[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPt_dt", pvAllSumPt_dt,"pvAllSumPt_dt[nPVAll]/F");
@@ -821,16 +824,10 @@ void RazorTuplizer::resetBranches(){
     ntrks_highpt_.clear();
 
 
-    allTrackX.clear();
-    allTrackY.clear();
-    allTrackZ.clear();
-    allTrackParticleId.clear();
-    allTrackQuality.clear();
-    allTrackPt.clear();
-    allTrackPtError.clear();
-    allTrackPx.clear();
-    allTrackPy.clear();
-    allTrackPz.clear();
+    allTrackPvIndex->clear();
+    allTrackdT->clear();
+    allTrackPt->clear();
+    allTrackdZ->clear();
 
 
     allNtrack = 0;
@@ -1358,18 +1355,6 @@ bool RazorTuplizer::fillPVAll() {
     if(!times->contains(pfcand.trackRef().id())) continue; 
     
      allNtrack += 1;
-/*
-    allTrackParticleId.push_back(pfcand.particleId());
-    allTrackX.push_back(pfcand.trackRef()->vx());
-    allTrackY.push_back(pfcand.trackRef()->vy());
-    allTrackZ.push_back(pfcand.trackRef()->vz());
-    allTrackPt.push_back(pfcand.trackRef()->pt());
-    allTrackPx.push_back(pfcand.trackRef()->px());
-    allTrackPy.push_back(pfcand.trackRef()->py());
-    allTrackPz.push_back(pfcand.trackRef()->pz());
-    allTrackPtError.push_back(pfcand.trackRef()->ptError());
-    allTrackQuality.push_back(int(pfcand.trackRef()->quality(TrackBase::highPurity)));
-*/
 
     double mindz = std::numeric_limits<double>::max();
     int ipvmin = -1;
@@ -1393,6 +1378,24 @@ bool RazorTuplizer::fillPVAll() {
 
       pvNtrack[ipvmin] += 1;
 
+    /*
+    allTrackParticleId.push_back(pfcand.particleId());
+    allTrackX.push_back(pfcand.trackRef()->vx());
+    allTrackY.push_back(pfcand.trackRef()->vy());
+    allTrackZ.push_back(pfcand.trackRef()->vz());
+    allTrackPt.push_back(pfcand.trackRef()->pt());
+    allTrackPx.push_back(pfcand.trackRef()->px());
+    allTrackPy.push_back(pfcand.trackRef()->py());
+    allTrackPz.push_back(pfcand.trackRef()->pz());
+    allTrackPtError.push_back(pfcand.trackRef()->ptError());
+    allTrackQuality.push_back(int(pfcand.trackRef()->quality(TrackBase::highPurity)));
+    */
+
+    const reco::Vertex &vtx = vertices->at(ipvmin);
+    allTrackdT->push_back((*times)[pfcand.trackRef()] - vtx.t());
+    allTrackPt->push_back(pfcand.trackRef()->pt());
+    allTrackdZ->push_back(mindz);
+    allTrackPvIndex->push_back(ipvmin);
 	/*
       const reco::Vertex &vtx = vertices->at(ipvmin);
       if(std::abs(vtx.z() - 0.0462162) < 0.0000001)
@@ -1616,7 +1619,14 @@ bool RazorTuplizer::fillElectrons(){
     } else {
       cout << "\n\nERROR!!! conversions not found!!!\n";
     }
-  
+ 
+    //save beamspot position
+    if( beamSpot.isValid())
+	{
+		beamSpotX = beamSpot->x0();
+		beamSpotY = beamSpot->y0();
+		beamSpotZ = beamSpot->z0();
+	} 
     // 1/E - 1/P
     if( ele.ecalEnergy() == 0 ){
       ele_OneOverEminusOneOverP[nElectrons] = 1e30;

@@ -329,6 +329,9 @@ protected:
 
   //PVAll (full list of primary vertices for analysis-level vtx selection)
   int nPVAll;
+  float beamSpotX;
+  float beamSpotY;
+  float beamSpotZ;
   float pvAllX[MAX_NPV];
   float pvAllXError[MAX_NPV];
   float pvAllY[MAX_NPV];
@@ -339,31 +342,12 @@ protected:
   float pvAllTError[MAX_NPV];
   float pvAllLogSumPtSq[MAX_NPV];
   float pvAllSumPt[MAX_NPV];
-/*
-  float allTrackPt[MAX_NTRACK];
-  float allTrackX[MAX_NTRACK];
-  float allTrackY[MAX_NTRACK];
-  float allTrackZ[MAX_NTRACK];
-*/
-/*
-  vector<float> pvTrackZ[MAX_NPV];
-  vector<float> pvTrackX[MAX_NPV];
-  vector<float> pvTrackY[MAX_NPV];
-  vector<float> pvTrackPt[MAX_NPV];
-  vector<float> pvTrackPx[MAX_NPV];
-  vector<float> pvTrackPy[MAX_NPV];
-  vector<float> pvTrackPz[MAX_NPV];
-*/
-  vector<float> allTrackX;
-  vector<float> allTrackY;
-  vector<float> allTrackZ;
-  vector<int> allTrackParticleId;
-  vector<int> allTrackQuality;
-  vector<float> allTrackPt;
-  vector<float> allTrackPtError;
-  vector<float> allTrackPx;
-  vector<float> allTrackPy;
-  vector<float> allTrackPz;
+  
+
+  vector<int> *allTrackPvIndex;
+  vector<float> *allTrackdZ;
+  vector<float> *allTrackdT;
+  vector<float> *allTrackPt;
 
   float pvAllSumPx[MAX_NPV];
   float pvAllSumPy[MAX_NPV];
