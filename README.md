@@ -7,9 +7,10 @@ Razor ntuplizer for running over LHC Run 2 miniAOD compatible with CMSSW_8_0_X
 Instructions for compiling in CMSSW
 -----------------------------------
 
-    cmsrel CMSSW_8_0_20
-    cd CMSSW_8_0_20/src
+    cmsrel CMSSW_8_0_24_patch1
+    cd CMSSW_8_0_24_patch1/src
     cmsenv
+    git cms-merge-topic rafaellopesdesa:Regression80XEgammaAnalysis
     git cms-merge-topic -u cms-met:fromCMSSW_8_0_20_postICHEPfilter
     git cms-merge-topic ikrav:egm_id_80X_v2
     git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
