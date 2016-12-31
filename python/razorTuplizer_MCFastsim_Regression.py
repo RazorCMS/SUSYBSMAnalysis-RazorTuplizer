@@ -32,7 +32,7 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 
 #------ Declare the correct global tag ------#
 
-process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_v3'
+process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_TrancheIV_v7'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -61,6 +61,9 @@ my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.mvaElectronID
 #add them to the VID producer
 for idmod in my_id_modules:
     setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+
+#------ EGM Regression Setup ------#
+process.load('EgammaAnalysis.ElectronTools.regressionApplication_cff')
 
 
 #------ Analyzer ------#
@@ -142,7 +145,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 )
 
 #run
-process.p = cms.Path( process.egmGsfElectronIDSequence *
+process.p = cms.Path( process.regressionApplication *
+                      process.egmGsfElectronIDSequence *
                       #process.HBHENoiseFilterResultProducer*
                       process.BadChargedCandidateFilter*
                       process.BadPFMuonFilter*
