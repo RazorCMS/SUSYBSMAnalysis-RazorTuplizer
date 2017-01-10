@@ -320,6 +320,7 @@ void RazorTuplizer::enableEventInfoBranches(){
   RazorEvents->Branch("isData", &isData, "isData/O");
   RazorEvents->Branch("nPV", &nPV, "nPV/I");
   RazorEvents->Branch("runNum", &runNum, "runNum/i");
+  RazorEvents->Branch("nSlimmedSecondV", &nSlimmedSecondV, "nSlimmedSecondV/i");
   RazorEvents->Branch("lumiNum", &lumiNum, "lumiNum/i");
   RazorEvents->Branch("eventNum", &eventNum, "eventNum/i");
   RazorEvents->Branch("pvX", &pvX, "pvX/F");
@@ -1092,6 +1093,7 @@ void RazorTuplizer::resetBranches(){
     eventNum = 0;
     lumiNum = 0;
     runNum = 0;
+    nSlimmedSecondV = 0;
     pvX = -99.0;
     pvY = -99.0;
     pvZ = -99.0;
@@ -1111,7 +1113,10 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   runNum = iEvent.id().run();
   lumiNum = iEvent.luminosityBlock();
   eventNum = iEvent.id().event();
-  
+ 
+  //number of slimmedSecondaryVertices
+  nSlimmedSecondV = secondaryVertices->size();
+
   //select the primary vertex, if any
   nPV = 0;
   myPV = &(vertices->front());

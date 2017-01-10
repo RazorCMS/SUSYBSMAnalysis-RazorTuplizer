@@ -648,6 +648,7 @@ protected:
   //event info
   bool isData;
   int nPV;
+  int nSlimmedSecondV;
   uint runNum;
   uint lumiNum;
   uint eventNum;
