@@ -513,6 +513,10 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_convTrkClusZ", pho_convTrkClusZ, "pho_convTrkClusZ[nPhotons]/F");
   RazorEvents->Branch("pho_vtxSumPx", &pho_vtxSumPx,Form("pho_vtxSumPx[nPhotons][%d]/F",MAX_NPV));
   RazorEvents->Branch("pho_vtxSumPy", &pho_vtxSumPy,Form("pho_vtxSumPy[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_seedRecHitSwitchToGain6", pho_seedRecHitSwitchToGain6, "pho_seedRecHitSwitchToGain6[nPhotons]/F");
+  RazorEvents->Branch("pho_seedRecHitSwitchToGain1", pho_seedRecHitSwitchToGain1, "pho_seedRecHitSwitchToGain1[nPhotons]/F");
+  RazorEvents->Branch("pho_anyRecHitSwitchToGain6", pho_anyRecHitSwitchToGain6, "pho_anyRecHitSwitchToGain6[nPhotons]/F");
+  RazorEvents->Branch("pho_anyRecHitSwitchToGain1", pho_anyRecHitSwitchToGain1, "pho_anyRecHitSwitchToGain1[nPhotons]/F");
 
 }
 
@@ -931,6 +935,11 @@ void RazorTuplizer::resetBranches(){
           pho_vtxSumPx[i][ipv] = 0.;
           pho_vtxSumPy[i][ipv] = 0.;
         }
+	pho_seedRecHitSwitchToGain6[i] = false;
+	pho_seedRecHitSwitchToGain1[i] = false;
+	pho_anyRecHitSwitchToGain6[i] = false;
+	pho_anyRecHitSwitchToGain1[i] = false;
+
 
         //Jet
         jetE[i] = 0.0;
@@ -1589,6 +1598,45 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_pfIsoModFrixione[nPhotons] = pho.getPflowIsolationVariables().modFrixione;
     pho_pfIsoSumPUPt[nPhotons] = pho.sumPUPt();
     
+
+    //gain switch flag
+    //cout << "photon " << pho.pt() << " " << pho.eta() << " " << pho.phi() << "\n";
+    const std::vector< std::pair<DetId, float>>& v_id =pho.seed()->hitsAndFractions();
+    float max = 0;
+    DetId id(0);
+    bool maxSwitchToGain6 = false;
+    bool maxSwitchToGain1 = false;
+    bool anySwitchToGain6 = false;
+    bool anySwitchToGain1 = false;
+    for ( size_t i = 0; i < v_id.size(); ++i ) {
+      EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
+      if (it != ebRecHits->end()) {
+	// cout << "rechit " << i << " : " << it->energy() << " "
+	//      << EcalRecHit::kHasSwitchToGain6 << " " << EcalRecHit::kHasSwitchToGain1 << " " 
+	//      << it->checkFlag(EcalRecHit::kHasSwitchToGain6) << " "
+	//      << it->checkFlag(EcalRecHit::kHasSwitchToGain1) 
+	//      << "\n";
+
+	float energy = it->energy() * v_id[i].second;
+	if (it->checkFlag(EcalRecHit::kHasSwitchToGain6)) anySwitchToGain6 = true;
+	if (it->checkFlag(EcalRecHit::kHasSwitchToGain1)) anySwitchToGain1 = true;
+	if ( energy > max ) {
+	  max = energy;
+	  id = v_id[i].first;
+	  maxSwitchToGain6 = it->checkFlag(EcalRecHit::kHasSwitchToGain6);
+	  maxSwitchToGain1 = it->checkFlag(EcalRecHit::kHasSwitchToGain1);
+	}
+      } else {
+	//cout << "rechit not found\n";
+      }           
+    }
+    pho_seedRecHitSwitchToGain6[nPhotons] = maxSwitchToGain6;
+    pho_seedRecHitSwitchToGain1[nPhotons] = maxSwitchToGain1;
+    pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;
+    pho_anyRecHitSwitchToGain1[nPhotons] = anySwitchToGain1;
+  
+
+
     //**********************************************************
     //Compute PF isolation
     //absolute uncorrected isolations with footprint removal
@@ -1677,7 +1725,6 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_sumNeutralHadronEt[nPhotons] = neutralHadronIsoSum;
     pho_sumPhotonEt[nPhotons] = photonIsoSum;
     
-
     //*****************************************************************
     //Compute Worst Isolation Looping over all vertices
     //*****************************************************************

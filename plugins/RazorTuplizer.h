@@ -56,6 +56,7 @@ using namespace std;
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaEleEstimatorCSA14.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/ElectronMVAEstimatorRun2NonTrig.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/RazorPDFWeightsHelper.h"
 
@@ -477,6 +478,10 @@ protected:
   float pho_convTrkClusZ[OBJECTARRAYSIZE];
   float pho_vtxSumPx[OBJECTARRAYSIZE][MAX_NPV];
   float pho_vtxSumPy[OBJECTARRAYSIZE][MAX_NPV];
+  bool  pho_seedRecHitSwitchToGain6[OBJECTARRAYSIZE];
+  bool  pho_seedRecHitSwitchToGain1[OBJECTARRAYSIZE];
+  bool  pho_anyRecHitSwitchToGain6[OBJECTARRAYSIZE];
+  bool  pho_anyRecHitSwitchToGain1[OBJECTARRAYSIZE];
 
   //AK4 Jets
   int nJets;
