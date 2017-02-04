@@ -2167,11 +2167,18 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
 	Flag_hcalLaserEventFilter = metFilterBits->accept(i);     
-      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badChargedCandidateFilter") == 0)
-	Flag_badChargedCandidateFilter = metFilterBits->accept(i);     
-      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badMuonFilter") == 0)
-	Flag_badMuonFilter = metFilterBits->accept(i);     
+      //else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badChargedCandidateFilter") == 0)
+      //Flag_badChargedCandidateFilter = metFilterBits->accept(i);     
+      //else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badMuonFilter") == 0)
+      //Flag_badMuonFilter = metFilterBits->accept(i);     
     } //loop over met filters
+
+    //use custom hbhefilter, because miniAOD filters are problematic.
+    //Flag_HBHENoiseFilter = *hbheNoiseFilter;
+    //Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
+    //Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
+    Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
+    Flag_badMuonFilter = *badMuonFilter;
 
     if (badGlobalMuonFilter->size()==0) Flag_badGlobalMuonFilter=1;
     else Flag_badGlobalMuonFilter=0;

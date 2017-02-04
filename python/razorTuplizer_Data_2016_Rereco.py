@@ -40,20 +40,15 @@ process.GlobalTag.globaltag = '80X_dataRun2_ICHEP16_repro_v0'
 #process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
 #process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
 
-#process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
-#process.BadChargedCandidateFilter.muons = cms.InputTag("slimmedMuons")
-#process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidates")
-#process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
+process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
+process.BadChargedCandidateFilter.muons = cms.InputTag("slimmedMuons")
+process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
 
-#process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
-#process.BadPFMuonFilter.muons = cms.InputTag("slimmedMuons")
-#process.BadPFMuonFilter.PFCandidates = cms.InputTag("packedPFCandidates")
-#process.BadPFMuonFilter.taggingMode = cms.bool(True)
-
-process.load("RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff")
-process.Flag_badMuons = cms.Path(process.badGlobalMuonTagger)
-process.Flag_duplicateMuons = cms.Path(process.cloneGlobalMuonTagger)
-process.Flag_noBadMuons = cms.Path(process.noBadGlobalMuons)
+process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
+process.BadPFMuonFilter.muons = cms.InputTag("slimmedMuons")
+process.BadPFMuonFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+process.BadPFMuonFilter.taggingMode = cms.bool(True)
 
 #------ Electron MVA Setup ------#
 # define which IDs we want to produce
@@ -146,13 +141,21 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
 #run
 process.egmIDPath = cms.Path(process.egmGsfElectronIDSequence)
+
+process.hipMetFiltersPath = cms.Path(process.BadChargedCandidateFilter *
+                                     process.BadPFMuonFilter)
+
+process.load("RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff")
+process.Flag_badMuons = cms.Path(process.badGlobalMuonTagger)
+process.Flag_duplicateMuons = cms.Path(process.cloneGlobalMuonTagger)
+
 process.ntupleStep = cms.Path(process.ntuples)
 
 #process.dump=cms.EDAnalyzer('EventContentAnalyzer')
 #process.whyy = cms.Path(process.dump)
 
 process.schedule = cms.Schedule( process.egmIDPath,
+                                 process.hipMetFiltersPath,
                                  process.Flag_badMuons,
                                  process.Flag_duplicateMuons,
-                                 process.Flag_noBadMuons,
                                  process.ntupleStep)
