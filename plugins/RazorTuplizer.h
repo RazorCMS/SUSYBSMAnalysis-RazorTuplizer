@@ -209,6 +209,8 @@ protected:
   edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
   edm::EDGetTokenT<bool> badChargedCandidateFilterToken_;
   edm::EDGetTokenT<bool> badMuonFilterToken_;
+  edm::EDGetTokenT<edm::PtrVector<reco::Muon>> badGlobalMuonFilterToken_;
+  edm::EDGetTokenT<edm::PtrVector<reco::Muon>> duplicateMuonFilterToken_;
   edm::InputTag lheRunInfoTag_;
   edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
@@ -272,6 +274,8 @@ protected:
   edm::Handle<bool> hbheIsoNoiseFilter;
   edm::Handle<bool> badChargedCandidateFilter;
   edm::Handle<bool> badMuonFilter;
+  edm::Handle<edm::PtrVector<reco::Muon>> badGlobalMuonFilter;
+  edm::Handle<edm::PtrVector<reco::Muon>> duplicateMuonFilter;
   edm::Handle<vector<reco::VertexCompositePtrCandidate> > secondaryVertices;
   edm::Handle<double> rhoAll;
   edm::Handle<double> rhoFastjetAll;
@@ -594,6 +598,8 @@ protected:
   bool Flag_HBHEIsoNoiseFilter;
   bool Flag_badChargedCandidateFilter;
   bool Flag_badMuonFilter;
+  bool Flag_badGlobalMuonFilter;
+  bool Flag_duplicateMuonFilter;
   bool Flag_CSCTightHaloFilter;
   bool Flag_hcalLaserEventFilter;
   bool Flag_EcalDeadCellTriggerPrimitiveFilter;
