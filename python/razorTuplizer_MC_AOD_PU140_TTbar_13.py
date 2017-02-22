@@ -11,26 +11,15 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-	#'/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/PU25ns_81X_upgrade2023_realistic_v3_2023D3Timing13TeVPU140r1-v1/10000/069E588E-4AA1-E611-AEF1-0025905B856E.root'
-	#'/store/relval/CMSSW_8_1_0_pre15/RelValH125GGgluonfusion_13/GEN-SIM-RECO/81X_upgrade2023_realistic_v3_2023D3Timing13TeV-v1/10000/10435CE1-6F99-E611-AC23-0CC47A7C3408.root'
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_1.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_2.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_3.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_4.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_5.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_6.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_7.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_8.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_9.root',
-	'/store/group/upgrade/timing/hggvtx/hgg125pu140nooot_3/hgg125pu140nooot_10.root'
-   )
+	'/store/relval/CMSSW_8_1_0_pre15/RelValTTbar_13/GEN-SIM-RECO/PU25ns_81X_upgrade2023_realistic_v3_2023D3Timing13TeVPU140r1-v1/10000/06276F04-2BA1-E611-B91E-0CC47A7C345E.root'
+  )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
 process.TFileService = cms.Service("TFileService", 
-    fileName = cms.string("razorNtuple.root"),
+    fileName = cms.string("razorNtuple_PU140_Timing.root"),
     closeFileFast = cms.untracked.bool(True)
 )
 
@@ -69,7 +58,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     isData = cms.bool(False),    
     useGen = cms.bool(True),
     isFastsim = cms.bool(False),
-    enableTriggerInfo = cms.bool(False),                                 
+    enableTriggerInfo = cms.bool(True),                                 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
     eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
     muonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorMuonHLTFilterNames.dat"),
@@ -98,8 +87,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     #prunedGenParticles = cms.InputTag("prunedGenParticles"),
     genJets = cms.InputTag("ak4GenJets"),
 
-    #triggerBits = cms.InputTag("TriggerResults","","HLT"),
-    triggerBits = cms.InputTag("TriggerResults","","RECO"),
+    triggerBits = cms.InputTag("TriggerResults","","HLT"),
     hepMC = cms.InputTag("generatorSmeared", "", "SIM"),
     
     #triggerPrescales = cms.InputTag("patTrigger"),
@@ -122,7 +110,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     trackTime = cms.InputTag("trackTimeValueMapProducer","generalTracksConfigurableFlatResolutionModel"),
     trackTimeReso = cms.InputTag("trackTimeValueMapProducer","generalTracksConfigurableFlatResolutionModelResolution"),
 
-    puInfo = cms.InputTag("addPileupInfo", "", "RECO"), #uncomment if no pre-mixing
+    puInfo = cms.InputTag("slimmedAddPileupInfo", "", "RECO"), #uncomment if no pre-mixing
     #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
     #hcalNoiseInfo = cms.InputTag("hcalnoise", "", "RECO"),
 

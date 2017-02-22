@@ -362,11 +362,13 @@ void RazorTuplizer::enablePVAllBranches() {
 
   allTrackdZ = new std::vector<float>; allTrackdZ->clear();
   allTrackdT = new std::vector<float>; allTrackdT->clear();
+  allTrackT = new std::vector<float>; allTrackT->clear();
   allTrackPt = new std::vector<float>; allTrackPt->clear();
   allTrackPvIndex = new std::vector<int>; allTrackPvIndex->clear();
 
   RazorEvents->Branch("allTrackPvIndex", "vector<int>", &allTrackPvIndex);
   RazorEvents->Branch("allTrackdT", "vector<float>", &allTrackdT);
+  RazorEvents->Branch("allTrackT", "vector<float>", &allTrackT);
   RazorEvents->Branch("allTrackPt", "vector<float>", &allTrackPt);
   RazorEvents->Branch("allTrackdZ", "vector<float>", &allTrackdZ);
 
@@ -551,6 +553,8 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_superClusterSeedY", pho_superClusterSeedY, "pho_superClusterSeedY[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterSeedZ", pho_superClusterSeedZ, "pho_superClusterSeedZ[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterSeedT", pho_superClusterSeedT, "pho_superClusterSeedT[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterSeedE", pho_superClusterSeedE, "pho_superClusterSeedE[nPhotons]/F");
+  RazorEvents->Branch("pho_pfClusterSeedE", pho_pfClusterSeedE, "pho_pfClusterSeedE[nPhotons]/F");
   
 //  RazorEvents->Branch("pho_superClusterSeedXError", pho_superClusterSeedXError, "pho_superClusterSeedXError[nPhotons]/F");
 //  RazorEvents->Branch("pho_superClusterSeedYError", pho_superClusterSeedYError, "pho_superClusterSeedYError[nPhotons]/F");
@@ -826,6 +830,7 @@ void RazorTuplizer::resetBranches(){
 
     allTrackPvIndex->clear();
     allTrackdT->clear();
+    allTrackT->clear();
     allTrackPt->clear();
     allTrackdZ->clear();
 
@@ -1023,6 +1028,8 @@ void RazorTuplizer::resetBranches(){
 	pho_superClusterSeedY[i]      = -99.0;
 	pho_superClusterSeedZ[i]      = -99.0;
 	pho_superClusterSeedT[i]      = -99.0;
+	pho_superClusterSeedE[i]      = -99.0;
+	pho_pfClusterSeedE[i]      = -99.0;
 	pho_superClusterSeedXError[i]      = -99.0;
 	pho_superClusterSeedYError[i]      = -99.0;
 	pho_superClusterSeedZError[i]      = -99.0;
@@ -1393,6 +1400,7 @@ bool RazorTuplizer::fillPVAll() {
 
     const reco::Vertex &vtx = vertices->at(ipvmin);
     allTrackdT->push_back((*times)[pfcand.trackRef()] - vtx.t());
+    allTrackT->push_back((*times)[pfcand.trackRef()]);
     allTrackPt->push_back(pfcand.trackRef()->pt());
     allTrackdZ->push_back(mindz);
     allTrackPvIndex->push_back(ipvmin);
@@ -2060,13 +2068,18 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_superClusterSeedX[nPhotons]      = pho.superCluster()->seed()->x();
     pho_superClusterSeedY[nPhotons]      = pho.superCluster()->seed()->y();
     pho_superClusterSeedZ[nPhotons]      = pho.superCluster()->seed()->z();
-  
+ 
+    pho_superClusterSeedE[nPhotons]      = pho.superCluster()->seed()->energy();
+
     for (const reco::PFCluster &pfcluster : *pfClusters) {
 	if(pfcluster.seed() == pho.superCluster()->seed()->seed())
 	{
 	pho_superClusterSeedT[nPhotons] = pfcluster.time();
+        pho_pfClusterSeedE[nPhotons]      = pfcluster.energy();
+	//std::cout<<"find seed cluster for photon #"<<nPhotons<<std::endl;
 	}
     } 
+	//std::cout<<"finished searching for seed cluster for photon #"<<nPhotons<<std::endl;
 
     //Detector DetId_this = pho.superCluster()->seed()->seed();
  

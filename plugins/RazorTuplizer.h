@@ -347,6 +347,7 @@ protected:
   vector<int> *allTrackPvIndex;
   vector<float> *allTrackdZ;
   vector<float> *allTrackdT;
+  vector<float> *allTrackT;
   vector<float> *allTrackPt;
 
   float pvAllSumPx[MAX_NPV];
@@ -532,6 +533,8 @@ protected:
   float pho_superClusterSeedY[OBJECTARRAYSIZE];
   float pho_superClusterSeedZ[OBJECTARRAYSIZE];
   float pho_superClusterSeedT[OBJECTARRAYSIZE];
+  float pho_superClusterSeedE[OBJECTARRAYSIZE];
+  float pho_pfClusterSeedE[OBJECTARRAYSIZE];
   float pho_superClusterSeedXError[OBJECTARRAYSIZE];
   float pho_superClusterSeedYError[OBJECTARRAYSIZE];
   float pho_superClusterSeedZError[OBJECTARRAYSIZE];
