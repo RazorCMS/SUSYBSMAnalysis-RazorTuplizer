@@ -7,8 +7,8 @@ Razor ntuplizer for running over LHC Run 2 miniAOD compatible with CMSSW_8_0_X
 Instructions for compiling in CMSSW
 -----------------------------------
 
-    cmsrel CMSSW_8_0_25
-    cd CMSSW_8_0_25/src
+    cmsrel CMSSW_8_0_26_patch1
+    cd CMSSW_8_0_26_patch1/src
     cmsenv
     git cms-merge-topic cms-met:METRecipe_80X_part2 -u
     git cms-merge-topic rafaellopesdesa:Regression80XEgammaAnalysis_v2
