@@ -34,6 +34,10 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   triggerObjectsToken_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("triggerObjects"))),
   triggerPrescalesToken_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("triggerPrescales"))),     
   metToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("mets"))),
+  metEGCleanToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsEGClean"))),
+  metMuEGCleanToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsMuEGClean"))),
+  metMuEGCleanCorrToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsMuEGCleanCorr"))),
+  metUncorrectedToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsUncorrected"))),
   metNoHFToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsNoHF"))),
   metPuppiToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsPuppi"))),
   metFilterBitsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("metFilterBits"))),
@@ -580,6 +584,14 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metType1Phi", &metType1Phi, "metType1Phi/F");
   RazorEvents->Branch("metType0Plus1Pt", &metType0Plus1Pt, "metType0Plus1Pt/F");
   RazorEvents->Branch("metType0Plus1Phi", &metType0Plus1Phi, "metType0Plus1Phi/F");
+  RazorEvents->Branch("metEGCleanPt", &metEGCleanPt, "metEGCleanPt/F");
+  RazorEvents->Branch("metEGCleanPhi", &metEGCleanPhi, "metEGCleanPhi/F");
+  RazorEvents->Branch("metMuEGCleanPt", &metMuEGCleanPt, "metMuEGCleanPt/F");
+  RazorEvents->Branch("metMuEGCleanPhi", &metMuEGCleanPhi, "metMuEGCleanPhi/F");
+  RazorEvents->Branch("metMuEGCleanCorrPt", &metMuEGCleanCorrPt, "metMuEGCleanCorrPt/F");
+  RazorEvents->Branch("metMuEGCleanCorrPhi", &metMuEGCleanCorrPhi, "metMuEGCleanCorrPhi/F");
+  RazorEvents->Branch("metUncorrectedPt", &metUncorrectedPt, "metUncorrectedPt/F");
+  RazorEvents->Branch("metUncorrectedPhi", &metUncorrectedPhi, "metUncorrectedPhi/F");
   RazorEvents->Branch("metNoHFPt", &metNoHFPt, "metNoHFPt/F");
   RazorEvents->Branch("metNoHFPhi", &metNoHFPhi, "metNoHFPhi/F");
   RazorEvents->Branch("metPuppiPt", &metPuppiPt, "metPuppiPt/F");
@@ -706,6 +718,10 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
+  iEvent.getByToken(metEGCleanToken_, metsEGClean);
+  iEvent.getByToken(metMuEGCleanToken_, metsMuEGClean);
+  iEvent.getByToken(metMuEGCleanCorrToken_, metsMuEGCleanCorr);
+  iEvent.getByToken(metUncorrectedToken_, metsUncorrected);
   //iEvent.getByToken(metNoHFToken_, metsNoHF);
   iEvent.getByToken(metPuppiToken_, metsPuppi);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
@@ -2064,6 +2080,10 @@ bool RazorTuplizer::fillJetsAK8(){
 
 bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   const pat::MET &Met = mets->front();
+  const pat::MET &MetEGClean = metsEGClean->front();
+  const pat::MET &MetMuEGClean = metsMuEGClean->front();
+  const pat::MET &MetMuEGCleanCorr = metsMuEGCleanCorr->front();
+  const pat::MET &MetUncorrected = metsUncorrected->front();
   
   metPt = Met.uncorPt();
   metPhi = Met.uncorPhi();
@@ -2076,6 +2096,15 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metType0Plus1Phi = 0;
   metCaloPt = Met.caloMETPt();
   metCaloPhi = Met.caloMETPhi();
+
+  metEGCleanPt = MetEGClean.pt();
+  metEGCleanPhi = MetEGClean.phi();
+  metMuEGCleanPt = MetMuEGClean.pt();
+  metMuEGCleanPhi = MetMuEGClean.phi();
+  metMuEGCleanCorrPt = MetMuEGCleanCorr.pt();
+  metMuEGCleanCorrPhi = MetMuEGCleanCorr.phi();
+  metUncorrectedPt = MetUncorrected.pt();
+  metUncorrectedPhi = MetUncorrected.phi();
 
   if(!isData_)
     {
@@ -2167,24 +2196,21 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
 	Flag_hcalLaserEventFilter = metFilterBits->accept(i);     
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badMuons") == 0) {
+	Flag_badGlobalMuonFilter = metFilterBits->accept(i);     
+	cout << "found bad muon flag : " << "\n";
+      }
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_duplicateMuons") == 0)
+	Flag_duplicateMuonFilter = metFilterBits->accept(i);     
       //else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badChargedCandidateFilter") == 0)
       //Flag_badChargedCandidateFilter = metFilterBits->accept(i);     
       //else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badMuonFilter") == 0)
       //Flag_badMuonFilter = metFilterBits->accept(i);     
     } //loop over met filters
 
-    //use custom hbhefilter, because miniAOD filters are problematic.
-    //Flag_HBHENoiseFilter = *hbheNoiseFilter;
-    //Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
-    //Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
     Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
     Flag_badMuonFilter = *badMuonFilter;
 
-    if (badGlobalMuonFilter->size()==0) Flag_badGlobalMuonFilter=1;
-    else Flag_badGlobalMuonFilter=0;
-
-    if (duplicateMuonFilter->size()==0) Flag_duplicateMuonFilter=1;
-    else Flag_duplicateMuonFilter=0;
     
   }
 

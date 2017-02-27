@@ -201,6 +201,10 @@ protected:
   edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjectsToken_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<pat::METCollection> metToken_;
+  edm::EDGetTokenT<pat::METCollection> metEGCleanToken_;
+  edm::EDGetTokenT<pat::METCollection> metMuEGCleanToken_;
+  edm::EDGetTokenT<pat::METCollection> metMuEGCleanCorrToken_;
+  edm::EDGetTokenT<pat::METCollection> metUncorrectedToken_;
   edm::EDGetTokenT<pat::METCollection> metNoHFToken_;
   edm::EDGetTokenT<pat::METCollection> metPuppiToken_;
   edm::EDGetTokenT<edm::TriggerResults> metFilterBitsToken_;
@@ -259,6 +263,10 @@ protected:
   edm::Handle<pat::JetCollection> jetsPuppi;
   edm::Handle<pat::JetCollection> jetsAK8;
   edm::Handle<pat::METCollection> mets;
+  edm::Handle<pat::METCollection> metsEGClean;
+  edm::Handle<pat::METCollection> metsMuEGClean;
+  edm::Handle<pat::METCollection> metsMuEGCleanCorr;
+  edm::Handle<pat::METCollection> metsUncorrected;
   edm::Handle<pat::METCollection> metsNoHF;
   edm::Handle<pat::METCollection> metsPuppi;
   edm::Handle<edm::View<reco::GenParticle> > prunedGenParticles;
@@ -539,6 +547,15 @@ protected:
   float UncMETdpx;
   float UncMETdpy;
   float UncMETdSumEt;
+
+  float metEGCleanPt;
+  float metEGCleanPhi;
+  float metMuEGCleanPt;
+  float metMuEGCleanPhi;
+  float metMuEGCleanCorrPt;
+  float metMuEGCleanCorrPhi;
+  float metUncorrectedPt;
+  float metUncorrectedPhi;
   float metType0Pt;
   float metType0Phi;
   float metType1Pt;

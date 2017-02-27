@@ -10,8 +10,7 @@ Instructions for compiling in CMSSW
     cmsrel CMSSW_8_0_25
     cd CMSSW_8_0_25/src
     cmsenv
-    git cms-merge-topic gpetruc:badMuonFilters_80X
-    git cms-merge-topic -u cms-met:fromCMSSW_8_0_20_postICHEPfilter
+    git cms-merge-topic cms-met:METRecipe_80X_part2 -u
     git cms-merge-topic rafaellopesdesa:Regression80XEgammaAnalysis_v2
     git cms-merge-topic ikrav:egm_id_80X_v2
     git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
