@@ -316,6 +316,7 @@ protected:
 //  edm::Handle<vector<reco::SuperCluster> > superClusters;
 //  edm::Handle<vector<reco::PFCandidate> > lostTracks;
   const reco::Vertex *myPV;
+  const reco::Vertex *myPV_GenMatch;
 
   //output tree
   TTree *RazorEvents;
@@ -332,6 +333,7 @@ protected:
   float beamSpotX;
   float beamSpotY;
   float beamSpotZ;
+  float beamSpotSigmaZ;
   float pvAllX[MAX_NPV];
   float pvAllXError[MAX_NPV];
   float pvAllY[MAX_NPV];
@@ -508,6 +510,15 @@ protected:
   float pho_HoverE[OBJECTARRAYSIZE];
   float pho_sumChargedHadronPtAllVertices[OBJECTARRAYSIZE][MAX_NPV];
   float pho_sumChargedHadronPt[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_NoTiming[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing50_TrkVtx[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing80_TrkVtx[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing100_TrkVtx[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing120_TrkVtx[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing50_TrkPho[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing80_TrkPho[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing100_TrkPho[OBJECTARRAYSIZE];
+  float pho_sumChargedHadronPt_NewPV_Timing120_TrkPho[OBJECTARRAYSIZE];
   float pho_sumNeutralHadronEt[OBJECTARRAYSIZE];
   float pho_sumPhotonEt[OBJECTARRAYSIZE];
   float pho_sumWorstVertexChargedHadronPt[OBJECTARRAYSIZE];
@@ -733,6 +744,9 @@ protected:
   float pvX;
   float pvY;
   float pvZ;
+  float pvX_New;
+  float pvY_New;
+  float pvZ_New;
   float fixedGridRhoAll;
   float fixedGridRhoFastjetAll;
   float fixedGridRhoFastjetAllCalo;

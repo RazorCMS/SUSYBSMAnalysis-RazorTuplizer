@@ -327,6 +327,9 @@ void RazorTuplizer::enableEventInfoBranches(){
   RazorEvents->Branch("pvX", &pvX, "pvX/F");
   RazorEvents->Branch("pvY", &pvY, "pvY/F");
   RazorEvents->Branch("pvZ", &pvZ, "pvZ/F");
+  RazorEvents->Branch("pvX_New", &pvX_New, "pvX_New/F");
+  RazorEvents->Branch("pvY_New", &pvY_New, "pvY_New/F");
+  RazorEvents->Branch("pvZ_New", &pvZ_New, "pvZ_New/F");
   RazorEvents->Branch("fixedGridRhoAll", &fixedGridRhoAll, "fixedGridRhoAll/F");
   RazorEvents->Branch("fixedGridRhoFastjetAll", &fixedGridRhoFastjetAll, "fixedGridRhoFastjetAll/F");
   RazorEvents->Branch("fixedGridRhoFastjetAllCalo", &fixedGridRhoFastjetAllCalo, "fixedGridRhoFastjetAllCalo/F");
@@ -339,6 +342,7 @@ void RazorTuplizer::enablePVAllBranches() {
   RazorEvents->Branch("beamSpotX", &beamSpotX,"beamSpotX/F");
   RazorEvents->Branch("beamSpotY", &beamSpotY,"beamSpotY/F");
   RazorEvents->Branch("beamSpotZ", &beamSpotZ,"beamSpotZ/F");
+  RazorEvents->Branch("beamSpotSigmaZ", &beamSpotSigmaZ,"beamSpotSigmaZ/F");
   RazorEvents->Branch("nPVAll", &nPVAll,"nPVAll/I");
   RazorEvents->Branch("pvAllX", pvAllX,"pvAllX[nPVAll]/F");
   RazorEvents->Branch("pvAllXError", pvAllXError,"pvAllXError[nPVAll]/F");
@@ -527,6 +531,16 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
   RazorEvents->Branch("pho_sumChargedHadronPtAllVertices", &pho_sumChargedHadronPtAllVertices,Form("pho_sumChargedHadronPtAllVertices[nPhotons][%d]/F",MAX_NPV));
   RazorEvents->Branch("pho_sumChargedHadronPt", &pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_NoTiming", &pho_sumChargedHadronPt_NewPV_NoTiming, "pho_sumChargedHadronPt_NewPV_NoTiming[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing50_TrkVtx", &pho_sumChargedHadronPt_NewPV_Timing50_TrkVtx, "pho_sumChargedHadronPt_NewPV_Timing50_TrkVtx[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing80_TrkVtx", &pho_sumChargedHadronPt_NewPV_Timing80_TrkVtx, "pho_sumChargedHadronPt_NewPV_Timing80_TrkVtx[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing100_TrkVtx", &pho_sumChargedHadronPt_NewPV_Timing100_TrkVtx, "pho_sumChargedHadronPt_NewPV_Timing100_TrkVtx[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing120_TrkVtx", &pho_sumChargedHadronPt_NewPV_Timing120_TrkVtx, "pho_sumChargedHadronPt_NewPV_Timing120_TrkVtx[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing50_TrkPho", &pho_sumChargedHadronPt_NewPV_Timing50_TrkPho, "pho_sumChargedHadronPt_NewPV_Timing50_TrkPho[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing80_TrkPho", &pho_sumChargedHadronPt_NewPV_Timing80_TrkPho, "pho_sumChargedHadronPt_NewPV_Timing80_TrkPho[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing100_TrkPho", &pho_sumChargedHadronPt_NewPV_Timing100_TrkPho, "pho_sumChargedHadronPt_NewPV_Timing100_TrkPho[nPhotons]/F");
+  RazorEvents->Branch("pho_sumChargedHadronPt_NewPV_Timing120_TrkPho", &pho_sumChargedHadronPt_NewPV_Timing120_TrkPho, "pho_sumChargedHadronPt_NewPV_Timing120_TrkPho[nPhotons]/F");
+
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumWorstVertexChargedHadronPt", pho_sumWorstVertexChargedHadronPt, "pho_sumWorstVertexChargedHadronPt[nPhotons]/F");
@@ -1003,6 +1017,16 @@ void RazorTuplizer::resetBranches(){
         phoR9[i] = -99.0;
         pho_HoverE[i] = -99.0;
 	pho_sumChargedHadronPt[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_NoTiming[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing50_TrkVtx[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing80_TrkVtx[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing100_TrkVtx[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing120_TrkVtx[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing50_TrkPho[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing80_TrkPho[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing100_TrkPho[i] = -99.0;
+	pho_sumChargedHadronPt_NewPV_Timing120_TrkPho[i] = -99.0;
+
 	pho_sumNeutralHadronEt[i] = -99.0;
         pho_sumPhotonEt[i] = -99.0;
 	pho_sumWorstVertexChargedHadronPt[i] = -99.0;
@@ -1221,6 +1245,9 @@ void RazorTuplizer::resetBranches(){
     pvX = -99.0;
     pvY = -99.0;
     pvZ = -99.0;
+    pvX_New = -99.0;
+    pvY_New = -99.0;
+    pvZ_New = -99.0;
     fixedGridRhoAll = -99.0;
     fixedGridRhoFastjetAll = -99.0;
     fixedGridRhoFastjetAllCalo = -99.0;
@@ -1241,20 +1268,35 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   //select the primary vertex, if any
   nPV = 0;
   myPV = &(vertices->front());
+
   bool foundPV = false;
+  double min_dz = 9999.99;
+  unsigned int ipv_min_dz = 0;
   for(unsigned int i = 0; i < vertices->size(); i++){
     if(vertices->at(i).isValid() && !vertices->at(i).isFake()){
       if (!foundPV) {
 	myPV = &(vertices->at(i));
 	foundPV = true;
       }
+      if(abs(vertices->at(i).z() - genVertexZ) < min_dz)
+	{
+		min_dz = abs(vertices->at(i).z() - genVertexZ);
+		ipv_min_dz = i;
+	} 
       nPV++;
     }
   }
-  
+ 
+  myPV_GenMatch = &(vertices->at(ipv_min_dz)); 
+
   pvX = myPV->x();
   pvY = myPV->y();
   pvZ = myPV->z();
+
+  pvX_New = myPV_GenMatch->x();
+  pvY_New = myPV_GenMatch->y();
+  pvZ_New = myPV_GenMatch->z();
+
 
   //get rho
   fixedGridRhoAll = *rhoAll;
@@ -1634,6 +1676,7 @@ bool RazorTuplizer::fillElectrons(){
 		beamSpotX = beamSpot->x0();
 		beamSpotY = beamSpot->y0();
 		beamSpotZ = beamSpot->z0();
+		beamSpotSigmaZ = beamSpot->sigmaZ();
 	} 
     // 1/E - 1/P
     if( ele.ecalEnergy() == 0 ){
@@ -1883,7 +1926,37 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_pfIsoPhotonIso[nPhotons] = pho.photonIso();
     pho_pfIsoModFrixione[nPhotons] = pho.getPflowIsolationVariables().modFrixione;
     pho_pfIsoSumPUPt[nPhotons] = pho.sumPUPt();
-    
+   
+    //-----------------------
+    // super cluster position and time
+    //-----------------------  
+    pho_superClusterEnergy[nPhotons] = pho.superCluster()->energy();
+    pho_superClusterRawEnergy[nPhotons] = pho.superCluster()->rawEnergy();
+    pho_superClusterEta[nPhotons]    = pho.superCluster()->eta();
+    pho_superClusterPhi[nPhotons]    = pho.superCluster()->phi();
+    pho_superClusterX[nPhotons]      = pho.superCluster()->x();
+    pho_superClusterY[nPhotons]      = pho.superCluster()->y();
+    pho_superClusterZ[nPhotons]      = pho.superCluster()->z();
+    pho_hasPixelSeed[nPhotons]       = pho.hasPixelSeed();
+
+    pho_superClusterSeedX[nPhotons]      = pho.superCluster()->seed()->x();
+    pho_superClusterSeedY[nPhotons]      = pho.superCluster()->seed()->y();
+    pho_superClusterSeedZ[nPhotons]      = pho.superCluster()->seed()->z();
+ 
+    pho_superClusterSeedE[nPhotons]      = pho.superCluster()->seed()->energy();
+
+    for (const reco::PFCluster &pfcluster : *pfClusters) {
+	if(pfcluster.seed() == pho.superCluster()->seed()->seed())
+	{
+	pho_superClusterSeedT[nPhotons] = pfcluster.time();
+        pho_pfClusterSeedE[nPhotons]      = pfcluster.energy();
+	//std::cout<<"find seed cluster for photon #"<<nPhotons<<std::endl;
+	}
+    } 
+	//std::cout<<"finished searching for seed cluster for photon #"<<nPhotons<<std::endl;
+
+
+ 
     //**********************************************************
     //Compute PF isolation
     //absolute uncorrected isolations with footprint removal
@@ -1894,6 +1967,16 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     float chargedIsoSumAllVertices[MAX_NPV];
     for (int q=0;q<MAX_NPV;++q) chargedIsoSumAllVertices[q] = 0.0;
     float chargedIsoSum = 0;
+    float chargedIsoSum_NewPV_NoTiming = 0;
+    float chargedIsoSum_NewPV_Timing50_TrkVtx = 0;
+    float chargedIsoSum_NewPV_Timing80_TrkVtx = 0;
+    float chargedIsoSum_NewPV_Timing100_TrkVtx = 0;
+    float chargedIsoSum_NewPV_Timing120_TrkVtx = 0;
+    float chargedIsoSum_NewPV_Timing50_TrkPho = 0;
+    float chargedIsoSum_NewPV_Timing80_TrkPho = 0;
+    float chargedIsoSum_NewPV_Timing100_TrkPho = 0;
+    float chargedIsoSum_NewPV_Timing120_TrkPho = 0;
+
     float neutralHadronIsoSum = 0;
     float photonIsoSum = 0;
 
@@ -1901,7 +1984,12 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     math::XYZVector photon_directionWrtVtx(pho.superCluster()->x() - myPV->x(),
 					   pho.superCluster()->y() - myPV->y(),
 					   pho.superCluster()->z() - myPV->z());
-    // Loop over all PF candidates
+
+    math::XYZVector photon_directionWrtVtx_GenMatch(pho.superCluster()->x() - myPV_GenMatch->x(),
+					   pho.superCluster()->y() - myPV_GenMatch->y(),
+					   pho.superCluster()->z() - myPV_GenMatch->z());
+
+    // old PV, Loop over all PF candidates
     for (const reco::PFCandidate &candidate : *pfCands) {
 
      // Check if this candidate is within the isolation cone
@@ -1965,11 +2053,128 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	photonIsoSum += candidate.pt();
     }
 
+
+
+    // new PV, Loop over all PF candidates
+    for (const reco::PFCandidate &candidate : *pfCands) {
+
+     // Check if this candidate is within the isolation cone
+      float dR=deltaR(photon_directionWrtVtx_GenMatch.Eta(),photon_directionWrtVtx_GenMatch.Phi(),
+		      candidate.eta(), candidate.phi());
+      if( dR > coneSizeDR ) continue;
+
+      // Check if this candidate is not in the footprint
+      /*
+      bool inFootprint = false;      
+      for (auto itr : pho.associatedPackedPFCandidates()) {	
+	if ( &(*itr) == &candidate) {
+	  inFootprint = true;
+	}
+      }     
+      if( inFootprint ) continue;
+
+	*/
+      // Find candidate type
+      reco::PFCandidate::ParticleType thisCandidateType = reco::PFCandidate::X;
+
+      // the neutral hadrons and charged hadrons can be of pdgId types
+      // only 130 (K0L) and +-211 (pi+-) in packed candidates
+      const int pdgId = candidate.pdgId();
+      if( pdgId == 22 )
+	thisCandidateType = reco::PFCandidate::gamma;
+      else if( abs(pdgId) == 130) // PDG ID for K0L
+	thisCandidateType = reco::PFCandidate::h0;
+      else if( abs(pdgId) == 211) // PDG ID for pi+-
+	thisCandidateType = reco::PFCandidate::h;
+      
+
+      // Increment the appropriate isolation sum
+      if( thisCandidateType == reco::PFCandidate::h ){
+	// for charged hadrons, additionally check consistency
+	// with the PV
+	float dxy = -999, dz = -999;
+
+	//For the primary vertex
+	dz = candidate.trackRef()->dz(myPV_GenMatch->position());
+	dxy =candidate.trackRef()->dxy(myPV_GenMatch->position());
+ 	float dt_TrkVtx = (*times)[candidate.trackRef()] - myPV_GenMatch->t();
+	
+	//photon time is the time extrapolated to (0,0,0)
+	float CmToNs = 0.1/2.99792458;
+	float globalOffset = 0.0111;//global offset of 0.0111 ns
+	
+
+	float pho_000_mag = sqrt(pow(pho_superClusterSeedX[nPhotons],2.0)+pow(pho_superClusterSeedY[nPhotons],2.0)+pow(pho_superClusterSeedZ[nPhotons],2.0));
+	
+	float photrk_mag = sqrt(pow(pho_superClusterSeedX[nPhotons] - candidate.trackRef()->vx(),2.0) + pow(pho_superClusterSeedY[nPhotons] - candidate.trackRef()->vy(),2.0) + pow(pho_superClusterSeedZ[nPhotons] - candidate.trackRef()->vz(),2.0) );
+
+	TRandom3 randomPhotonTime(1111);
+	
+	float phoTime_m = randomPhotonTime.Gaus(pho_superClusterSeedT[nPhotons] + CmToNs*pho_000_mag - globalOffset, 0.03);
+
+	float phoTime_track = (*times)[candidate.trackRef()] + CmToNs*photrk_mag;
+	
+ 	float dt_TrkPho = phoTime_track - phoTime_m;
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax) {
+	  chargedIsoSum_NewPV_NoTiming += candidate.pt();
+	}
+	
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkVtx)<0.05 ) {
+	  chargedIsoSum_NewPV_Timing50_TrkVtx += candidate.pt();
+	}
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkVtx)<0.08 ) {
+	  chargedIsoSum_NewPV_Timing80_TrkVtx += candidate.pt();
+	}
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkVtx)<0.10 ) {
+	  chargedIsoSum_NewPV_Timing100_TrkVtx += candidate.pt();
+	}
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkVtx)<0.12 ) {
+	  chargedIsoSum_NewPV_Timing120_TrkVtx += candidate.pt();
+	}
+
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkPho)<0.05 ) {
+	  chargedIsoSum_NewPV_Timing50_TrkPho += candidate.pt();
+	}
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkPho)<0.08 ) {
+	  chargedIsoSum_NewPV_Timing80_TrkPho += candidate.pt();
+	}
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkPho)<0.10 ) {
+	  chargedIsoSum_NewPV_Timing100_TrkPho += candidate.pt();
+	}
+
+	if (fabs(dz) <= dzMax && fabs(dxy) <= dxyMax && fabs(dt_TrkPho)<0.12 ) {
+	  chargedIsoSum_NewPV_Timing120_TrkPho += candidate.pt();
+	}
+
+      }
+    }
+
+
     //fill the proper variables
     for(int q = 0; q < nPVAll; q++) {
       pho_sumChargedHadronPtAllVertices[nPhotons][q] = chargedIsoSumAllVertices[q];
     }
     pho_sumChargedHadronPt[nPhotons] = chargedIsoSum;
+    
+    pho_sumChargedHadronPt_NewPV_NoTiming[nPhotons] = chargedIsoSum_NewPV_NoTiming;
+    
+    pho_sumChargedHadronPt_NewPV_Timing50_TrkVtx[nPhotons] = chargedIsoSum_NewPV_Timing50_TrkVtx;
+    pho_sumChargedHadronPt_NewPV_Timing80_TrkVtx[nPhotons] = chargedIsoSum_NewPV_Timing80_TrkVtx;
+    pho_sumChargedHadronPt_NewPV_Timing100_TrkVtx[nPhotons] = chargedIsoSum_NewPV_Timing100_TrkVtx;
+    pho_sumChargedHadronPt_NewPV_Timing120_TrkVtx[nPhotons] = chargedIsoSum_NewPV_Timing120_TrkVtx;
+
+    pho_sumChargedHadronPt_NewPV_Timing50_TrkPho[nPhotons] = chargedIsoSum_NewPV_Timing50_TrkPho;
+    pho_sumChargedHadronPt_NewPV_Timing80_TrkPho[nPhotons] = chargedIsoSum_NewPV_Timing80_TrkPho;
+    pho_sumChargedHadronPt_NewPV_Timing100_TrkPho[nPhotons] = chargedIsoSum_NewPV_Timing100_TrkPho;
+    pho_sumChargedHadronPt_NewPV_Timing120_TrkPho[nPhotons] = chargedIsoSum_NewPV_Timing120_TrkPho;
+
     pho_sumNeutralHadronEt[nPhotons] = neutralHadronIsoSum;
     pho_sumPhotonEt[nPhotons] = photonIsoSum;
     
@@ -2053,35 +2258,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
       phoPhi[nPhotons] = phoP4.Phi();
     */
     
-    //-----------------------
-    // super cluster position
-    //-----------------------  
-    pho_superClusterEnergy[nPhotons] = pho.superCluster()->energy();
-    pho_superClusterRawEnergy[nPhotons] = pho.superCluster()->rawEnergy();
-    pho_superClusterEta[nPhotons]    = pho.superCluster()->eta();
-    pho_superClusterPhi[nPhotons]    = pho.superCluster()->phi();
-    pho_superClusterX[nPhotons]      = pho.superCluster()->x();
-    pho_superClusterY[nPhotons]      = pho.superCluster()->y();
-    pho_superClusterZ[nPhotons]      = pho.superCluster()->z();
-    pho_hasPixelSeed[nPhotons]       = pho.hasPixelSeed();
-
-    pho_superClusterSeedX[nPhotons]      = pho.superCluster()->seed()->x();
-    pho_superClusterSeedY[nPhotons]      = pho.superCluster()->seed()->y();
-    pho_superClusterSeedZ[nPhotons]      = pho.superCluster()->seed()->z();
- 
-    pho_superClusterSeedE[nPhotons]      = pho.superCluster()->seed()->energy();
-
-    for (const reco::PFCluster &pfcluster : *pfClusters) {
-	if(pfcluster.seed() == pho.superCluster()->seed()->seed())
-	{
-	pho_superClusterSeedT[nPhotons] = pfcluster.time();
-        pho_pfClusterSeedE[nPhotons]      = pfcluster.energy();
-	//std::cout<<"find seed cluster for photon #"<<nPhotons<<std::endl;
-	}
-    } 
-	//std::cout<<"finished searching for seed cluster for photon #"<<nPhotons<<std::endl;
-
-    //Detector DetId_this = pho.superCluster()->seed()->seed();
+   //Detector DetId_this = pho.superCluster()->seed()->seed();
  
     //*************************************************
     //Trigger Object Matching
@@ -2940,6 +3117,13 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   
   NEvents->Fill(0); //increment event count
 
+  bool isGoodMCEvent = true;
+  if (useGen_) {
+    isGoodMCEvent = fillMC()
+      && fillPileUp()
+      && fillGenParticles();
+  }
+ 
   //filler methods should fill relevant tree variables and return false if the event should be rejected
   bool isGoodEvent = 
     fillEventInfo(iEvent)
@@ -2954,13 +3138,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillMet(iEvent);
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
-  bool isGoodMCEvent = true;
-  if (useGen_) {
-    isGoodMCEvent = fillMC()
-      && fillPileUp()
-      && fillGenParticles();
-  }
-  
+ 
   isGoodEvent = isGoodEvent&&isGoodMCEvent;
   if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && fillTrigger(iEvent));
   
