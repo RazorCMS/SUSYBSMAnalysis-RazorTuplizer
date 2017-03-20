@@ -11,10 +11,8 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #'/store/mc/RunIISpring16MiniAODv2/SMS-T1tttt_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/00000/00775AA9-5132-E611-A4FE-001E675049F5.root'
-        '/store/mc/RunIISpring16MiniAODv2/SMS-T1ttbb_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16Fast_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/00000/0255C014-BF4A-E611-9056-001E67F3370D.root'
-
-   )
+        '/store/data/Run2016C/DoubleEG/MINIAOD/03Feb2017-v1/80000/00371362-6AEC-E611-9845-842B2B758BAA.root'
+    )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
@@ -26,20 +24,16 @@ process.TFileService = cms.Service("TFileService",
 )
 
 #load run conditions
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.load('Configuration.Geometry.GeometryIdeal_cff')
-process.load('Configuration.StandardSequences.MagneticField_38T_cff')
+process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #------ Declare the correct global tag ------#
 
-process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_v3'
+#Global Tag 
+process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v7'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
-
-#process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
-#process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
-#process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
-#process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
 
 process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
 process.BadChargedCandidateFilter.muons = cms.InputTag("slimmedMuons")
@@ -67,11 +61,11 @@ for idmod in my_id_modules:
 
 #list input collections
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
-    isData = cms.bool(False),    
-    useGen = cms.bool(True),
-    isFastsim = cms.bool(True),
+    isData = cms.bool(True),    
+    useGen = cms.bool(False),
+    isFastsim = cms.bool(False),
     enableTriggerInfo = cms.bool(True),                                 
-    enableEcalRechits = cms.bool(False), 
+    enableEcalRechits = cms.bool(True), 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
     eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
     muonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorMuonHLTFilterNames.dat"),
@@ -86,7 +80,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     jets = cms.InputTag("slimmedJets"),
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),
-    mets = cms.InputTag("slimmedMETs"),
+    mets = cms.InputTag("slimmedMETs","","PAT"),
     metsEGClean = cms.InputTag("slimmedMETsEGClean","","PAT"),
     metsMuEGClean = cms.InputTag("slimmedMETsMuEGClean","","PAT"),
     metsMuEGCleanCorr = cms.InputTag("slimmedMETsMuEGClean","","razorTuplizer"),
@@ -97,12 +91,12 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     packedGenParticles = cms.InputTag("packedGenParticles"),
     prunedGenParticles = cms.InputTag("prunedGenParticles"),
-    genJets = cms.InputTag("slimmedGenJets", "", "PAT"),
+    genJets = cms.InputTag("slimmedGenJets", "", "RECO"),
 
     triggerBits = cms.InputTag("TriggerResults","","HLT"),
     triggerPrescales = cms.InputTag("patTrigger"),
     triggerObjects = cms.InputTag("selectedPatTrigger"),
-    metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
+    metFilterBits = cms.InputTag("TriggerResults", "", "RECO"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
     hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
     hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
@@ -110,25 +104,22 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     BadMuonFilter = cms.InputTag("BadPFMuonFilter",""),
     badGlobalMuonFilter = cms.InputTag("badGlobalMuonTagger","bad"),
     duplicateMuonFilter = cms.InputTag("cloneGlobalMuonTagger","bad"),
-
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
-    genInfo = cms.InputTag("generator", "", "HLT"),
-    genLumiHeader = cms.InputTag("generator", "", "HLT"),
-                                 
-    puInfo = cms.InputTag("slimmedAddPileupInfo", "", "PAT"), #uncomment if no pre-mixing
+    genInfo = cms.InputTag("generator", "", "SIM"),
+    puInfo = cms.InputTag("addPileupInfo", "", "HLT"), #uncomment if no pre-mixing
     #puInfo = cms.InputTag("mixData", "", "HLT"), #uncomment for samples with pre-mixed pileup
-    hcalNoiseInfo = cms.InputTag("hcalnoise", "", "PAT"),
+    hcalNoiseInfo = cms.InputTag("hcalnoise", "", "RECO"),
 
     secondaryVertices = cms.InputTag("slimmedSecondaryVertices", "", "PAT"),
 
-    rhoAll = cms.InputTag("fixedGridRhoAll", "", "HLT"),
-    rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "HLT"),
-    rhoFastjetAllCalo = cms.InputTag("fixedGridRhoFastjetAllCalo", "", "HLT"),
-    rhoFastjetCentralCalo = cms.InputTag("fixedGridRhoFastjetCentralCalo", "", "HLT"),
-    rhoFastjetCentralChargedPileUp = cms.InputTag("fixedGridRhoFastjetCentralChargedPileUp", "", "HLT"),
-    rhoFastjetCentralNeutral = cms.InputTag("fixedGridRhoFastjetCentralNeutral", "", "HLT"),
+    rhoAll = cms.InputTag("fixedGridRhoAll", "", "RECO"),
+    rhoFastjetAll = cms.InputTag("fixedGridRhoFastjetAll", "", "RECO"),
+    rhoFastjetAllCalo = cms.InputTag("fixedGridRhoFastjetAllCalo", "", "RECO"),
+    rhoFastjetCentralCalo = cms.InputTag("fixedGridRhoFastjetCentralCalo", "", "RECO"),
+    rhoFastjetCentralChargedPileUp = cms.InputTag("fixedGridRhoFastjetCentralChargedPileUp", "", "RECO"),
+    rhoFastjetCentralNeutral = cms.InputTag("fixedGridRhoFastjetCentralNeutral", "", "RECO"),
 
-    beamSpot = cms.InputTag("offlineBeamSpot", "", "HLT"),
+    beamSpot = cms.InputTag("offlineBeamSpot", "", "RECO"),
 
     ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "PAT"),
     eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "PAT"),
@@ -148,9 +139,58 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     mvaHZZCategoriesMap = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16HZZV1Categories")
 )
 
-#run
-process.p = cms.Path( process.egmGsfElectronIDSequence *
-                      #process.HBHENoiseFilterResultProducer*
-                      process.BadChargedCandidateFilter*
-                      process.BadPFMuonFilter*
-                      process.ntuples)
+#rerun MET sequence to update JECs 
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+runMetCorAndUncFromMiniAOD(process, isData=True )
+
+# creating the e/g corrected MET on top of the bad muon corrected MET (on re-miniaod)
+from PhysicsTools.PatUtils.tools.corMETFromMuonAndEG import corMETFromMuonAndEG
+corMETFromMuonAndEG(process,
+                    pfCandCollection="", #not needed                     
+                    electronCollection="slimmedElectronsBeforeGSFix",
+                    photonCollection="slimmedPhotonsBeforeGSFix",
+                    corElectronCollection="slimmedElectrons",
+                    corPhotonCollection="slimmedPhotons",
+                    allMETEGCorrected=True,
+                    muCorrection=False,
+                    eGCorrection=True,
+                    runOnMiniAOD=True,
+                    postfix="MuEGClean"
+                    )
+process.slimmedMETsMuEGClean = process.slimmedMETs.clone()
+process.slimmedMETsMuEGClean.src = cms.InputTag("patPFMetT1MuEGClean")
+process.slimmedMETsMuEGClean.rawVariation =  cms.InputTag("patPFMetRawMuEGClean")
+process.slimmedMETsMuEGClean.t1Uncertainties = cms.InputTag("patPFMetT1%sMuEGClean")
+del process.slimmedMETsMuEGClean.caloMET
+ 
+#run electron ID sequence
+process.egmIDPath = cms.Path(process.egmGsfElectronIDSequence)
+
+#run met bad track filters 
+process.hipMetFiltersPath = cms.Path(process.BadChargedCandidateFilter *
+                                     process.BadPFMuonFilter)
+
+#run EG gain-switch correction and bad muon corrections for MET
+process.egcorrMET = cms.Sequence(
+        process.cleanedPhotonsMuEGClean+process.cleanedCorPhotonsMuEGClean+
+        process.matchedPhotonsMuEGClean + process.matchedElectronsMuEGClean +
+        process.corMETPhotonMuEGClean+process.corMETElectronMuEGClean+
+        process.patPFMetT1MuEGClean+process.patPFMetRawMuEGClean+
+        process.patPFMetT1SmearMuEGClean+process.patPFMetT1TxyMuEGClean+
+        process.patPFMetTxyMuEGClean+process.patPFMetT1JetEnUpMuEGClean+
+        process.patPFMetT1JetResUpMuEGClean+process.patPFMetT1SmearJetResUpMuEGClean+
+        process.patPFMetT1ElectronEnUpMuEGClean+process.patPFMetT1PhotonEnUpMuEGClean+
+        process.patPFMetT1MuonEnUpMuEGClean+process.patPFMetT1TauEnUpMuEGClean+
+        process.patPFMetT1UnclusteredEnUpMuEGClean+process.patPFMetT1JetEnDownMuEGClean+
+        process.patPFMetT1JetResDownMuEGClean+process.patPFMetT1SmearJetResDownMuEGClean+
+        process.patPFMetT1ElectronEnDownMuEGClean+process.patPFMetT1PhotonEnDownMuEGClean+
+        process.patPFMetT1MuonEnDownMuEGClean+process.patPFMetT1TauEnDownMuEGClean+
+        process.patPFMetT1UnclusteredEnDownMuEGClean+process.slimmedMETsMuEGClean)
+
+process.ntupleStep = cms.Path(process.fullPatMetSequence *
+                              process.egcorrMET * 
+                              process.ntuples)
+
+process.schedule = cms.Schedule( process.egmIDPath,
+                                 process.hipMetFiltersPath,
+                                 process.ntupleStep)

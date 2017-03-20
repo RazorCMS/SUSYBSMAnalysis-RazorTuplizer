@@ -56,9 +56,22 @@ using namespace std;
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaEleEstimatorCSA14.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/ElectronMVAEstimatorRun2NonTrig.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
-#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/RazorPDFWeightsHelper.h"
+
+//ECAL Rechits
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+
+// Geometry
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 
 //ROOT includes
 #include "TTree.h"
@@ -69,6 +82,8 @@ using namespace std;
 #define OBJECTARRAYSIZE 1000
 #define GENPARTICLEARRAYSIZE 500
 #define MAX_NPV 200
+#define ECALRECHITARRAYSIZE 80000
+#define ECALRECHITARRAYSIZEPEROBJECT 500
 
 //------ Class declaration ------//
 
@@ -98,6 +113,7 @@ public:
   virtual void enableTriggerBranches();
   virtual void enableMCBranches();
   virtual void enableGenParticleBranches();
+  virtual void enableEcalRechitBranches();
   
   //select objects and fill tree branches
   virtual bool fillEventInfo(const edm::Event& iEvent);
@@ -115,6 +131,7 @@ public:
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
   virtual bool fillGenParticles();
+  virtual bool fillEcalRechits(const edm::EventSetup& iSetup);
   
   //------ HELPER FUNCTIONS ------//
   
@@ -169,6 +186,7 @@ protected:
   bool    useGen_;
   bool    isFastsim_;
   bool enableTriggerInfo_;
+  bool enableEcalRechits_;
   
   // Mapping of the HLT Triggers and Filters
   string triggerPathNamesFile_;
@@ -410,6 +428,8 @@ protected:
   bool ele_passTPOneProbeFilter[OBJECTARRAYSIZE];
   bool ele_passTPTwoProbeFilter[OBJECTARRAYSIZE];  
   bool ele_passHLTFilter[OBJECTARRAYSIZE][MAX_ElectronHLTFilters];
+  uint ele_NEcalRechitID[OBJECTARRAYSIZE];
+  uint ele_EcalRechitID[OBJECTARRAYSIZE][ECALRECHITARRAYSIZEPEROBJECT];
 
   //Taus
   int nTaus;
@@ -494,6 +514,25 @@ protected:
   bool  pho_seedRecHitSwitchToGain1[OBJECTARRAYSIZE];
   bool  pho_anyRecHitSwitchToGain6[OBJECTARRAYSIZE];
   bool  pho_anyRecHitSwitchToGain1[OBJECTARRAYSIZE];
+  uint  pho_NEcalRechitID[OBJECTARRAYSIZE];
+  uint  pho_EcalRechitID[OBJECTARRAYSIZE][ECALRECHITARRAYSIZEPEROBJECT];
+
+  //Ecal RecHits
+  vector<uint> ecalRechitID_ToBeSaved;
+  vector<pair<double,double> > ecalRechitEtaPhi_ToBeSaved;
+  vector<pair<double,double> > ecalRechitJetEtaPhi_ToBeSaved;
+  int nEcalRechits;
+  float ecalRechit_Eta[ECALRECHITARRAYSIZE];
+  float ecalRechit_Phi[ECALRECHITARRAYSIZE];
+  float ecalRechit_X[ECALRECHITARRAYSIZE];
+  float ecalRechit_Y[ECALRECHITARRAYSIZE];
+  float ecalRechit_Z[ECALRECHITARRAYSIZE];
+  float ecalRechit_E[ECALRECHITARRAYSIZE];
+  float ecalRechit_T[ECALRECHITARRAYSIZE];
+  uint  ecalRechit_ID[ECALRECHITARRAYSIZE];
+  bool  ecalRechit_FlagOOT[ECALRECHITARRAYSIZE];
+  bool  ecalRechit_GainSwitch1[ECALRECHITARRAYSIZE];
+  bool  ecalRechit_GainSwitch6[ECALRECHITARRAYSIZE];
 
   //AK4 Jets
   int nJets;

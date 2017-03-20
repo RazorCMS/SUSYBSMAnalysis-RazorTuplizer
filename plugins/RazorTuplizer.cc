@@ -14,6 +14,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   useGen_(iConfig.getParameter<bool> ("useGen")),  
   isFastsim_(iConfig.getParameter<bool> ("isFastsim")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
+  enableEcalRechits_(iConfig.getParameter<bool> ("enableEcalRechits")),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
@@ -318,6 +319,7 @@ void RazorTuplizer::setBranches(){
   enableMetBranches();
   
   if (enableTriggerInfo_) enableTriggerBranches();
+  if (enableEcalRechits_) enableEcalRechitBranches();
   enableMCBranches();
   enableGenParticleBranches();
 }
@@ -437,6 +439,8 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_passTPOneProbeFilter", ele_passTPOneProbeFilter, "ele_passTPOneProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPTwoProbeFilter", ele_passTPTwoProbeFilter, "ele_passTPTwoProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passHLTFilter", &ele_passHLTFilter, Form("ele_passHLTFilter[nElectrons][%d]/O",MAX_ElectronHLTFilters));
+  RazorEvents->Branch("ele_NEcalRechitID", &ele_NEcalRechitID, "ele_NEcalRechitID[nElectrons]/i");
+  RazorEvents->Branch("ele_EcalRechitID", &ele_EcalRechitID, Form("ele_EcalRechitID[nElectrons][%d]/i",ECALRECHITARRAYSIZEPEROBJECT));
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -524,7 +528,24 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_seedRecHitSwitchToGain1", pho_seedRecHitSwitchToGain1, "pho_seedRecHitSwitchToGain1[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain6", pho_anyRecHitSwitchToGain6, "pho_anyRecHitSwitchToGain6[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain1", pho_anyRecHitSwitchToGain1, "pho_anyRecHitSwitchToGain1[nPhotons]/F");
+  RazorEvents->Branch("pho_NEcalRechitID", pho_NEcalRechitID, "pho_NEcalRechitID[nPhotons]/i");
+  RazorEvents->Branch("pho_EcalRechitID", &pho_EcalRechitID, Form("pho_EcalRechitID[nPhotons][%d]/i",ECALRECHITARRAYSIZEPEROBJECT));
 
+}
+
+void RazorTuplizer::enableEcalRechitBranches(){
+  RazorEvents->Branch("nEcalRechits",   &nEcalRechits,    "nEcalRechits/I");
+  RazorEvents->Branch("ecalRechit_Eta",  ecalRechit_Eta,  "ecalRechit_Eta[nEcalRechits]/F");
+  RazorEvents->Branch("ecalRechit_Phi",  ecalRechit_Phi,  "ecalRechit_Phi[nEcalRechits]/F");
+  RazorEvents->Branch("ecalRechit_X",    ecalRechit_X,    "ecalRechit_X[nEcalRechits]/F");
+  RazorEvents->Branch("ecalRechit_Y",    ecalRechit_Y,    "ecalRechit_Y[nEcalRechits]/F");
+  RazorEvents->Branch("ecalRechit_Z",    ecalRechit_Z,    "ecalRechit_Z[nEcalRechits]/F");
+  RazorEvents->Branch("ecalRechit_E",    ecalRechit_E,    "ecalRechit_E[nEcalRechits]/F");
+  RazorEvents->Branch("ecalRechit_T",    ecalRechit_T,    "ecalRechit_T[nEcalRechits]/F");
+  RazorEvents->Branch("ecalRechit_ID",   ecalRechit_ID,   "ecalRechit_ID[nEcalRechits]/i");
+  RazorEvents->Branch("ecalRechit_X",    ecalRechit_FlagOOT,    "ecalRechit_FlagOOT[nEcalRechits]/O");
+  RazorEvents->Branch("ecalRechit_X",    ecalRechit_GainSwitch1,"ecalRechit_GainSwitch1[nEcalRechits]/O");
+  RazorEvents->Branch("ecalRechit_X",    ecalRechit_GainSwitch6,"ecalRechit_GainSwitch6[nEcalRechits]/O");
 }
 
 void RazorTuplizer::enableJetBranches(){
@@ -718,10 +739,12 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
-  iEvent.getByToken(metEGCleanToken_, metsEGClean);
-  iEvent.getByToken(metMuEGCleanToken_, metsMuEGClean);
-  iEvent.getByToken(metMuEGCleanCorrToken_, metsMuEGCleanCorr);
-  iEvent.getByToken(metUncorrectedToken_, metsUncorrected);
+  if (isData_) {
+    iEvent.getByToken(metEGCleanToken_, metsEGClean);
+    iEvent.getByToken(metMuEGCleanToken_, metsMuEGClean);
+    iEvent.getByToken(metMuEGCleanCorrToken_, metsMuEGCleanCorr);
+    iEvent.getByToken(metUncorrectedToken_, metsUncorrected);
+  }
   //iEvent.getByToken(metNoHFToken_, metsNoHF);
   iEvent.getByToken(metPuppiToken_, metsPuppi);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
@@ -795,7 +818,8 @@ void RazorTuplizer::resetBranches(){
       pvAllSumPy[i] = 0.;
     }
     
-    for(int i = 0; i < 99; i++){      
+
+    for(int i = 0; i < OBJECTARRAYSIZE; i++){      
         //PU
         BunchXing[i] = -99;
         nPU[i] = -99;
@@ -877,7 +901,9 @@ void RazorTuplizer::resetBranches(){
 	ele_passTPOneProbeFilter[i] = false;
 	ele_passTPTwoProbeFilter[i] = false;
 	for (int q=0;q<MAX_ElectronHLTFilters;q++) ele_passHLTFilter[i][q] = false;
-
+	ele_NEcalRechitID[i] = 0;
+	for (int q=0;q<ECALRECHITARRAYSIZEPEROBJECT;q++) ele_EcalRechitID[i][q] = 0;
+ 
         //Tau
         tauE[i] = 0.0;
         tauPt[i] = 0.0;
@@ -962,8 +988,9 @@ void RazorTuplizer::resetBranches(){
 	pho_seedRecHitSwitchToGain1[i] = false;
 	pho_anyRecHitSwitchToGain6[i] = false;
 	pho_anyRecHitSwitchToGain1[i] = false;
-
-
+	pho_NEcalRechitID[i] = 0;
+	for (int q=0;q<ECALRECHITARRAYSIZEPEROBJECT;q++) pho_EcalRechitID[i][q] = 0;
+	
         //Jet
         jetE[i] = 0.0;
         jetPt[i] = 0.0;
@@ -1013,7 +1040,26 @@ void RazorTuplizer::resetBranches(){
         genJetPhi[i] = 0.0;
     }
 
+
+    ecalRechitID_ToBeSaved.clear();
+    ecalRechitEtaPhi_ToBeSaved.clear();
+    ecalRechitJetEtaPhi_ToBeSaved.clear();
+    nEcalRechits = 0;
     for(int i = 0; i < 500; i++){
+      ecalRechit_Eta[i] = 0.0;
+      ecalRechit_Phi[i] = 0.0;
+      ecalRechit_X[i] = 0.0;
+      ecalRechit_Y[i] = 0.0;
+      ecalRechit_Z[i] = 0.0;
+      ecalRechit_E[i] = 0.0;
+      ecalRechit_T[i] = 0.0;
+      ecalRechit_ID[i] = 0.0;
+      ecalRechit_FlagOOT[i] = 0.0;
+      ecalRechit_GainSwitch1[i] = 0.0;
+      ecalRechit_GainSwitch6[i] = 0.0;     
+    }
+
+    for(int i = 0; i < GENPARTICLEARRAYSIZE; i++){
         //Gen Particle
         gParticleMotherId[i] = -99999;
         gParticleMotherIndex[i] = -99999;
@@ -1460,6 +1506,21 @@ bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
     ele_passTPTwoProbeFilter[nElectrons] = passTPTwoProbeFilter;
 
 
+    //*************************************************
+    //Find relevant rechits
+    //*************************************************
+    const std::vector< std::pair<DetId, float>>& v_id =ele->superCluster()->seed()->hitsAndFractions();
+    ele_NEcalRechitID[nElectrons] = v_id.size();
+    for ( size_t i = 0; i < v_id.size(); ++i ) {
+      // EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
+      // if (it != ebRecHits->end()) {
+      ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+      ele_EcalRechitID[nElectrons][i] = v_id[i].first.rawId();
+      // }
+    }
+    ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( ele->superCluster()->eta(), ele->superCluster()->phi() ));
+
+
     nElectrons++;
   }
   
@@ -1637,8 +1698,13 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     bool maxSwitchToGain1 = false;
     bool anySwitchToGain6 = false;
     bool anySwitchToGain1 = false;
+    pho_NEcalRechitID[nPhotons] = v_id.size();  
     for ( size_t i = 0; i < v_id.size(); ++i ) {
       EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
+
+      ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+      pho_EcalRechitID[nPhotons][i] = v_id[i].first.rawId();
+
       if (it != ebRecHits->end()) {
 	// cout << "rechit " << i << " : " << it->energy() << " "
 	//      << EcalRecHit::kHasSwitchToGain6 << " " << EcalRecHit::kHasSwitchToGain1 << " " 
@@ -1664,7 +1730,10 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;
     pho_anyRecHitSwitchToGain1[nPhotons] = anySwitchToGain1;
   
-
+    //*************************************************
+    //Find relevant rechits
+    //*************************************************
+    ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( pho.superCluster()->eta(), pho.superCluster()->phi() ));
 
     //**********************************************************
     //Compute PF isolation
@@ -1997,6 +2066,127 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
   return true;
 };
 
+
+bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
+  
+  // geometry (from ECAL ELF)
+  edm::ESHandle<CaloGeometry> geoHandle;
+  iSetup.get<CaloGeometryRecord>().get(geoHandle);
+  const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
+  const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+
+  //Barrel Rechits
+  for (EcalRecHitCollection::const_iterator recHit = ebRecHits->begin(); recHit != ebRecHits->end(); ++recHit) {
+    // first get detector id
+    
+    const DetId recHitId = recHit->detid();
+    //const uint32_t rhId  = recHitId.rawId();
+
+    //Find rechits by ID that are explicitly marked to be saved.
+    bool matchedRechit = false;
+    std::vector<uint>::iterator it;
+    it = find (ecalRechitID_ToBeSaved.begin(), ecalRechitID_ToBeSaved.end(), recHitId.rawId());
+    if (it == ecalRechitID_ToBeSaved.end()) {      
+      matchedRechit = true;
+    }
+  
+    const auto recHitPos = barrelGeometry->getGeometry(recHitId)->getPosition();
+
+    //Find rechits by deltaR proximity
+    bool dRProximity = false;
+    for (int k=0; k<int(ecalRechitEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitEtaPhi_ToBeSaved[k].first, ecalRechitEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.5) {
+	dRProximity = true;
+      }
+    }
+
+    bool dRJetProximity = false;
+
+    for (int k=0; k<int(ecalRechitJetEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitJetEtaPhi_ToBeSaved[k].first, ecalRechitJetEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.7) {
+	dRJetProximity = true;
+      }
+    }
+
+    //skip rechits that are not relevant
+    if (!(matchedRechit || dRProximity || dRJetProximity)) {
+      continue;
+    }
+
+    ecalRechit_ID[nEcalRechits] = recHitId.rawId();
+    ecalRechit_Eta[nEcalRechits] = recHitPos.eta();
+    ecalRechit_Phi[nEcalRechits] = recHitPos.phi();
+    ecalRechit_X[nEcalRechits] = recHitPos.x();
+    ecalRechit_Y[nEcalRechits] = recHitPos.y();
+    ecalRechit_Z[nEcalRechits] = recHitPos.z();
+    ecalRechit_E[nEcalRechits] = recHit->energy();
+    ecalRechit_T[nEcalRechits] = recHit->time();
+    ecalRechit_FlagOOT[nEcalRechits] = recHit->checkFlag(EcalRecHit::kOutOfTime);
+    ecalRechit_GainSwitch1[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
+    ecalRechit_GainSwitch6[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
+   
+    nEcalRechits++;
+  }
+  
+  //Endcap Rechits
+  for (EcalRecHitCollection::const_iterator recHit = eeRecHits->begin(); recHit != eeRecHits->end(); ++recHit) {
+    // first get detector id
+    
+    const DetId recHitId = recHit->detid();
+    const uint32_t rhId  = recHitId.rawId();
+ 
+   bool matchedRechit = false;
+    std::vector<uint>::iterator it;
+    it = find (ecalRechitID_ToBeSaved.begin(), ecalRechitID_ToBeSaved.end(), recHitId.rawId());
+    if (it == ecalRechitID_ToBeSaved.end()) {
+      matchedRechit = true;
+    }
+  
+    const auto recHitPos = endcapGeometry->getGeometry(recHitId)->getPosition();
+ 
+    //Find rechits by deltaR proximity
+    bool dRProximity = false;
+    for (int k=0; k<int(ecalRechitEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitEtaPhi_ToBeSaved[k].first, ecalRechitEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.5) {
+	dRProximity = true;
+      }
+    }
+
+    bool dRJetProximity = false;
+    for (int k=0; k<int(ecalRechitJetEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitJetEtaPhi_ToBeSaved[k].first, ecalRechitJetEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.7) {
+	dRJetProximity = true;
+      }
+    }
+
+    //skip rechits that are not relevant
+    if (!(matchedRechit || dRProximity || dRJetProximity)) {
+      continue;
+    }
+
+    ecalRechit_ID[nEcalRechits] = recHitId.rawId();
+    ecalRechit_Eta[nEcalRechits] = recHitPos.eta();
+    ecalRechit_Phi[nEcalRechits] = recHitPos.phi();
+    ecalRechit_X[nEcalRechits] = recHitPos.x();
+    ecalRechit_Y[nEcalRechits] = recHitPos.y();
+    ecalRechit_Z[nEcalRechits] = recHitPos.z();
+    ecalRechit_E[nEcalRechits] = recHit->energy();
+    ecalRechit_T[nEcalRechits] = recHit->time();
+    ecalRechit_FlagOOT[nEcalRechits] = recHit->checkFlag(EcalRecHit::kOutOfTime);
+    ecalRechit_GainSwitch1[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
+    ecalRechit_GainSwitch6[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
+   
+    nEcalRechits++;
+  }
+  
+  return true;
+}
+
+
 bool RazorTuplizer::fillJets(){
   for (const pat::Jet &j : *jets) {
     if (j.pt() < 10) continue;
@@ -2050,6 +2240,21 @@ bool RazorTuplizer::fillJets(){
     jetAllMuonEta[nJets] = AllMuonP4.Eta();
     jetAllMuonPhi[nJets] = AllMuonP4.Phi();
     jetAllMuonM[nJets] = AllMuonP4.M();
+
+
+    //*************************************************
+    //Find relevant rechits
+    //*************************************************
+    // const std::vector< std::pair<DetId, float>>& v_id =ele->superCluster()->seed()->hitsAndFractions();
+    // for ( size_t i = 0; i < v_id.size(); ++i ) {
+    //   // EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
+    //   // if (it != ebRecHits->end()) {
+    //   ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+    //   // }
+    // }
+    ecalRechitJetEtaPhi_ToBeSaved.push_back( pair<double,double>( j.eta(), j.phi() ));
+
+
    
     nJets++;
   }
@@ -2080,11 +2285,7 @@ bool RazorTuplizer::fillJetsAK8(){
 
 bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   const pat::MET &Met = mets->front();
-  const pat::MET &MetEGClean = metsEGClean->front();
-  const pat::MET &MetMuEGClean = metsMuEGClean->front();
-  const pat::MET &MetMuEGCleanCorr = metsMuEGCleanCorr->front();
-  const pat::MET &MetUncorrected = metsUncorrected->front();
-  
+
   metPt = Met.uncorPt();
   metPhi = Met.uncorPhi();
   sumMET = Met.sumEt();
@@ -2097,55 +2298,61 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metCaloPt = Met.caloMETPt();
   metCaloPhi = Met.caloMETPhi();
 
-  metEGCleanPt = MetEGClean.pt();
-  metEGCleanPhi = MetEGClean.phi();
-  metMuEGCleanPt = MetMuEGClean.pt();
-  metMuEGCleanPhi = MetMuEGClean.phi();
-  metMuEGCleanCorrPt = MetMuEGCleanCorr.pt();
-  metMuEGCleanCorrPhi = MetMuEGCleanCorr.phi();
-  metUncorrectedPt = MetUncorrected.pt();
-  metUncorrectedPhi = MetUncorrected.phi();
+  //Only do this for reMiniAOD data
+  if (isData_) {
+    const pat::MET &MetEGClean = metsEGClean->front();
+    const pat::MET &MetMuEGClean = metsMuEGClean->front();
+    const pat::MET &MetMuEGCleanCorr = metsMuEGCleanCorr->front();
+    const pat::MET &MetUncorrected = metsUncorrected->front();
+    metEGCleanPt = MetEGClean.pt();
+    metEGCleanPhi = MetEGClean.phi();
+    metMuEGCleanPt = MetMuEGClean.pt();
+    metMuEGCleanPhi = MetMuEGClean.phi();
+    metMuEGCleanCorrPt = MetMuEGCleanCorr.pt();
+    metMuEGCleanCorrPhi = MetMuEGCleanCorr.phi();
+    metUncorrectedPt = MetUncorrected.pt();
+    metUncorrectedPhi = MetUncorrected.phi();
+  }
 
-  if(!isData_)
-    {
-      metType1PtJetResUp           = Met.shiftedPt(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtJetResDown         = Met.shiftedPt(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtJetEnUp            = Met.shiftedPt(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtJetEnDown          = Met.shiftedPt(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtMuonEnUp           = Met.shiftedPt(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtMuonEnDown         = Met.shiftedPt(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtElectronEnUp       = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtElectronEnDown     = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtTauEnUp	           = Met.shiftedPt(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtTauEnDown          = Met.shiftedPt(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtUnclusteredEnUp    = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtUnclusteredEnDown  = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtPhotonEnUp         = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtPhotonEnDown       = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);
-      // metType1PtMETUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);
-      // metType1PtJetResUpSmear     = Met.shiftedPt(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PtJetResDownSmear   = Met.shiftedPt(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PtMETFullUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
+  if(!isData_) {
+    metType1PtJetResUp           = Met.shiftedPt(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtJetResDown         = Met.shiftedPt(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtJetEnUp            = Met.shiftedPt(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtJetEnDown          = Met.shiftedPt(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtMuonEnUp           = Met.shiftedPt(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtMuonEnDown         = Met.shiftedPt(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtElectronEnUp       = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtElectronEnDown     = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtTauEnUp	           = Met.shiftedPt(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtTauEnDown          = Met.shiftedPt(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtUnclusteredEnUp    = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtUnclusteredEnDown  = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtPhotonEnUp         = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtPhotonEnDown       = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);
+    // metType1PtMETUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);
+    // metType1PtJetResUpSmear     = Met.shiftedPt(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PtJetResDownSmear   = Met.shiftedPt(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PtMETFullUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
       
-      metType1PhiJetResUp          = Met.shiftedPhi(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PhiJetResDown        = Met.shiftedPhi(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PhiJetEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiJetEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiMuonEnUp          = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiMuonEnDown        = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);	 
-      metType1PhiElectronEnUp      = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiElectronEnDown    = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiTauEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiTauEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiUnclusteredEnUp   = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiUnclusteredEnDown = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiPhotonEnUp        = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiPhotonEnDown      = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiMETUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiJetResUpSmear     = Met.shiftedPhi(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiJetResDownSmear   = Met.shiftedPhi(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiMETFullUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
-    }
+    metType1PhiJetResUp          = Met.shiftedPhi(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PhiJetResDown        = Met.shiftedPhi(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PhiJetEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiJetEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiMuonEnUp          = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiMuonEnDown        = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);	 
+    metType1PhiElectronEnUp      = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiElectronEnDown    = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiTauEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiTauEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiUnclusteredEnUp   = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiUnclusteredEnDown = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiPhotonEnUp        = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiPhotonEnDown      = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiMETUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiJetResUpSmear     = Met.shiftedPhi(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiJetResDownSmear   = Met.shiftedPhi(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiMETFullUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
+  }
   
   const pat::MET &MetPuppi = metsPuppi->front();
   //const pat::MET &MetNoHF = metsNoHF->front();
@@ -2681,9 +2888,11 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   NEvents->Fill(0); //increment event count
 
   //filler methods should fill relevant tree variables and return false if the event should be rejected
-  bool isGoodEvent = 
-    fillEventInfo(iEvent)
-    && fillPVAll()
+  bool isGoodEvent = fillEventInfo(iEvent) 
+    && fillPVAll();
+
+  //Fill Standard Objects
+  isGoodEvent = isGoodEvent 
     && fillMuons() 
     && fillElectrons(iEvent)
     && fillTaus()
@@ -2694,6 +2903,9 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillMet(iEvent);
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
+  //Fill Rechits
+  if (enableEcalRechits_) isGoodEvent = isGoodEvent && fillEcalRechits(iSetup);
+
   bool isGoodMCEvent = true;
   if (useGen_) {
     isGoodMCEvent = fillMC()
