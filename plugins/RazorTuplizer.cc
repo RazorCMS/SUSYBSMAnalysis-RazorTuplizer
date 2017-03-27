@@ -543,9 +543,9 @@ void RazorTuplizer::enableEcalRechitBranches(){
   RazorEvents->Branch("ecalRechit_E",    ecalRechit_E,    "ecalRechit_E[nEcalRechits]/F");
   RazorEvents->Branch("ecalRechit_T",    ecalRechit_T,    "ecalRechit_T[nEcalRechits]/F");
   RazorEvents->Branch("ecalRechit_ID",   ecalRechit_ID,   "ecalRechit_ID[nEcalRechits]/i");
-  RazorEvents->Branch("ecalRechit_X",    ecalRechit_FlagOOT,    "ecalRechit_FlagOOT[nEcalRechits]/O");
-  RazorEvents->Branch("ecalRechit_X",    ecalRechit_GainSwitch1,"ecalRechit_GainSwitch1[nEcalRechits]/O");
-  RazorEvents->Branch("ecalRechit_X",    ecalRechit_GainSwitch6,"ecalRechit_GainSwitch6[nEcalRechits]/O");
+  RazorEvents->Branch("ecalRechit_FlagOOT",    ecalRechit_FlagOOT,    "ecalRechit_FlagOOT[nEcalRechits]/O");
+  RazorEvents->Branch("ecalRechit_GainSwitch1",    ecalRechit_GainSwitch1,"ecalRechit_GainSwitch1[nEcalRechits]/O");
+  RazorEvents->Branch("ecalRechit_GainSwitch6",    ecalRechit_GainSwitch6,"ecalRechit_GainSwitch6[nEcalRechits]/O");
 }
 
 void RazorTuplizer::enableJetBranches(){
