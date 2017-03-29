@@ -273,7 +273,6 @@ protected:
   edm::Handle<reco::VertexCollection> vertices;
   edm::Handle<pat::PackedCandidateCollection> packedPFCands;
   edm::Handle<pat::MuonCollection> muons;
-  // edm::Handle<pat::ElectronCollection> electrons;
   edm::Handle<edm::View<reco::GsfElectron> > electrons;
   edm::Handle<pat::PhotonCollection> photons;
   edm::Handle<pat::TauCollection> taus;
@@ -428,8 +427,10 @@ protected:
   bool ele_passTPOneProbeFilter[OBJECTARRAYSIZE];
   bool ele_passTPTwoProbeFilter[OBJECTARRAYSIZE];  
   bool ele_passHLTFilter[OBJECTARRAYSIZE][MAX_ElectronHLTFilters];
-  uint ele_NEcalRechitID[OBJECTARRAYSIZE];
-  uint ele_EcalRechitID[OBJECTARRAYSIZE][ECALRECHITARRAYSIZEPEROBJECT];
+  vector<vector<uint> > ele_EcalRechitID;
+  vector<vector<uint> > *ele_EcalRechitIndex;
+  vector<uint> ele_SeedRechitID;
+  vector<uint> *ele_SeedRechitIndex;
 
   //Taus
   int nTaus;
@@ -514,25 +515,26 @@ protected:
   bool  pho_seedRecHitSwitchToGain1[OBJECTARRAYSIZE];
   bool  pho_anyRecHitSwitchToGain6[OBJECTARRAYSIZE];
   bool  pho_anyRecHitSwitchToGain1[OBJECTARRAYSIZE];
-  uint  pho_NEcalRechitID[OBJECTARRAYSIZE];
-  uint  pho_EcalRechitID[OBJECTARRAYSIZE][ECALRECHITARRAYSIZEPEROBJECT];
+  vector<vector<uint> > pho_EcalRechitID;
+  vector<vector<uint> > *pho_EcalRechitIndex;
+  vector<uint>  pho_SeedRechitID;
+  vector<uint>  *pho_SeedRechitIndex;
 
   //Ecal RecHits
   vector<uint> ecalRechitID_ToBeSaved;
   vector<pair<double,double> > ecalRechitEtaPhi_ToBeSaved;
   vector<pair<double,double> > ecalRechitJetEtaPhi_ToBeSaved;
-  int nEcalRechits;
-  float ecalRechit_Eta[ECALRECHITARRAYSIZE];
-  float ecalRechit_Phi[ECALRECHITARRAYSIZE];
-  float ecalRechit_X[ECALRECHITARRAYSIZE];
-  float ecalRechit_Y[ECALRECHITARRAYSIZE];
-  float ecalRechit_Z[ECALRECHITARRAYSIZE];
-  float ecalRechit_E[ECALRECHITARRAYSIZE];
-  float ecalRechit_T[ECALRECHITARRAYSIZE];
-  uint  ecalRechit_ID[ECALRECHITARRAYSIZE];
-  bool  ecalRechit_FlagOOT[ECALRECHITARRAYSIZE];
-  bool  ecalRechit_GainSwitch1[ECALRECHITARRAYSIZE];
-  bool  ecalRechit_GainSwitch6[ECALRECHITARRAYSIZE];
+  vector<float> *ecalRechit_Eta;
+  vector<float> *ecalRechit_Phi;
+  vector<float> *ecalRechit_X;
+  vector<float> *ecalRechit_Y;
+  vector<float> *ecalRechit_Z;
+  vector<float> *ecalRechit_E;
+  vector<float> *ecalRechit_T;
+  vector<uint> *ecalRechit_ID;
+  vector<bool> *ecalRechit_FlagOOT;
+  vector<bool> *ecalRechit_GainSwitch1;
+  vector<bool> *ecalRechit_GainSwitch6;
 
   //AK4 Jets
   int nJets;

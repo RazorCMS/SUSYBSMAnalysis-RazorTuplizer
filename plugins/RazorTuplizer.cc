@@ -439,8 +439,10 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_passTPOneProbeFilter", ele_passTPOneProbeFilter, "ele_passTPOneProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPTwoProbeFilter", ele_passTPTwoProbeFilter, "ele_passTPTwoProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passHLTFilter", &ele_passHLTFilter, Form("ele_passHLTFilter[nElectrons][%d]/O",MAX_ElectronHLTFilters));
-  RazorEvents->Branch("ele_NEcalRechitID", &ele_NEcalRechitID, "ele_NEcalRechitID[nElectrons]/i");
-  RazorEvents->Branch("ele_EcalRechitID", &ele_EcalRechitID, Form("ele_EcalRechitID[nElectrons][%d]/i",ECALRECHITARRAYSIZEPEROBJECT));
+  ele_EcalRechitIndex = new std::vector<std::vector<uint> >; ele_EcalRechitIndex->clear();
+  RazorEvents->Branch("ele_EcalRechitIndex", "std::vector<std::vector<uint> >",&ele_EcalRechitIndex);
+  ele_SeedRechitIndex = new std::vector<uint>; ele_SeedRechitIndex->clear();
+  RazorEvents->Branch("ele_SeedRechitIndex", "std::vector<uint>",&ele_SeedRechitIndex);
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -528,24 +530,39 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_seedRecHitSwitchToGain1", pho_seedRecHitSwitchToGain1, "pho_seedRecHitSwitchToGain1[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain6", pho_anyRecHitSwitchToGain6, "pho_anyRecHitSwitchToGain6[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain1", pho_anyRecHitSwitchToGain1, "pho_anyRecHitSwitchToGain1[nPhotons]/F");
-  RazorEvents->Branch("pho_NEcalRechitID", pho_NEcalRechitID, "pho_NEcalRechitID[nPhotons]/i");
-  RazorEvents->Branch("pho_EcalRechitID", &pho_EcalRechitID, Form("pho_EcalRechitID[nPhotons][%d]/i",ECALRECHITARRAYSIZEPEROBJECT));
+  pho_EcalRechitIndex = new std::vector<std::vector<uint> >; pho_EcalRechitIndex->clear();
+  RazorEvents->Branch("pho_EcalRechitIndex", "std::vector<std::vector<uint> >",&pho_EcalRechitIndex);
+  pho_SeedRechitIndex = new std::vector<uint>; pho_SeedRechitIndex->clear();
+  RazorEvents->Branch("pho_SeedRechitIndex", "std::vector<uint>",&pho_SeedRechitIndex);
 
 }
 
 void RazorTuplizer::enableEcalRechitBranches(){
-  RazorEvents->Branch("nEcalRechits",   &nEcalRechits,    "nEcalRechits/I");
-  RazorEvents->Branch("ecalRechit_Eta",  ecalRechit_Eta,  "ecalRechit_Eta[nEcalRechits]/F");
-  RazorEvents->Branch("ecalRechit_Phi",  ecalRechit_Phi,  "ecalRechit_Phi[nEcalRechits]/F");
-  RazorEvents->Branch("ecalRechit_X",    ecalRechit_X,    "ecalRechit_X[nEcalRechits]/F");
-  RazorEvents->Branch("ecalRechit_Y",    ecalRechit_Y,    "ecalRechit_Y[nEcalRechits]/F");
-  RazorEvents->Branch("ecalRechit_Z",    ecalRechit_Z,    "ecalRechit_Z[nEcalRechits]/F");
-  RazorEvents->Branch("ecalRechit_E",    ecalRechit_E,    "ecalRechit_E[nEcalRechits]/F");
-  RazorEvents->Branch("ecalRechit_T",    ecalRechit_T,    "ecalRechit_T[nEcalRechits]/F");
-  RazorEvents->Branch("ecalRechit_ID",   ecalRechit_ID,   "ecalRechit_ID[nEcalRechits]/i");
-  RazorEvents->Branch("ecalRechit_FlagOOT",    ecalRechit_FlagOOT,    "ecalRechit_FlagOOT[nEcalRechits]/O");
-  RazorEvents->Branch("ecalRechit_GainSwitch1",    ecalRechit_GainSwitch1,"ecalRechit_GainSwitch1[nEcalRechits]/O");
-  RazorEvents->Branch("ecalRechit_GainSwitch6",    ecalRechit_GainSwitch6,"ecalRechit_GainSwitch6[nEcalRechits]/O");
+
+  ecalRechit_Eta = new std::vector<float>; ecalRechit_Eta->clear();
+  ecalRechit_Phi = new std::vector<float>; ecalRechit_Phi->clear();
+  ecalRechit_X = new std::vector<float>; ecalRechit_X->clear();
+  ecalRechit_Y = new std::vector<float>; ecalRechit_Y->clear();
+  ecalRechit_Z = new std::vector<float>; ecalRechit_Z->clear();
+  ecalRechit_E = new std::vector<float>; ecalRechit_E->clear();
+  ecalRechit_T = new std::vector<float>; ecalRechit_T->clear();
+  ecalRechit_ID = new std::vector<uint>; ecalRechit_ID->clear();
+  ecalRechit_FlagOOT = new std::vector<bool>; ecalRechit_FlagOOT->clear();
+  ecalRechit_GainSwitch1 = new std::vector<bool>; ecalRechit_GainSwitch1->clear();
+  ecalRechit_GainSwitch6 = new std::vector<bool>; ecalRechit_GainSwitch6->clear();
+
+  RazorEvents->Branch("ecalRechit_Eta", "std::vector<float>",&ecalRechit_Eta);
+  RazorEvents->Branch("ecalRechit_Phi", "std::vector<float>",&ecalRechit_Phi);
+  RazorEvents->Branch("ecalRechit_X", "std::vector<float>",&ecalRechit_X);
+  RazorEvents->Branch("ecalRechit_Y", "std::vector<float>",&ecalRechit_Y);
+  RazorEvents->Branch("ecalRechit_Z", "std::vector<float>",&ecalRechit_Z);
+  RazorEvents->Branch("ecalRechit_E", "std::vector<float>",&ecalRechit_E);
+  RazorEvents->Branch("ecalRechit_T", "std::vector<float>",&ecalRechit_T);
+  RazorEvents->Branch("ecalRechit_ID", "std::vector<uint>",&ecalRechit_ID);
+  RazorEvents->Branch("ecalRechit_FlagOOT", "std::vector<bool>",&ecalRechit_FlagOOT);
+  RazorEvents->Branch("ecalRechit_GainSwitch1", "std::vector<bool>",&ecalRechit_GainSwitch1);
+  RazorEvents->Branch("ecalRechit_GainSwitch6", "std::vector<bool>",&ecalRechit_GainSwitch6);
+
 }
 
 void RazorTuplizer::enableJetBranches(){
@@ -901,9 +918,7 @@ void RazorTuplizer::resetBranches(){
 	ele_passTPOneProbeFilter[i] = false;
 	ele_passTPTwoProbeFilter[i] = false;
 	for (int q=0;q<MAX_ElectronHLTFilters;q++) ele_passHLTFilter[i][q] = false;
-	ele_NEcalRechitID[i] = 0;
-	for (int q=0;q<ECALRECHITARRAYSIZEPEROBJECT;q++) ele_EcalRechitID[i][q] = 0;
- 
+
         //Tau
         tauE[i] = 0.0;
         tauPt[i] = 0.0;
@@ -988,8 +1003,6 @@ void RazorTuplizer::resetBranches(){
 	pho_seedRecHitSwitchToGain1[i] = false;
 	pho_anyRecHitSwitchToGain6[i] = false;
 	pho_anyRecHitSwitchToGain1[i] = false;
-	pho_NEcalRechitID[i] = 0;
-	for (int q=0;q<ECALRECHITARRAYSIZEPEROBJECT;q++) pho_EcalRechitID[i][q] = 0;
 	
         //Jet
         jetE[i] = 0.0;
@@ -1039,25 +1052,30 @@ void RazorTuplizer::resetBranches(){
         genJetEta[i] = 0.0;
         genJetPhi[i] = 0.0;
     }
-
+    ele_EcalRechitID.clear();
+    ele_SeedRechitID.clear();
+    pho_EcalRechitID.clear();
+    pho_SeedRechitID.clear();
+    ele_EcalRechitIndex->clear();
+    ele_SeedRechitIndex->clear();
+    pho_EcalRechitIndex->clear();
+    pho_SeedRechitIndex->clear();
 
     ecalRechitID_ToBeSaved.clear();
     ecalRechitEtaPhi_ToBeSaved.clear();
     ecalRechitJetEtaPhi_ToBeSaved.clear();
-    nEcalRechits = 0;
-    for(int i = 0; i < 500; i++){
-      ecalRechit_Eta[i] = 0.0;
-      ecalRechit_Phi[i] = 0.0;
-      ecalRechit_X[i] = 0.0;
-      ecalRechit_Y[i] = 0.0;
-      ecalRechit_Z[i] = 0.0;
-      ecalRechit_E[i] = 0.0;
-      ecalRechit_T[i] = 0.0;
-      ecalRechit_ID[i] = 0.0;
-      ecalRechit_FlagOOT[i] = 0.0;
-      ecalRechit_GainSwitch1[i] = 0.0;
-      ecalRechit_GainSwitch6[i] = 0.0;     
-    }
+    ecalRechit_Eta->clear();
+    ecalRechit_Phi->clear();
+    ecalRechit_X->clear();
+    ecalRechit_Y->clear();
+    ecalRechit_Z->clear();
+    ecalRechit_E->clear();
+    ecalRechit_T->clear();
+    ecalRechit_ID->clear();
+    ecalRechit_FlagOOT->clear();
+    ecalRechit_GainSwitch1->clear();
+    ecalRechit_GainSwitch6->clear();
+
 
     for(int i = 0; i < GENPARTICLEARRAYSIZE; i++){
         //Gen Particle
@@ -1506,20 +1524,19 @@ bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
     ele_passTPTwoProbeFilter[nElectrons] = passTPTwoProbeFilter;
 
 
+    ele_SeedRechitID.push_back(ele->superCluster()->seed()->seed().rawId());
+
     //*************************************************
     //Find relevant rechits
     //*************************************************
+    std::vector<uint> rechits; rechits.clear();
     const std::vector< std::pair<DetId, float>>& v_id =ele->superCluster()->seed()->hitsAndFractions();
-    ele_NEcalRechitID[nElectrons] = v_id.size();
     for ( size_t i = 0; i < v_id.size(); ++i ) {
-      // EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
-      // if (it != ebRecHits->end()) {
       ecalRechitID_ToBeSaved.push_back(v_id[i].first);
-      ele_EcalRechitID[nElectrons][i] = v_id[i].first.rawId();
-      // }
+      rechits.push_back(v_id[i].first.rawId());
     }
     ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( ele->superCluster()->eta(), ele->superCluster()->phi() ));
-
+    ele_EcalRechitID.push_back(rechits);
 
     nElectrons++;
   }
@@ -1688,6 +1705,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_pfIsoModFrixione[nPhotons] = pho.getPflowIsolationVariables().modFrixione;
     pho_pfIsoSumPUPt[nPhotons] = pho.sumPUPt();
     
+    pho_SeedRechitID.push_back(pho.superCluster()->seed()->seed().rawId());
 
     //gain switch flag
     //cout << "photon " << pho.pt() << " " << pho.eta() << " " << pho.phi() << "\n";
@@ -1698,12 +1716,12 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     bool maxSwitchToGain1 = false;
     bool anySwitchToGain6 = false;
     bool anySwitchToGain1 = false;
-    pho_NEcalRechitID[nPhotons] = v_id.size();  
+    std::vector<uint> rechits; rechits.clear();
     for ( size_t i = 0; i < v_id.size(); ++i ) {
       EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
 
       ecalRechitID_ToBeSaved.push_back(v_id[i].first);
-      pho_EcalRechitID[nPhotons][i] = v_id[i].first.rawId();
+      rechits.push_back(v_id[i].first.rawId());
 
       if (it != ebRecHits->end()) {
 	// cout << "rechit " << i << " : " << it->energy() << " "
@@ -1725,6 +1743,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	//cout << "rechit not found\n";
       }           
     }
+    pho_EcalRechitID.push_back(rechits);
+
     pho_seedRecHitSwitchToGain6[nPhotons] = maxSwitchToGain6;
     pho_seedRecHitSwitchToGain1[nPhotons] = maxSwitchToGain1;
     pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;
@@ -2075,6 +2095,9 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
   const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
+  std::map<uint, uint> mapRecHitIdToIndex; mapRecHitIdToIndex.clear();
+  uint rechitIndex = 0;
+
   //Barrel Rechits
   for (EcalRecHitCollection::const_iterator recHit = ebRecHits->begin(); recHit != ebRecHits->end(); ++recHit) {
     // first get detector id
@@ -2115,19 +2138,19 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
       continue;
     }
 
-    ecalRechit_ID[nEcalRechits] = recHitId.rawId();
-    ecalRechit_Eta[nEcalRechits] = recHitPos.eta();
-    ecalRechit_Phi[nEcalRechits] = recHitPos.phi();
-    ecalRechit_X[nEcalRechits] = recHitPos.x();
-    ecalRechit_Y[nEcalRechits] = recHitPos.y();
-    ecalRechit_Z[nEcalRechits] = recHitPos.z();
-    ecalRechit_E[nEcalRechits] = recHit->energy();
-    ecalRechit_T[nEcalRechits] = recHit->time();
-    ecalRechit_FlagOOT[nEcalRechits] = recHit->checkFlag(EcalRecHit::kOutOfTime);
-    ecalRechit_GainSwitch1[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
-    ecalRechit_GainSwitch6[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
-   
-    nEcalRechits++;
+    mapRecHitIdToIndex[recHitId.rawId()] = rechitIndex;
+    ecalRechit_ID->push_back(recHitId.rawId());
+    ecalRechit_Eta->push_back(recHitPos.eta());
+    ecalRechit_Phi->push_back(recHitPos.phi());
+    ecalRechit_X->push_back(recHitPos.x());
+    ecalRechit_Y->push_back(recHitPos.y());
+    ecalRechit_Z->push_back(recHitPos.z());
+    ecalRechit_E->push_back(recHit->energy());
+    ecalRechit_T->push_back(recHit->time());
+    ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+    ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+    ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    rechitIndex++;
   }
   
   //Endcap Rechits
@@ -2135,7 +2158,7 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
     // first get detector id
     
     const DetId recHitId = recHit->detid();
-    const uint32_t rhId  = recHitId.rawId();
+    // const uint32_t rhId  = recHitId.rawId();
  
    bool matchedRechit = false;
     std::vector<uint>::iterator it;
@@ -2168,21 +2191,41 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
       continue;
     }
 
-    ecalRechit_ID[nEcalRechits] = recHitId.rawId();
-    ecalRechit_Eta[nEcalRechits] = recHitPos.eta();
-    ecalRechit_Phi[nEcalRechits] = recHitPos.phi();
-    ecalRechit_X[nEcalRechits] = recHitPos.x();
-    ecalRechit_Y[nEcalRechits] = recHitPos.y();
-    ecalRechit_Z[nEcalRechits] = recHitPos.z();
-    ecalRechit_E[nEcalRechits] = recHit->energy();
-    ecalRechit_T[nEcalRechits] = recHit->time();
-    ecalRechit_FlagOOT[nEcalRechits] = recHit->checkFlag(EcalRecHit::kOutOfTime);
-    ecalRechit_GainSwitch1[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
-    ecalRechit_GainSwitch6[nEcalRechits] = recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
-   
-    nEcalRechits++;
+    mapRecHitIdToIndex[recHitId.rawId()] = rechitIndex;
+    ecalRechit_ID->push_back(recHitId.rawId());
+    ecalRechit_Eta->push_back(recHitPos.eta());
+    ecalRechit_Phi->push_back(recHitPos.phi());
+    ecalRechit_X->push_back(recHitPos.x());
+    ecalRechit_Y->push_back(recHitPos.y());
+    ecalRechit_Z->push_back(recHitPos.z());
+    ecalRechit_E->push_back(recHit->energy());
+    ecalRechit_T->push_back(recHit->time());
+    ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+    ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+    ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    rechitIndex++;
+
   }
   
+  //Fill Rechit Indices for electrons and photons
+  for (uint k=0; k<ele_EcalRechitID.size(); k++) {
+    std::vector<uint> tmpVector;
+    for (uint l=0; l<ele_EcalRechitID[k].size(); l++) {
+      tmpVector.push_back(mapRecHitIdToIndex[ele_EcalRechitID[k][l]]);
+    }
+    ele_EcalRechitIndex->push_back(tmpVector);
+    ele_SeedRechitIndex->push_back(mapRecHitIdToIndex[ele_SeedRechitID[k]]);
+  }
+  for (uint k=0; k<pho_EcalRechitID.size(); k++) {
+    std::vector<uint> tmpVector;
+    for (uint l=0; l<pho_EcalRechitID[k].size(); l++) {
+      tmpVector.push_back(mapRecHitIdToIndex[pho_EcalRechitID[k][l]]);
+    }
+    pho_EcalRechitIndex->push_back(tmpVector);
+    pho_SeedRechitIndex->push_back(mapRecHitIdToIndex[pho_SeedRechitID[k]]);
+ }
+ 
+
   return true;
 }
 
