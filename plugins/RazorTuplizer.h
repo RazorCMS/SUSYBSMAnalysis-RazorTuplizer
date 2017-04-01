@@ -567,6 +567,7 @@ protected:
   float jetAllMuonEta[OBJECTARRAYSIZE];
   float jetAllMuonPhi[OBJECTARRAYSIZE];
   float jetAllMuonM[OBJECTARRAYSIZE];
+  float jetPtWeightedDZ[OBJECTARRAYSIZE];
 
   //AK8 Jets
   int nFatJets;
@@ -721,6 +722,8 @@ protected:
   uint runNum;
   uint lumiNum;
   uint eventNum;
+  uint eventTime;//in second, since 1970
+
   float pvX;
   float pvY;
   float pvZ;

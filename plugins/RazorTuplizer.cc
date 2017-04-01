@@ -331,6 +331,7 @@ void RazorTuplizer::enableEventInfoBranches(){
   RazorEvents->Branch("nSlimmedSecondV", &nSlimmedSecondV, "nSlimmedSecondV/i");
   RazorEvents->Branch("lumiNum", &lumiNum, "lumiNum/i");
   RazorEvents->Branch("eventNum", &eventNum, "eventNum/i");
+  RazorEvents->Branch("eventTime", &eventTime, "eventTime/i");
   RazorEvents->Branch("pvX", &pvX, "pvX/F");
   RazorEvents->Branch("pvY", &pvY, "pvY/F");
   RazorEvents->Branch("pvZ", &pvZ, "pvZ/F");
@@ -596,6 +597,7 @@ void RazorTuplizer::enableJetBranches(){
   RazorEvents->Branch("jetAllMuonEta", jetAllMuonEta,"jetAllMuonEta[nJets]/F");
   RazorEvents->Branch("jetAllMuonPhi", jetAllMuonPhi,"jetAllMuonPhi[nJets]/F");
   RazorEvents->Branch("jetAllMuonM", jetAllMuonM,"jetAllMuonM[nJets]/F");
+  RazorEvents->Branch("jetPtWeightedDZ", jetPtWeightedDZ,"jetPtWeightedDZ[nJets]/F");
 }
 
 void RazorTuplizer::enableJetAK8Branches(){
@@ -1034,6 +1036,7 @@ void RazorTuplizer::resetBranches(){
         jetAllMuonEta[i] = 0.0;
         jetAllMuonPhi[i] = 0.0;
         jetAllMuonM[i] = 0.0;
+	jetPtWeightedDZ[i] = 0.0;
 	
         //AK8 Jet
         fatJetE[i] = 0.0;
@@ -1188,6 +1191,7 @@ void RazorTuplizer::resetBranches(){
     //Event
     nPV = -1;
     eventNum = 0;
+    eventTime = 0;
     lumiNum = 0;
     runNum = 0;
     nSlimmedSecondV = 0;
@@ -1210,6 +1214,7 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   runNum = iEvent.id().run();
   lumiNum = iEvent.luminosityBlock();
   eventNum = iEvent.id().event();
+  eventTime = iEvent.eventAuxiliary().time().unixTime();
  
   //number of slimmedSecondaryVertices
   nSlimmedSecondV = secondaryVertices->size();
@@ -2298,7 +2303,20 @@ bool RazorTuplizer::fillJets(){
     ecalRechitJetEtaPhi_ToBeSaved.push_back( pair<double,double>( j.eta(), j.phi() ));
 
 
-   
+    //*************************************************
+    //DZ Variable
+    //*************************************************    
+    double tmpTkPtWeightedDZ = 0;
+    double tmpSumTkPt = 0;
+    for (uint k=0; k < j.numberOfDaughters(); k++) {     	        
+      if (j.daughter(k)->charge() == 0) continue;
+     
+      tmpSumTkPt += ((pat::PackedCandidate*)j.daughter(k))->pt();
+      tmpTkPtWeightedDZ += ((pat::PackedCandidate*)j.daughter(k))->pt() * (((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() - pvZ);         
+    }
+    jetPtWeightedDZ[nJets] = double(bool(tmpSumTkPt>0) ? double(tmpTkPtWeightedDZ/tmpSumTkPt) :-999);  
+    
+
     nJets++;
   }
 
