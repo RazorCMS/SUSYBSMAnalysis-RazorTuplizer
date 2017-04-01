@@ -312,10 +312,9 @@ void RazorTuplizer::setBranches(){
   enableMuonBranches();
   enableElectronBranches();
   enableTauBranches();
-  enableIsoPFCandidateBranches();
+  //enableIsoPFCandidateBranches();
   enablePhotonBranches();
   enableJetBranches();
-  enableJetAK8Branches();
   enableMetBranches();
   
   if (enableTriggerInfo_) enableTriggerBranches();
@@ -348,9 +347,9 @@ void RazorTuplizer::enablePVAllBranches() {
   RazorEvents->Branch("pvAllX", pvAllX,"pvAllX[nPVAll]/F");
   RazorEvents->Branch("pvAllY", pvAllY,"pvAllY[nPVAll]/F");
   RazorEvents->Branch("pvAllZ", pvAllZ,"pvAllZ[nPVAll]/F");
-  RazorEvents->Branch("pvAllLogSumPtSq", pvAllLogSumPtSq,"pvAllLogSumPtSq[nPVAll]/F");
-  RazorEvents->Branch("pvAllSumPx", pvAllSumPx,"pvAllSumPx[nPVAll]/F");
-  RazorEvents->Branch("pvAllSumPy", pvAllSumPy,"pvAllSumPy[nPVAll]/F");
+  // RazorEvents->Branch("pvAllLogSumPtSq", pvAllLogSumPtSq,"pvAllLogSumPtSq[nPVAll]/F");
+  // RazorEvents->Branch("pvAllSumPx", pvAllSumPx,"pvAllSumPx[nPVAll]/F");
+  // RazorEvents->Branch("pvAllSumPy", pvAllSumPy,"pvAllSumPy[nPVAll]/F");
 }
 
 void RazorTuplizer::enablePileUpBranches(){
@@ -440,10 +439,12 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_passTPOneProbeFilter", ele_passTPOneProbeFilter, "ele_passTPOneProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPTwoProbeFilter", ele_passTPTwoProbeFilter, "ele_passTPTwoProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passHLTFilter", &ele_passHLTFilter, Form("ele_passHLTFilter[nElectrons][%d]/O",MAX_ElectronHLTFilters));
-  ele_EcalRechitIndex = new std::vector<std::vector<uint> >; ele_EcalRechitIndex->clear();
-  RazorEvents->Branch("ele_EcalRechitIndex", "std::vector<std::vector<uint> >",&ele_EcalRechitIndex);
-  ele_SeedRechitIndex = new std::vector<uint>; ele_SeedRechitIndex->clear();
-  RazorEvents->Branch("ele_SeedRechitIndex", "std::vector<uint>",&ele_SeedRechitIndex);
+  if (enableEcalRechits_) {
+    ele_EcalRechitIndex = new std::vector<std::vector<uint> >; ele_EcalRechitIndex->clear();
+    RazorEvents->Branch("ele_EcalRechitIndex", "std::vector<std::vector<uint> >",&ele_EcalRechitIndex);
+    ele_SeedRechitIndex = new std::vector<uint>; ele_SeedRechitIndex->clear();
+    RazorEvents->Branch("ele_SeedRechitIndex", "std::vector<uint>",&ele_SeedRechitIndex);
+  }
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -531,10 +532,12 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_seedRecHitSwitchToGain1", pho_seedRecHitSwitchToGain1, "pho_seedRecHitSwitchToGain1[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain6", pho_anyRecHitSwitchToGain6, "pho_anyRecHitSwitchToGain6[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain1", pho_anyRecHitSwitchToGain1, "pho_anyRecHitSwitchToGain1[nPhotons]/F");
-  pho_EcalRechitIndex = new std::vector<std::vector<uint> >; pho_EcalRechitIndex->clear();
-  RazorEvents->Branch("pho_EcalRechitIndex", "std::vector<std::vector<uint> >",&pho_EcalRechitIndex);
-  pho_SeedRechitIndex = new std::vector<uint>; pho_SeedRechitIndex->clear();
-  RazorEvents->Branch("pho_SeedRechitIndex", "std::vector<uint>",&pho_SeedRechitIndex);
+  if (enableEcalRechits_) {
+    pho_EcalRechitIndex = new std::vector<std::vector<uint> >; pho_EcalRechitIndex->clear();
+    RazorEvents->Branch("pho_EcalRechitIndex", "std::vector<std::vector<uint> >",&pho_EcalRechitIndex);
+    pho_SeedRechitIndex = new std::vector<uint>; pho_SeedRechitIndex->clear();
+    RazorEvents->Branch("pho_SeedRechitIndex", "std::vector<uint>",&pho_SeedRechitIndex);
+  }
 
 }
 
@@ -639,35 +642,35 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metCaloPt", &metCaloPt, "metCaloPt/F");
   RazorEvents->Branch("metCaloPhi", &metCaloPhi, "metCaloPhi/F");
 
-  RazorEvents->Branch("metType1PtJetResUp", &metType1PtJetResUp, "metType1PtJetResUp/F");
-  RazorEvents->Branch("metType1PtJetResDown", &metType1PtJetResDown, "metType1PtJetResDown/F");
-  RazorEvents->Branch("metType1PtJetEnUp", &metType1PtJetEnUp, "metType1PtJetEnUp/F");
-  RazorEvents->Branch("metType1PtJetEnDown", &metType1PtJetEnDown, "metType1PtJetEnDown/F");
-  RazorEvents->Branch("metType1PtMuonEnUp", &metType1PtMuonEnUp, "metType1PtMuonEnUp/F");
-  RazorEvents->Branch("metType1PtMuonEnDown", &metType1PtMuonEnDown, "metType1PtMuonEnDown/F");
-  RazorEvents->Branch("metType1PtElectronEnUp", &metType1PtElectronEnUp, "metType1PtElectronEnUp/F");
-  RazorEvents->Branch("metType1PtElectronEnDown", &metType1PtElectronEnDown, "metType1PtElectronEnDown/F");
-  RazorEvents->Branch("metType1PtTauEnUp", &metType1PtTauEnUp, "metType1PtTauEnUp/F");
-  RazorEvents->Branch("metType1PtTauEnDown", &metType1PtTauEnDown, "metType1PtTauEnDown/F");
-  RazorEvents->Branch("metType1PtUnclusteredEnUp", &metType1PtUnclusteredEnUp, "metType1PtUnclusteredEnUp/F");
-  RazorEvents->Branch("metType1PtUnclusteredEnDown", &metType1PtUnclusteredEnDown, "metType1PtUnclusteredEnDown/F");
-  RazorEvents->Branch("metType1PtPhotonEnUp", &metType1PtPhotonEnUp, "metType1PtPhotonEnUp/F");
-  RazorEvents->Branch("metType1PtPhotonEnDown", &metType1PtPhotonEnDown, "metType1PtPhotonEnDown/F");
+  // RazorEvents->Branch("metType1PtJetResUp", &metType1PtJetResUp, "metType1PtJetResUp/F");
+  // RazorEvents->Branch("metType1PtJetResDown", &metType1PtJetResDown, "metType1PtJetResDown/F");
+  // RazorEvents->Branch("metType1PtJetEnUp", &metType1PtJetEnUp, "metType1PtJetEnUp/F");
+  // RazorEvents->Branch("metType1PtJetEnDown", &metType1PtJetEnDown, "metType1PtJetEnDown/F");
+  // RazorEvents->Branch("metType1PtMuonEnUp", &metType1PtMuonEnUp, "metType1PtMuonEnUp/F");
+  // RazorEvents->Branch("metType1PtMuonEnDown", &metType1PtMuonEnDown, "metType1PtMuonEnDown/F");
+  // RazorEvents->Branch("metType1PtElectronEnUp", &metType1PtElectronEnUp, "metType1PtElectronEnUp/F");
+  // RazorEvents->Branch("metType1PtElectronEnDown", &metType1PtElectronEnDown, "metType1PtElectronEnDown/F");
+  // RazorEvents->Branch("metType1PtTauEnUp", &metType1PtTauEnUp, "metType1PtTauEnUp/F");
+  // RazorEvents->Branch("metType1PtTauEnDown", &metType1PtTauEnDown, "metType1PtTauEnDown/F");
+  // RazorEvents->Branch("metType1PtUnclusteredEnUp", &metType1PtUnclusteredEnUp, "metType1PtUnclusteredEnUp/F");
+  // RazorEvents->Branch("metType1PtUnclusteredEnDown", &metType1PtUnclusteredEnDown, "metType1PtUnclusteredEnDown/F");
+  // RazorEvents->Branch("metType1PtPhotonEnUp", &metType1PtPhotonEnUp, "metType1PtPhotonEnUp/F");
+  // RazorEvents->Branch("metType1PtPhotonEnDown", &metType1PtPhotonEnDown, "metType1PtPhotonEnDown/F");
 
-  RazorEvents->Branch("metType1PhiJetResUp", &metType1PhiJetResUp, "metType1PhiJetResUp/F");
-  RazorEvents->Branch("metType1PhiJetResDown", &metType1PhiJetResDown, "metType1PhiJetResDown/F");
-  RazorEvents->Branch("metType1PhiJetEnUp", &metType1PhiJetEnUp, "metType1PhiJetEnUp/F");
-  RazorEvents->Branch("metType1PhiJetEnDown", &metType1PhiJetEnDown, "metType1PhiJetEnDown/F");
-  RazorEvents->Branch("metType1PhiMuonEnUp", &metType1PhiMuonEnUp, "metType1PhiMuonEnUp/F");
-  RazorEvents->Branch("metType1PhiMuonEnDown", &metType1PhiMuonEnDown, "metType1PhiMuonEnDown/F");
-  RazorEvents->Branch("metType1PhiElectronEnUp", &metType1PhiElectronEnUp, "metType1PhiElectronEnUp/F");
-  RazorEvents->Branch("metType1PhiElectronEnDown", &metType1PhiElectronEnDown, "metType1PhiElectronEnDown/F");
-  RazorEvents->Branch("metType1PhiTauEnUp", &metType1PhiTauEnUp, "metType1PhiTauEnUp/F");
-  RazorEvents->Branch("metType1PhiTauEnDown", &metType1PhiTauEnDown, "metType1PhiTauEnDown/F");
-  RazorEvents->Branch("metType1PhiUnclusteredEnUp", &metType1PhiUnclusteredEnUp, "metType1PhiUnclusteredEnUp/F");
-  RazorEvents->Branch("metType1PhiUnclusteredEnDown", &metType1PhiUnclusteredEnDown, "metType1PhiUnclusteredEnDown/F");
-  RazorEvents->Branch("metType1PhiPhotonEnUp", &metType1PhiPhotonEnUp, "metType1PhiPhotonEnUp/F");
-  RazorEvents->Branch("metType1PhiPhotonEnDown", &metType1PhiPhotonEnDown, "metType1PhiPhotonEnDown/F");
+  // RazorEvents->Branch("metType1PhiJetResUp", &metType1PhiJetResUp, "metType1PhiJetResUp/F");
+  // RazorEvents->Branch("metType1PhiJetResDown", &metType1PhiJetResDown, "metType1PhiJetResDown/F");
+  // RazorEvents->Branch("metType1PhiJetEnUp", &metType1PhiJetEnUp, "metType1PhiJetEnUp/F");
+  // RazorEvents->Branch("metType1PhiJetEnDown", &metType1PhiJetEnDown, "metType1PhiJetEnDown/F");
+  // RazorEvents->Branch("metType1PhiMuonEnUp", &metType1PhiMuonEnUp, "metType1PhiMuonEnUp/F");
+  // RazorEvents->Branch("metType1PhiMuonEnDown", &metType1PhiMuonEnDown, "metType1PhiMuonEnDown/F");
+  // RazorEvents->Branch("metType1PhiElectronEnUp", &metType1PhiElectronEnUp, "metType1PhiElectronEnUp/F");
+  // RazorEvents->Branch("metType1PhiElectronEnDown", &metType1PhiElectronEnDown, "metType1PhiElectronEnDown/F");
+  // RazorEvents->Branch("metType1PhiTauEnUp", &metType1PhiTauEnUp, "metType1PhiTauEnUp/F");
+  // RazorEvents->Branch("metType1PhiTauEnDown", &metType1PhiTauEnDown, "metType1PhiTauEnDown/F");
+  // RazorEvents->Branch("metType1PhiUnclusteredEnUp", &metType1PhiUnclusteredEnUp, "metType1PhiUnclusteredEnUp/F");
+  // RazorEvents->Branch("metType1PhiUnclusteredEnDown", &metType1PhiUnclusteredEnDown, "metType1PhiUnclusteredEnDown/F");
+  // RazorEvents->Branch("metType1PhiPhotonEnUp", &metType1PhiPhotonEnUp, "metType1PhiPhotonEnUp/F");
+  // RazorEvents->Branch("metType1PhiPhotonEnDown", &metType1PhiPhotonEnDown, "metType1PhiPhotonEnDown/F");
 
   RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
   RazorEvents->Branch("Flag_HBHETightNoiseFilter", &Flag_HBHETightNoiseFilter, "Flag_HBHETightNoiseFilter/O");
