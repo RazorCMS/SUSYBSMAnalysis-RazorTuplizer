@@ -11,7 +11,9 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/data/Run2016B/DoubleEG/MINIAOD/23Sep2016-v3/00000/026637B9-C797-E611-B157-14187741212B.root'
+#        '/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v1/000/272/775/00000/4EA77143-2A16-E611-81F2-02163E01412F.root'
+#        '/store/data/Run2017B/SingleElectron/MINIAOD/PromptReco-v1/000/297/050/00000/B0F32AAC-4556-E711-9763-02163E013676.root'
+        'file:B0F32AAC-4556-E711-9763-02163E013676.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -31,7 +33,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 #------ Declare the correct global tag ------#
 
 #Global Tag for Run2015D
-process.GlobalTag.globaltag = '80X_dataRun2_ICHEP16_repro_v0'
+process.GlobalTag.globaltag = '92X_dataRun2_Prompt_v4'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
@@ -69,7 +71,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     isData = cms.bool(True),    
     useGen = cms.bool(False),
     isFastsim = cms.bool(False),
-    enableTriggerInfo = cms.bool(True), 
+    enableTriggerInfo = cms.bool(True),                                 
     enableEcalRechits = cms.bool(False),                    
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
     eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
@@ -96,15 +98,14 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     triggerBits = cms.InputTag("TriggerResults","","HLT"),
     triggerPrescales = cms.InputTag("patTrigger"),
-    triggerObjects = cms.InputTag("selectedPatTrigger"),
+    triggerObjects = cms.InputTag("slimmedPatTrigger"),
     metFilterBits = cms.InputTag("TriggerResults", "", "RECO"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
     hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
     hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
     BadChargedCandidateFilter = cms.InputTag("BadChargedCandidateFilter",""),
     BadMuonFilter = cms.InputTag("BadPFMuonFilter",""),
-    badGlobalMuonFilter = cms.InputTag("badGlobalMuonTagger","bad"),
-    duplicateMuonFilter = cms.InputTag("cloneGlobalMuonTagger","bad"),
+
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
     puInfo = cms.InputTag("addPileupInfo", "", "HLT"), #uncomment if no pre-mixing
@@ -141,22 +142,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 )
 
 #run
-process.egmIDPath = cms.Path(process.egmGsfElectronIDSequence)
-
-process.hipMetFiltersPath = cms.Path(process.BadChargedCandidateFilter *
-                                     process.BadPFMuonFilter)
-
-process.load("RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff")
-process.Flag_badMuons = cms.Path(process.badGlobalMuonTagger)
-process.Flag_duplicateMuons = cms.Path(process.cloneGlobalMuonTagger)
-
-process.ntupleStep = cms.Path(process.ntuples)
-
-#process.dump=cms.EDAnalyzer('EventContentAnalyzer')
-#process.whyy = cms.Path(process.dump)
-
-process.schedule = cms.Schedule( process.egmIDPath,
-                                 process.hipMetFiltersPath,
-                                 process.Flag_badMuons,
-                                 process.Flag_duplicateMuons,
-                                 process.ntupleStep)
+process.p = cms.Path( process.egmGsfElectronIDSequence *
+                      process.BadChargedCandidateFilter*
+                      process.BadPFMuonFilter*
+                      process.ntuples)
