@@ -13,7 +13,7 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
 #        '/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v1/000/272/775/00000/4EA77143-2A16-E611-81F2-02163E01412F.root'
 #        '/store/data/Run2017B/SingleElectron/MINIAOD/PromptReco-v1/000/297/050/00000/B0F32AAC-4556-E711-9763-02163E013676.root'
-        'file:B0F32AAC-4556-E711-9763-02163E013676.root'
+        '/store/data/Run2017B/SingleElectron/MINIAOD/PromptReco-v1/000/297/050/00000/B0F32AAC-4556-E711-9763-02163E013676.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
