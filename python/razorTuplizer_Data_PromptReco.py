@@ -11,10 +11,11 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:88BF317B-500A-E611-86D6-02163E014126.root'
+#        '/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v1/000/272/775/00000/4EA77143-2A16-E611-81F2-02163E01412F.root'
+        '/store/data/Run2016B/HTMHT/MINIAOD/PromptReco-v2/000/275/309/00000/2A61A026-CA37-E611-90CE-02163E011E19.root'
     )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
@@ -35,10 +36,32 @@ process.GlobalTag.globaltag = '80X_dataRun2_Prompt_v8'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
-process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
-process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
-process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
-process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
+#process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
+#process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
+#process.HBHENoiseFilterResultProducer.IgnoreTS4TS5ifJetInLowBVRegion=cms.bool(False) 
+#process.HBHENoiseFilterResultProducer.defaultDecision = cms.string("HBHENoiseFilterResultRun2Loose")
+
+process.load('RecoMET.METFilters.BadChargedCandidateFilter_cfi')
+process.BadChargedCandidateFilter.muons = cms.InputTag("slimmedMuons")
+process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
+
+process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
+process.BadPFMuonFilter.muons = cms.InputTag("slimmedMuons")
+process.BadPFMuonFilter.PFCandidates = cms.InputTag("packedPFCandidates")
+process.BadPFMuonFilter.taggingMode = cms.bool(True)
+
+#------ Electron MVA Setup ------#
+# define which IDs we want to produce
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
+dataFormat = DataFormat.MiniAOD
+switchOnVIDElectronIdProducer(process, dataFormat)
+my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff','RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_HZZ_V1_cff']
+
+#add them to the VID producer
+for idmod in my_id_modules:
+    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+
 
 #------ Analyzer ------#
 
@@ -78,6 +101,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
     hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
     hbheIsoNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHEIsoNoiseFilterResult"),
+    BadChargedCandidateFilter = cms.InputTag("BadChargedCandidateFilter",""),
+    BadMuonFilter = cms.InputTag("BadPFMuonFilter",""),
 
     lheInfo = cms.InputTag("externalLHEProducer", "", "LHE"),
     genInfo = cms.InputTag("generator", "", "SIM"),
@@ -107,9 +132,15 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     gedPhotonCores = cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "RECO"),
     superClusters = cms.InputTag("reducedEgamma", "reducedSuperClusters", "RECO"),
 
-    lostTracks = cms.InputTag("lostTracks", "", "RECO")
+    lostTracks = cms.InputTag("lostTracks", "", "RECO"),
+    mvaGeneralPurposeValuesMap     = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16GeneralPurposeV1Values"),
+    mvaGeneralPurposeCategoriesMap = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16GeneralPurposeV1Categories"),
+    mvaHZZValuesMap     = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16HZZV1Values"),
+    mvaHZZCategoriesMap = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16HZZV1Categories")
 )
 
 #run
-process.p = cms.Path( process.HBHENoiseFilterResultProducer*
+process.p = cms.Path( process.egmGsfElectronIDSequence *
+                      process.BadChargedCandidateFilter*
+                      process.BadPFMuonFilter*
                       process.ntuples)

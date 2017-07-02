@@ -19,6 +19,8 @@ using namespace std;
 
 // CMSSW framework includes
 #include "FWCore/Framework/interface/Frameworkfwd.h"
+#include "FWCore/Framework/interface/Run.h"
+#include "FWCore/Framework/interface/LuminosityBlock.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -49,6 +51,8 @@ using namespace std;
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenLumiInfoHeader.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaEleEstimatorCSA14.h"
@@ -57,14 +61,31 @@ using namespace std;
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/EGammaMvaPhotonEstimator.h"
 #include "SUSYBSMAnalysis/RazorTuplizer/interface/RazorPDFWeightsHelper.h"
 
+//ECAL Rechits
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+
+// Geometry
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+
 //ROOT includes
 #include "TTree.h"
 #include "TFile.h"
 #include "TLorentzVector.h"
 
 //------ Array Size Constants ------//
-#define OBJECTARRAYSIZE 99
+#define OBJECTARRAYSIZE 1000
 #define GENPARTICLEARRAYSIZE 500
+#define MAX_NPV 200
+#define ECALRECHITARRAYSIZE 80000
+#define ECALRECHITARRAYSIZEPEROBJECT 500
 
 //------ Class declaration ------//
 
@@ -80,6 +101,7 @@ public:
   //enable desired output variables
   virtual void setBranches();
   virtual void enableEventInfoBranches();
+  virtual void enablePVAllBranches();
   virtual void enablePileUpBranches();
   virtual void enableMuonBranches();
   virtual void enableElectronBranches();
@@ -93,12 +115,14 @@ public:
   virtual void enableTriggerBranches();
   virtual void enableMCBranches();
   virtual void enableGenParticleBranches();
+  virtual void enableEcalRechitBranches();
   
   //select objects and fill tree branches
   virtual bool fillEventInfo(const edm::Event& iEvent);
+  virtual bool fillPVAll();
   virtual bool fillPileUp();//Fill summary PU info
   virtual bool fillMuons();//Fills looseID muon 4-momentum only. PT > 5GeV
-  virtual bool fillElectrons();//Fills Ele 4-momentum only. PT > 5GeV
+  virtual bool fillElectrons(const edm::Event& iEvent);//Fills Ele 4-momentum only. PT > 5GeV
   virtual bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
   virtual bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
   virtual bool fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup);//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
@@ -109,6 +133,7 @@ public:
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
   virtual bool fillGenParticles();
+  virtual bool fillEcalRechits(const edm::EventSetup& iSetup);
   
   //------ HELPER FUNCTIONS ------//
   
@@ -127,7 +152,7 @@ public:
   //follows the particle's ancestry back and finds the "oldest" particle with the same ID
   const reco::Candidate* findOriginalMotherWithSameID(const reco::Candidate *particle);
   //electron veto for photons (for use until an official recipe exists)
-  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+  bool hasMatchedPromptElectron(const reco::SuperClusterRef &sc, edm::Handle<edm::View<reco::GsfElectron> > eleCol,
 				const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
 				float lxyMin=2.0, float probMin=1e-6, unsigned int nHitsBeforeVtxMax=0);
   
@@ -147,6 +172,7 @@ public:
 protected:
   virtual void beginJob() override;
   virtual void beginRun(const edm::Run&, const edm::EventSetup&) override;
+  virtual void beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const&) override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
 
@@ -162,6 +188,7 @@ protected:
   bool    useGen_;
   bool    isFastsim_;
   bool enableTriggerInfo_;
+  bool enableEcalRechits_;
   
   // Mapping of the HLT Triggers and Filters
   string triggerPathNamesFile_;
@@ -180,7 +207,7 @@ protected:
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
   edm::EDGetTokenT<pat::MuonCollection> muonsToken_;
-  edm::EDGetTokenT<pat::ElectronCollection> electronsToken_;
+  edm::EDGetTokenT<edm::View<reco::GsfElectron> > electronsToken_;
   edm::EDGetTokenT<pat::TauCollection> tausToken_;
   edm::EDGetTokenT<pat::PhotonCollection> photonsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
@@ -194,16 +221,25 @@ protected:
   edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjectsToken_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken_;
   edm::EDGetTokenT<pat::METCollection> metToken_;
+  edm::EDGetTokenT<pat::METCollection> metEGCleanToken_;
+  edm::EDGetTokenT<pat::METCollection> metMuEGCleanToken_;
+  edm::EDGetTokenT<pat::METCollection> metMuEGCleanCorrToken_;
+  edm::EDGetTokenT<pat::METCollection> metUncorrectedToken_;
   edm::EDGetTokenT<pat::METCollection> metNoHFToken_;
   edm::EDGetTokenT<pat::METCollection> metPuppiToken_;
   edm::EDGetTokenT<edm::TriggerResults> metFilterBitsToken_;
   edm::EDGetTokenT<bool> hbheNoiseFilterToken_;
   edm::EDGetTokenT<bool> hbheTightNoiseFilterToken_;
   edm::EDGetTokenT<bool> hbheIsoNoiseFilterToken_;
+  edm::EDGetTokenT<bool> badChargedCandidateFilterToken_;
+  edm::EDGetTokenT<bool> badMuonFilterToken_;
+  edm::EDGetTokenT<edm::PtrVector<reco::Muon>> badGlobalMuonFilterToken_;
+  edm::EDGetTokenT<edm::PtrVector<reco::Muon>> duplicateMuonFilterToken_;
   edm::InputTag lheRunInfoTag_;
   edm::EDGetTokenT<LHERunInfoProduct> lheRunInfoToken_;
   edm::EDGetTokenT<LHEEventProduct> lheInfoToken_;
   edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
+  edm::EDGetTokenT<GenLumiInfoHeader> genLumiHeaderToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > puInfoToken_;
   edm::EDGetTokenT<HcalNoiseSummary> hcalNoiseInfoToken_;
   edm::EDGetTokenT<vector<reco::VertexCompositePtrCandidate> > secondaryVerticesToken_;
@@ -225,7 +261,11 @@ protected:
   edm::EDGetTokenT<vector<reco::PhotonCore> > gedPhotonCoresToken_;
   edm::EDGetTokenT<vector<reco::SuperCluster> > superClustersToken_;
   edm::EDGetTokenT<vector<pat::PackedCandidate> > lostTracksToken_;
-  
+  edm::EDGetTokenT<edm::ValueMap<float> > mvaGeneralPurposeValuesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<int> > mvaGeneralPurposeCategoriesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<float> > mvaHZZValuesMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<int> > mvaHZZCategoriesMapToken_;
+
   
   //EDM handles for each miniAOD input object
   edm::Handle<edm::TriggerResults> triggerBits;
@@ -235,13 +275,17 @@ protected:
   edm::Handle<reco::VertexCollection> vertices;
   edm::Handle<pat::PackedCandidateCollection> packedPFCands;
   edm::Handle<pat::MuonCollection> muons;
-  edm::Handle<pat::ElectronCollection> electrons;
+  edm::Handle<edm::View<reco::GsfElectron> > electrons;
   edm::Handle<pat::PhotonCollection> photons;
   edm::Handle<pat::TauCollection> taus;
   edm::Handle<pat::JetCollection> jets;
   edm::Handle<pat::JetCollection> jetsPuppi;
   edm::Handle<pat::JetCollection> jetsAK8;
   edm::Handle<pat::METCollection> mets;
+  edm::Handle<pat::METCollection> metsEGClean;
+  edm::Handle<pat::METCollection> metsMuEGClean;
+  edm::Handle<pat::METCollection> metsMuEGCleanCorr;
+  edm::Handle<pat::METCollection> metsUncorrected;
   edm::Handle<pat::METCollection> metsNoHF;
   edm::Handle<pat::METCollection> metsPuppi;
   edm::Handle<edm::View<reco::GenParticle> > prunedGenParticles;
@@ -249,11 +293,16 @@ protected:
   edm::Handle<reco::GenJetCollection> genJets;
   edm::Handle<LHEEventProduct> lheInfo;
   edm::Handle<GenEventInfoProduct> genInfo;
+  edm::Handle<GenLumiInfoHeader> genLumiHeader;
   edm::Handle<std::vector<PileupSummaryInfo> > puInfo;
   edm::Handle<HcalNoiseSummary> hcalNoiseInfo;
   edm::Handle<bool> hbheNoiseFilter;
   edm::Handle<bool> hbheTightNoiseFilter;
   edm::Handle<bool> hbheIsoNoiseFilter;
+  edm::Handle<bool> badChargedCandidateFilter;
+  edm::Handle<bool> badMuonFilter;
+  edm::Handle<edm::PtrVector<reco::Muon>> badGlobalMuonFilter;
+  edm::Handle<edm::PtrVector<reco::Muon>> duplicateMuonFilter;
   edm::Handle<vector<reco::VertexCompositePtrCandidate> > secondaryVertices;
   edm::Handle<double> rhoAll;
   edm::Handle<double> rhoFastjetAll;
@@ -285,6 +334,15 @@ protected:
 
   //------ Variables for tree ------//
 
+  //PVAll (full list of primary vertices for analysis-level vtx selection)
+  int nPVAll;
+  float pvAllX[MAX_NPV];
+  float pvAllY[MAX_NPV];
+  float pvAllZ[MAX_NPV];
+  float pvAllLogSumPtSq[MAX_NPV];
+  float pvAllSumPx[MAX_NPV];
+  float pvAllSumPy[MAX_NPV];
+  
   //PU
   int nBunchXing;
   int BunchXing[OBJECTARRAYSIZE];
@@ -318,6 +376,13 @@ protected:
   float muon_activityMiniIsoAnnulus[OBJECTARRAYSIZE];
   bool  muon_passSingleMuTagFilter[OBJECTARRAYSIZE];
   bool  muon_passHLTFilter[OBJECTARRAYSIZE][MAX_MuonHLTFilters];
+  float muon_validFractionTrackerHits[OBJECTARRAYSIZE];
+  bool  muon_isGlobal[OBJECTARRAYSIZE];
+  float muon_normChi2[OBJECTARRAYSIZE];
+  float muon_chi2LocalPosition[OBJECTARRAYSIZE];
+  float muon_kinkFinder[OBJECTARRAYSIZE];
+  float muon_segmentCompatability[OBJECTARRAYSIZE];
+  bool muonIsICHEPMedium[OBJECTARRAYSIZE];
 
   //Electrons
   int nElectrons;
@@ -344,11 +409,13 @@ protected:
   float ele_chargedIso[OBJECTARRAYSIZE];
   float ele_photonIso[OBJECTARRAYSIZE];
   float ele_neutralHadIso[OBJECTARRAYSIZE];
-  int ele_MissHits[OBJECTARRAYSIZE];
-  bool ele_PassConvVeto[OBJECTARRAYSIZE];
+  int   ele_MissHits[OBJECTARRAYSIZE];
+  bool  ele_PassConvVeto[OBJECTARRAYSIZE];
   float ele_OneOverEminusOneOverP[OBJECTARRAYSIZE];
-  float ele_IDMVATrig[OBJECTARRAYSIZE];
-  float ele_IDMVANonTrig[OBJECTARRAYSIZE];
+  float ele_IDMVAGeneralPurpose[OBJECTARRAYSIZE];
+  int   ele_IDMVACategoryGeneralPurpose[OBJECTARRAYSIZE];
+  float ele_IDMVAHZZ[OBJECTARRAYSIZE];
+  int   ele_IDMVACategoryHZZ[OBJECTARRAYSIZE];
   float ele_RegressionE[OBJECTARRAYSIZE];
   float ele_CombineP4[OBJECTARRAYSIZE];
   float ele_ptrel[OBJECTARRAYSIZE];
@@ -362,6 +429,10 @@ protected:
   bool ele_passTPOneProbeFilter[OBJECTARRAYSIZE];
   bool ele_passTPTwoProbeFilter[OBJECTARRAYSIZE];  
   bool ele_passHLTFilter[OBJECTARRAYSIZE][MAX_ElectronHLTFilters];
+  vector<vector<uint> > ele_EcalRechitID;
+  vector<vector<uint> > *ele_EcalRechitIndex;
+  vector<uint> ele_SeedRechitID;
+  vector<uint> *ele_SeedRechitIndex;
 
   //Taus
   int nTaus;
@@ -403,7 +474,6 @@ protected:
   int   isoPFCandidatePdgId[OBJECTARRAYSIZE];
 
   //Photons
-  static const int MAX_NPV = 200;
   int nPhotons;
   float phoE[OBJECTARRAYSIZE];
   float phoPt[OBJECTARRAYSIZE];
@@ -430,6 +500,7 @@ protected:
   float pho_RegressionEUncertainty[OBJECTARRAYSIZE];
   float pho_IDMVA[OBJECTARRAYSIZE];
   float pho_superClusterEnergy[OBJECTARRAYSIZE];
+  float pho_superClusterRawEnergy[OBJECTARRAYSIZE];
   float pho_superClusterEta[OBJECTARRAYSIZE];
   float pho_superClusterPhi[OBJECTARRAYSIZE];
   float pho_superClusterX[OBJECTARRAYSIZE];
@@ -437,6 +508,35 @@ protected:
   float pho_superClusterZ[OBJECTARRAYSIZE];
   bool pho_hasPixelSeed[OBJECTARRAYSIZE];
   bool pho_passHLTFilter[OBJECTARRAYSIZE][MAX_PhotonHLTFilters];
+  int pho_convType[OBJECTARRAYSIZE];
+  float pho_convTrkZ[OBJECTARRAYSIZE];
+  float pho_convTrkClusZ[OBJECTARRAYSIZE];
+  float pho_vtxSumPx[OBJECTARRAYSIZE][MAX_NPV];
+  float pho_vtxSumPy[OBJECTARRAYSIZE][MAX_NPV];
+  bool  pho_seedRecHitSwitchToGain6[OBJECTARRAYSIZE];
+  bool  pho_seedRecHitSwitchToGain1[OBJECTARRAYSIZE];
+  bool  pho_anyRecHitSwitchToGain6[OBJECTARRAYSIZE];
+  bool  pho_anyRecHitSwitchToGain1[OBJECTARRAYSIZE];
+  vector<vector<uint> > pho_EcalRechitID;
+  vector<vector<uint> > *pho_EcalRechitIndex;
+  vector<uint>  pho_SeedRechitID;
+  vector<uint>  *pho_SeedRechitIndex;
+
+  //Ecal RecHits
+  vector<uint> ecalRechitID_ToBeSaved;
+  vector<pair<double,double> > ecalRechitEtaPhi_ToBeSaved;
+  vector<pair<double,double> > ecalRechitJetEtaPhi_ToBeSaved;
+  vector<float> *ecalRechit_Eta;
+  vector<float> *ecalRechit_Phi;
+  vector<float> *ecalRechit_X;
+  vector<float> *ecalRechit_Y;
+  vector<float> *ecalRechit_Z;
+  vector<float> *ecalRechit_E;
+  vector<float> *ecalRechit_T;
+  vector<uint> *ecalRechit_ID;
+  vector<bool> *ecalRechit_FlagOOT;
+  vector<bool> *ecalRechit_GainSwitch1;
+  vector<bool> *ecalRechit_GainSwitch6;
 
   //AK4 Jets
   int nJets;
@@ -469,6 +569,7 @@ protected:
   float jetAllMuonEta[OBJECTARRAYSIZE];
   float jetAllMuonPhi[OBJECTARRAYSIZE];
   float jetAllMuonM[OBJECTARRAYSIZE];
+  float jetPtWeightedDZ[OBJECTARRAYSIZE];
 
   //AK8 Jets
   int nFatJets;
@@ -490,6 +591,15 @@ protected:
   float UncMETdpx;
   float UncMETdpy;
   float UncMETdSumEt;
+
+  float metEGCleanPt;
+  float metEGCleanPhi;
+  float metMuEGCleanPt;
+  float metMuEGCleanPhi;
+  float metMuEGCleanCorrPt;
+  float metMuEGCleanCorrPhi;
+  float metUncorrectedPt;
+  float metUncorrectedPhi;
   float metType0Pt;
   float metType0Phi;
   float metType1Pt;
@@ -502,6 +612,8 @@ protected:
   float metNoHFPhi;
   float metPuppiPt;
   float metPuppiPhi;
+  float metCaloPt;
+  float metCaloPhi;
 
   float metType1PtJetResUp;
   float metType1PtJetResDown;
@@ -545,6 +657,10 @@ protected:
   bool Flag_HBHENoiseFilter;
   bool Flag_HBHETightNoiseFilter;
   bool Flag_HBHEIsoNoiseFilter;
+  bool Flag_badChargedCandidateFilter;
+  bool Flag_badMuonFilter;
+  bool Flag_badGlobalMuonFilter;
+  bool Flag_duplicateMuonFilter;
   bool Flag_CSCTightHaloFilter;
   bool Flag_hcalLaserEventFilter;
   bool Flag_EcalDeadCellTriggerPrimitiveFilter;
@@ -576,7 +692,7 @@ protected:
   float genQScale;
   float genAlphaQCD;
   float genAlphaQED;
-  vector<string> *lheComments;
+  string lheComments;
   vector<float> *scaleWeights;
   vector<float> *pdfWeights;
   vector<float> *alphasWeights;
@@ -604,9 +720,12 @@ protected:
   //event info
   bool isData;
   int nPV;
+  int nSlimmedSecondV;
   uint runNum;
   uint lumiNum;
   uint eventNum;
+  uint eventTime;//in second, since 1970
+
   float pvX;
   float pvY;
   float pvZ;

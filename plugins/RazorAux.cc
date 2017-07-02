@@ -128,29 +128,32 @@ const reco::Candidate* RazorTuplizer::findOriginalMotherWithSameID(const reco::C
 //A copy from RecoEgamma/EgammaTools/src/ConversionTools.cc
 //temporary solution because I'm not sure how to convert a PAT electron handle
 //to a GSF electron handle
-bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, const edm::Handle<std::vector<pat::Electron> > &eleCol,
+bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, edm::Handle<edm::View<reco::GsfElectron> > eleCol,
 					const edm::Handle<reco::ConversionCollection> &convCol, const math::XYZPoint &beamspot, 
 					float lxyMin, float probMin, unsigned int nHitsBeforeVtxMax) {
 
-   //check if a given SuperCluster matches to at least one GsfElectron having zero expected inner hits
-   //and not matching any conversion in the collection passing the quality cuts
- 
-   if (sc.isNull()) return false;
-   
-   for (std::vector<pat::Electron>::const_iterator it = eleCol->begin(); it!=eleCol->end(); ++it) {
-     //match electron to supercluster
-     if (it->superCluster()!=sc) continue;
- 
-     //check expected inner hits
-     if (it->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS) > 0) continue;
- 
-     //check if electron is matching to a conversion
-     if (ConversionTools::hasMatchedConversion(*it,convCol,beamspot,lxyMin,probMin,nHitsBeforeVtxMax)) continue;
-        
-     return true;
-   }
-   
-   return false;
+  //check if a given SuperCluster matches to at least one GsfElectron having zero expected inner hits
+  //and not matching any conversion in the collection passing the quality cuts
+  
+  if (sc.isNull()) return false;
+  
+  for (size_t i = 0; i < electrons->size(); ++i){
+    // for (std::vector<pat::Electron>::const_iterator it = eleCol->begin(); it!=eleCol->end(); ++it) {
+    const auto ele = electrons->ptrAt(i);
+    
+    //match electron to supercluster
+    if (ele->superCluster()!=sc) continue;
+    
+    //check expected inner hits
+    if (ele->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS) > 0) continue;
+    
+    //check if electron is matching to a conversion
+    if (ConversionTools::hasMatchedConversion(*ele,convCol,beamspot,lxyMin,probMin,nHitsBeforeVtxMax)) continue;
+    
+    return true;
+  }
+  
+  return false;
   
 }
 

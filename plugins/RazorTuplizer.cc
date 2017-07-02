@@ -14,13 +14,14 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   useGen_(iConfig.getParameter<bool> ("useGen")),  
   isFastsim_(iConfig.getParameter<bool> ("isFastsim")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
+  enableEcalRechits_(iConfig.getParameter<bool> ("enableEcalRechits")),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
   photonHLTFilterNamesFile_(iConfig.getParameter<string> ("photonHLTFilterNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
-  electronsToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
+  electronsToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   tausToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
   photonsToken_(consumes<pat::PhotonCollection>(iConfig.getParameter<edm::InputTag>("photons"))),
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
@@ -34,16 +35,25 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   triggerObjectsToken_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("triggerObjects"))),
   triggerPrescalesToken_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("triggerPrescales"))),     
   metToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("mets"))),
+  metEGCleanToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsEGClean"))),
+  metMuEGCleanToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsMuEGClean"))),
+  metMuEGCleanCorrToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsMuEGCleanCorr"))),
+  metUncorrectedToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsUncorrected"))),
   metNoHFToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsNoHF"))),
   metPuppiToken_(consumes<pat::METCollection>(iConfig.getParameter<edm::InputTag>("metsPuppi"))),
   metFilterBitsToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("metFilterBits"))),
   hbheNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheNoiseFilter"))),
   hbheTightNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheTightNoiseFilter"))),
   hbheIsoNoiseFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("hbheIsoNoiseFilter"))),
+  badChargedCandidateFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("BadChargedCandidateFilter"))),
+  badMuonFilterToken_(consumes<bool>(iConfig.getParameter<edm::InputTag>("BadMuonFilter"))),
+  badGlobalMuonFilterToken_(consumes<edm::PtrVector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("badGlobalMuonFilter"))),
+  duplicateMuonFilterToken_(consumes<edm::PtrVector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("duplicateMuonFilter"))),
   lheRunInfoTag_(iConfig.getParameter<edm::InputTag>("lheInfo")),
   lheRunInfoToken_(consumes<LHERunInfoProduct,edm::InRun>(lheRunInfoTag_)),
   lheInfoToken_(consumes<LHEEventProduct>(iConfig.getParameter<edm::InputTag>("lheInfo"))),
   genInfoToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("genInfo"))),
+  genLumiHeaderToken_(consumes<GenLumiInfoHeader,edm::InLumi>(edm::InputTag("generator",""))),
   puInfoToken_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("puInfo"))),
   hcalNoiseInfoToken_(consumes<HcalNoiseSummary>(iConfig.getParameter<edm::InputTag>("hcalNoiseInfo"))),
   secondaryVerticesToken_(consumes<vector<reco::VertexCompositePtrCandidate> >(iConfig.getParameter<edm::InputTag>("secondaryVertices"))),
@@ -64,7 +74,11 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   gedGsfElectronCoresToken_(consumes<vector<reco::GsfElectronCore> >(iConfig.getParameter<edm::InputTag>("gedGsfElectronCores"))),
   gedPhotonCoresToken_(consumes<vector<reco::PhotonCore> >(iConfig.getParameter<edm::InputTag>("gedPhotonCores"))),
   superClustersToken_(consumes<vector<reco::SuperCluster> >(iConfig.getParameter<edm::InputTag>("superClusters"))),
-  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks")))
+  lostTracksToken_(consumes<vector<pat::PackedCandidate> >(iConfig.getParameter<edm::InputTag>("lostTracks"))),
+  mvaGeneralPurposeValuesMapToken_(consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("mvaGeneralPurposeValuesMap"))),
+  mvaGeneralPurposeCategoriesMapToken_(consumes<edm::ValueMap<int> >(iConfig.getParameter<edm::InputTag>("mvaGeneralPurposeCategoriesMap"))),
+  mvaHZZValuesMapToken_(consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("mvaHZZValuesMap"))),
+  mvaHZZCategoriesMapToken_(consumes<edm::ValueMap<int> >(iConfig.getParameter<edm::InputTag>("mvaHZZCategoriesMap")))
 {
   //declare the TFileService for output
   edm::Service<TFileService> fs;
@@ -293,17 +307,18 @@ RazorTuplizer::~RazorTuplizer()
 //------ Enable the desired set of branches ------//
 void RazorTuplizer::setBranches(){
   enableEventInfoBranches();
+  enablePVAllBranches();
   enablePileUpBranches();
   enableMuonBranches();
   enableElectronBranches();
   enableTauBranches();
-  enableIsoPFCandidateBranches();
+  //enableIsoPFCandidateBranches();
   enablePhotonBranches();
   enableJetBranches();
-  enableJetAK8Branches();
   enableMetBranches();
   
   if (enableTriggerInfo_) enableTriggerBranches();
+  if (enableEcalRechits_) enableEcalRechitBranches();
   enableMCBranches();
   enableGenParticleBranches();
 }
@@ -312,8 +327,10 @@ void RazorTuplizer::enableEventInfoBranches(){
   RazorEvents->Branch("isData", &isData, "isData/O");
   RazorEvents->Branch("nPV", &nPV, "nPV/I");
   RazorEvents->Branch("runNum", &runNum, "runNum/i");
+  RazorEvents->Branch("nSlimmedSecondV", &nSlimmedSecondV, "nSlimmedSecondV/i");
   RazorEvents->Branch("lumiNum", &lumiNum, "lumiNum/i");
   RazorEvents->Branch("eventNum", &eventNum, "eventNum/i");
+  RazorEvents->Branch("eventTime", &eventTime, "eventTime/i");
   RazorEvents->Branch("pvX", &pvX, "pvX/F");
   RazorEvents->Branch("pvY", &pvY, "pvY/F");
   RazorEvents->Branch("pvZ", &pvZ, "pvZ/F");
@@ -323,6 +340,16 @@ void RazorTuplizer::enableEventInfoBranches(){
   RazorEvents->Branch("fixedGridRhoFastjetCentralCalo", &fixedGridRhoFastjetCentralCalo, "fixedGridRhoFastjetCentralCalo/F");
   RazorEvents->Branch("fixedGridRhoFastjetCentralChargedPileUp", &fixedGridRhoFastjetCentralChargedPileUp, "fixedGridRhoFastjetCentralChargedPileUp/F");
   RazorEvents->Branch("fixedGridRhoFastjetCentralNeutral", &fixedGridRhoFastjetCentralNeutral, "fixedGridRhoFastjetCentralNeutral/F");
+}
+
+void RazorTuplizer::enablePVAllBranches() {
+  RazorEvents->Branch("nPVAll", &nPVAll,"nPVAll/I");
+  RazorEvents->Branch("pvAllX", pvAllX,"pvAllX[nPVAll]/F");
+  RazorEvents->Branch("pvAllY", pvAllY,"pvAllY[nPVAll]/F");
+  RazorEvents->Branch("pvAllZ", pvAllZ,"pvAllZ[nPVAll]/F");
+  // RazorEvents->Branch("pvAllLogSumPtSq", pvAllLogSumPtSq,"pvAllLogSumPtSq[nPVAll]/F");
+  // RazorEvents->Branch("pvAllSumPx", pvAllSumPx,"pvAllSumPx[nPVAll]/F");
+  // RazorEvents->Branch("pvAllSumPy", pvAllSumPy,"pvAllSumPy[nPVAll]/F");
 }
 
 void RazorTuplizer::enablePileUpBranches(){
@@ -359,6 +386,13 @@ void RazorTuplizer::enableMuonBranches(){
   RazorEvents->Branch("muon_activityMiniIsoAnnulus", muon_activityMiniIsoAnnulus, "muon_activityMiniIsoAnnulus[nMuons]/F");
   RazorEvents->Branch("muon_passSingleMuTagFilter", muon_passSingleMuTagFilter, "muon_passSingleMuTagFilter[nMuons]/O");
   RazorEvents->Branch("muon_passHLTFilter", &muon_passHLTFilter, Form("muon_passHLTFilter[nMuons][%d]/O",MAX_MuonHLTFilters));
+  RazorEvents->Branch("muon_validFractionTrackerHits", muon_validFractionTrackerHits, "muon_validFractionTrackerHits[nMuons]/F");
+  RazorEvents->Branch("muon_isGlobal", muon_isGlobal,"muon_isGlobal[nMuons]/O");
+  RazorEvents->Branch("muon_normChi2", muon_normChi2,"muon_normChi2[nMuons]/F");
+  RazorEvents->Branch("muon_chi2LocalPosition", muon_chi2LocalPosition,"muon_chi2LocalPosition[nMuons]/F");
+  RazorEvents->Branch("muon_kinkFinder", muon_kinkFinder,"muon_kinkFinder[nMuons]/F");
+  RazorEvents->Branch("muon_segmentCompatability", muon_segmentCompatability,"muon_segmentCompatability[nMuons]/F");
+  RazorEvents->Branch("muonIsICHEPMedium", muonIsICHEPMedium,"muonIsICHEPMedium[nMuons]/O");
 }
 
 void RazorTuplizer::enableElectronBranches(){
@@ -388,8 +422,10 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_MissHits", ele_MissHits, "ele_MissHits[nElectrons]/I");
   RazorEvents->Branch("ele_PassConvVeto", ele_PassConvVeto, "ele_PassConvVeto[nElectrons]/O");
   RazorEvents->Branch("ele_OneOverEminusOneOverP", ele_OneOverEminusOneOverP, "ele_OneOverEminusOneOverP[nElectrons]/F");
-  RazorEvents->Branch("ele_IDMVATrig", ele_IDMVATrig, "ele_IDMVATrig[nElectrons]/F");
-  RazorEvents->Branch("ele_IDMVANonTrig", ele_IDMVANonTrig, "ele_IDMVANonTrig[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVAGeneralPurpose", ele_IDMVAGeneralPurpose, "ele_IDMVAGeneralPurpose[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVACategoryGeneralPurpose", ele_IDMVACategoryGeneralPurpose, "ele_IDMVACategoryGeneralPurpose[nElectrons]/I"); 
+  RazorEvents->Branch("ele_IDMVAHZZ", ele_IDMVAHZZ, "ele_IDMVAHZZ[nElectrons]/F");
+  RazorEvents->Branch("ele_IDMVACategoryHZZ", ele_IDMVACategoryHZZ, "ele_IDMVACategoryHZZ[nElectrons]/I"); 
   RazorEvents->Branch("ele_RegressionE", ele_RegressionE, "ele_RegressionE[nElectrons]/F");
   RazorEvents->Branch("ele_CombineP4", ele_CombineP4, "ele_CombineP4[nElectrons]/F");
   RazorEvents->Branch("ele_ptrel", ele_ptrel, "ele_ptrel[nElectrons]/F");
@@ -403,6 +439,12 @@ void RazorTuplizer::enableElectronBranches(){
   RazorEvents->Branch("ele_passTPOneProbeFilter", ele_passTPOneProbeFilter, "ele_passTPOneProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passTPTwoProbeFilter", ele_passTPTwoProbeFilter, "ele_passTPTwoProbeFilter[nElectrons]/O");
   RazorEvents->Branch("ele_passHLTFilter", &ele_passHLTFilter, Form("ele_passHLTFilter[nElectrons][%d]/O",MAX_ElectronHLTFilters));
+  if (enableEcalRechits_) {
+    ele_EcalRechitIndex = new std::vector<std::vector<uint> >; ele_EcalRechitIndex->clear();
+    RazorEvents->Branch("ele_EcalRechitIndex", "std::vector<std::vector<uint> >",&ele_EcalRechitIndex);
+    ele_SeedRechitIndex = new std::vector<uint>; ele_SeedRechitIndex->clear();
+    RazorEvents->Branch("ele_SeedRechitIndex", "std::vector<uint>",&ele_SeedRechitIndex);
+  }
 }
 
 void RazorTuplizer::enableTauBranches(){
@@ -456,7 +498,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("phoFull5x5SigmaIetaIeta", phoFull5x5SigmaIetaIeta, "phoFull5x5SigmaIetaIeta[nPhotons]/F");
   RazorEvents->Branch("phoR9", phoR9, "phoR9[nPhotons]/F");
   RazorEvents->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
-  RazorEvents->Branch("pho_sumChargedHadronPtAllVertices", &pho_sumChargedHadronPtAllVertices, Form("pho_sumChargedHadronPtAllVertices[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_sumChargedHadronPtAllVertices", &pho_sumChargedHadronPtAllVertices,Form("pho_sumChargedHadronPtAllVertices[nPhotons][%d]/F",MAX_NPV));
   RazorEvents->Branch("pho_sumChargedHadronPt", &pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
@@ -473,6 +515,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_RegressionEUncertainty", pho_RegressionEUncertainty, "pho_RegressionEUncertainty[nPhotons]/F");
   RazorEvents->Branch("pho_IDMVA", pho_IDMVA, "pho_IDMVA[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEnergy", pho_superClusterEnergy, "pho_superClusterEnergy[nPhotons]/F");
+  RazorEvents->Branch("pho_superClusterRawEnergy", pho_superClusterRawEnergy, "pho_superClusterRawEnergy[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterEta", pho_superClusterEta, "pho_superClusterEta[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterPhi", pho_superClusterPhi, "pho_superClusterPhi[nPhotons]/F");
   RazorEvents->Branch("pho_superClusterX", pho_superClusterX, "pho_superClusterX[nPhotons]/F");
@@ -480,6 +523,50 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_superClusterZ", pho_superClusterZ, "pho_superClusterZ[nPhotons]/F");
   RazorEvents->Branch("pho_hasPixelSeed", pho_hasPixelSeed, "pho_hasPixelSeed[nPhotons]/O");
   RazorEvents->Branch("pho_passHLTFilter", &pho_passHLTFilter, Form("pho_passHLTFilter[nPhotons][%d]/O",MAX_PhotonHLTFilters));
+  RazorEvents->Branch("pho_convType", pho_convType, "pho_convType[nPhotons]/I");
+  RazorEvents->Branch("pho_convTrkZ", pho_convTrkZ, "pho_convTrkZ[nPhotons]/F");
+  RazorEvents->Branch("pho_convTrkClusZ", pho_convTrkClusZ, "pho_convTrkClusZ[nPhotons]/F");
+  RazorEvents->Branch("pho_vtxSumPx", &pho_vtxSumPx,Form("pho_vtxSumPx[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_vtxSumPy", &pho_vtxSumPy,Form("pho_vtxSumPy[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_seedRecHitSwitchToGain6", pho_seedRecHitSwitchToGain6, "pho_seedRecHitSwitchToGain6[nPhotons]/F");
+  RazorEvents->Branch("pho_seedRecHitSwitchToGain1", pho_seedRecHitSwitchToGain1, "pho_seedRecHitSwitchToGain1[nPhotons]/F");
+  RazorEvents->Branch("pho_anyRecHitSwitchToGain6", pho_anyRecHitSwitchToGain6, "pho_anyRecHitSwitchToGain6[nPhotons]/F");
+  RazorEvents->Branch("pho_anyRecHitSwitchToGain1", pho_anyRecHitSwitchToGain1, "pho_anyRecHitSwitchToGain1[nPhotons]/F");
+  if (enableEcalRechits_) {
+    pho_EcalRechitIndex = new std::vector<std::vector<uint> >; pho_EcalRechitIndex->clear();
+    RazorEvents->Branch("pho_EcalRechitIndex", "std::vector<std::vector<uint> >",&pho_EcalRechitIndex);
+    pho_SeedRechitIndex = new std::vector<uint>; pho_SeedRechitIndex->clear();
+    RazorEvents->Branch("pho_SeedRechitIndex", "std::vector<uint>",&pho_SeedRechitIndex);
+  }
+
+}
+
+void RazorTuplizer::enableEcalRechitBranches(){
+
+  ecalRechit_Eta = new std::vector<float>; ecalRechit_Eta->clear();
+  ecalRechit_Phi = new std::vector<float>; ecalRechit_Phi->clear();
+  ecalRechit_X = new std::vector<float>; ecalRechit_X->clear();
+  ecalRechit_Y = new std::vector<float>; ecalRechit_Y->clear();
+  ecalRechit_Z = new std::vector<float>; ecalRechit_Z->clear();
+  ecalRechit_E = new std::vector<float>; ecalRechit_E->clear();
+  ecalRechit_T = new std::vector<float>; ecalRechit_T->clear();
+  ecalRechit_ID = new std::vector<uint>; ecalRechit_ID->clear();
+  ecalRechit_FlagOOT = new std::vector<bool>; ecalRechit_FlagOOT->clear();
+  ecalRechit_GainSwitch1 = new std::vector<bool>; ecalRechit_GainSwitch1->clear();
+  ecalRechit_GainSwitch6 = new std::vector<bool>; ecalRechit_GainSwitch6->clear();
+
+  RazorEvents->Branch("ecalRechit_Eta", "std::vector<float>",&ecalRechit_Eta);
+  RazorEvents->Branch("ecalRechit_Phi", "std::vector<float>",&ecalRechit_Phi);
+  RazorEvents->Branch("ecalRechit_X", "std::vector<float>",&ecalRechit_X);
+  RazorEvents->Branch("ecalRechit_Y", "std::vector<float>",&ecalRechit_Y);
+  RazorEvents->Branch("ecalRechit_Z", "std::vector<float>",&ecalRechit_Z);
+  RazorEvents->Branch("ecalRechit_E", "std::vector<float>",&ecalRechit_E);
+  RazorEvents->Branch("ecalRechit_T", "std::vector<float>",&ecalRechit_T);
+  RazorEvents->Branch("ecalRechit_ID", "std::vector<uint>",&ecalRechit_ID);
+  RazorEvents->Branch("ecalRechit_FlagOOT", "std::vector<bool>",&ecalRechit_FlagOOT);
+  RazorEvents->Branch("ecalRechit_GainSwitch1", "std::vector<bool>",&ecalRechit_GainSwitch1);
+  RazorEvents->Branch("ecalRechit_GainSwitch6", "std::vector<bool>",&ecalRechit_GainSwitch6);
+
 }
 
 void RazorTuplizer::enableJetBranches(){
@@ -513,6 +600,7 @@ void RazorTuplizer::enableJetBranches(){
   RazorEvents->Branch("jetAllMuonEta", jetAllMuonEta,"jetAllMuonEta[nJets]/F");
   RazorEvents->Branch("jetAllMuonPhi", jetAllMuonPhi,"jetAllMuonPhi[nJets]/F");
   RazorEvents->Branch("jetAllMuonM", jetAllMuonM,"jetAllMuonM[nJets]/F");
+  RazorEvents->Branch("jetPtWeightedDZ", jetPtWeightedDZ,"jetPtWeightedDZ[nJets]/F");
 }
 
 void RazorTuplizer::enableJetAK8Branches(){
@@ -539,44 +627,58 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("metType1Phi", &metType1Phi, "metType1Phi/F");
   RazorEvents->Branch("metType0Plus1Pt", &metType0Plus1Pt, "metType0Plus1Pt/F");
   RazorEvents->Branch("metType0Plus1Phi", &metType0Plus1Phi, "metType0Plus1Phi/F");
+  RazorEvents->Branch("metEGCleanPt", &metEGCleanPt, "metEGCleanPt/F");
+  RazorEvents->Branch("metEGCleanPhi", &metEGCleanPhi, "metEGCleanPhi/F");
+  RazorEvents->Branch("metMuEGCleanPt", &metMuEGCleanPt, "metMuEGCleanPt/F");
+  RazorEvents->Branch("metMuEGCleanPhi", &metMuEGCleanPhi, "metMuEGCleanPhi/F");
+  RazorEvents->Branch("metMuEGCleanCorrPt", &metMuEGCleanCorrPt, "metMuEGCleanCorrPt/F");
+  RazorEvents->Branch("metMuEGCleanCorrPhi", &metMuEGCleanCorrPhi, "metMuEGCleanCorrPhi/F");
+  RazorEvents->Branch("metUncorrectedPt", &metUncorrectedPt, "metUncorrectedPt/F");
+  RazorEvents->Branch("metUncorrectedPhi", &metUncorrectedPhi, "metUncorrectedPhi/F");
   RazorEvents->Branch("metNoHFPt", &metNoHFPt, "metNoHFPt/F");
   RazorEvents->Branch("metNoHFPhi", &metNoHFPhi, "metNoHFPhi/F");
   RazorEvents->Branch("metPuppiPt", &metPuppiPt, "metPuppiPt/F");
   RazorEvents->Branch("metPuppiPhi", &metPuppiPhi, "metPuppiPhi/F");
+  RazorEvents->Branch("metCaloPt", &metCaloPt, "metCaloPt/F");
+  RazorEvents->Branch("metCaloPhi", &metCaloPhi, "metCaloPhi/F");
 
-  RazorEvents->Branch("metType1PtJetResUp", &metType1PtJetResUp, "metType1PtJetResUp/F");
-  RazorEvents->Branch("metType1PtJetResDown", &metType1PtJetResDown, "metType1PtJetResDown/F");
-  RazorEvents->Branch("metType1PtJetEnUp", &metType1PtJetEnUp, "metType1PtJetEnUp/F");
-  RazorEvents->Branch("metType1PtJetEnDown", &metType1PtJetEnDown, "metType1PtJetEnDown/F");
-  RazorEvents->Branch("metType1PtMuonEnUp", &metType1PtMuonEnUp, "metType1PtMuonEnUp/F");
-  RazorEvents->Branch("metType1PtMuonEnDown", &metType1PtMuonEnDown, "metType1PtMuonEnDown/F");
-  RazorEvents->Branch("metType1PtElectronEnUp", &metType1PtElectronEnUp, "metType1PtElectronEnUp/F");
-  RazorEvents->Branch("metType1PtElectronEnDown", &metType1PtElectronEnDown, "metType1PtElectronEnDown/F");
-  RazorEvents->Branch("metType1PtTauEnUp", &metType1PtTauEnUp, "metType1PtTauEnUp/F");
-  RazorEvents->Branch("metType1PtTauEnDown", &metType1PtTauEnDown, "metType1PtTauEnDown/F");
-  RazorEvents->Branch("metType1PtUnclusteredEnUp", &metType1PtUnclusteredEnUp, "metType1PtUnclusteredEnUp/F");
-  RazorEvents->Branch("metType1PtUnclusteredEnDown", &metType1PtUnclusteredEnDown, "metType1PtUnclusteredEnDown/F");
-  RazorEvents->Branch("metType1PtPhotonEnUp", &metType1PtPhotonEnUp, "metType1PtPhotonEnUp/F");
-  RazorEvents->Branch("metType1PtPhotonEnDown", &metType1PtPhotonEnDown, "metType1PtPhotonEnDown/F");
+  // RazorEvents->Branch("metType1PtJetResUp", &metType1PtJetResUp, "metType1PtJetResUp/F");
+  // RazorEvents->Branch("metType1PtJetResDown", &metType1PtJetResDown, "metType1PtJetResDown/F");
+  // RazorEvents->Branch("metType1PtJetEnUp", &metType1PtJetEnUp, "metType1PtJetEnUp/F");
+  // RazorEvents->Branch("metType1PtJetEnDown", &metType1PtJetEnDown, "metType1PtJetEnDown/F");
+  // RazorEvents->Branch("metType1PtMuonEnUp", &metType1PtMuonEnUp, "metType1PtMuonEnUp/F");
+  // RazorEvents->Branch("metType1PtMuonEnDown", &metType1PtMuonEnDown, "metType1PtMuonEnDown/F");
+  // RazorEvents->Branch("metType1PtElectronEnUp", &metType1PtElectronEnUp, "metType1PtElectronEnUp/F");
+  // RazorEvents->Branch("metType1PtElectronEnDown", &metType1PtElectronEnDown, "metType1PtElectronEnDown/F");
+  // RazorEvents->Branch("metType1PtTauEnUp", &metType1PtTauEnUp, "metType1PtTauEnUp/F");
+  // RazorEvents->Branch("metType1PtTauEnDown", &metType1PtTauEnDown, "metType1PtTauEnDown/F");
+  // RazorEvents->Branch("metType1PtUnclusteredEnUp", &metType1PtUnclusteredEnUp, "metType1PtUnclusteredEnUp/F");
+  // RazorEvents->Branch("metType1PtUnclusteredEnDown", &metType1PtUnclusteredEnDown, "metType1PtUnclusteredEnDown/F");
+  // RazorEvents->Branch("metType1PtPhotonEnUp", &metType1PtPhotonEnUp, "metType1PtPhotonEnUp/F");
+  // RazorEvents->Branch("metType1PtPhotonEnDown", &metType1PtPhotonEnDown, "metType1PtPhotonEnDown/F");
 
-  RazorEvents->Branch("metType1PhiJetResUp", &metType1PhiJetResUp, "metType1PhiJetResUp/F");
-  RazorEvents->Branch("metType1PhiJetResDown", &metType1PhiJetResDown, "metType1PhiJetResDown/F");
-  RazorEvents->Branch("metType1PhiJetEnUp", &metType1PhiJetEnUp, "metType1PhiJetEnUp/F");
-  RazorEvents->Branch("metType1PhiJetEnDown", &metType1PhiJetEnDown, "metType1PhiJetEnDown/F");
-  RazorEvents->Branch("metType1PhiMuonEnUp", &metType1PhiMuonEnUp, "metType1PhiMuonEnUp/F");
-  RazorEvents->Branch("metType1PhiMuonEnDown", &metType1PhiMuonEnDown, "metType1PhiMuonEnDown/F");
-  RazorEvents->Branch("metType1PhiElectronEnUp", &metType1PhiElectronEnUp, "metType1PhiElectronEnUp/F");
-  RazorEvents->Branch("metType1PhiElectronEnDown", &metType1PhiElectronEnDown, "metType1PhiElectronEnDown/F");
-  RazorEvents->Branch("metType1PhiTauEnUp", &metType1PhiTauEnUp, "metType1PhiTauEnUp/F");
-  RazorEvents->Branch("metType1PhiTauEnDown", &metType1PhiTauEnDown, "metType1PhiTauEnDown/F");
-  RazorEvents->Branch("metType1PhiUnclusteredEnUp", &metType1PhiUnclusteredEnUp, "metType1PhiUnclusteredEnUp/F");
-  RazorEvents->Branch("metType1PhiUnclusteredEnDown", &metType1PhiUnclusteredEnDown, "metType1PhiUnclusteredEnDown/F");
-  RazorEvents->Branch("metType1PhiPhotonEnUp", &metType1PhiPhotonEnUp, "metType1PhiPhotonEnUp/F");
-  RazorEvents->Branch("metType1PhiPhotonEnDown", &metType1PhiPhotonEnDown, "metType1PhiPhotonEnDown/F");
+  // RazorEvents->Branch("metType1PhiJetResUp", &metType1PhiJetResUp, "metType1PhiJetResUp/F");
+  // RazorEvents->Branch("metType1PhiJetResDown", &metType1PhiJetResDown, "metType1PhiJetResDown/F");
+  // RazorEvents->Branch("metType1PhiJetEnUp", &metType1PhiJetEnUp, "metType1PhiJetEnUp/F");
+  // RazorEvents->Branch("metType1PhiJetEnDown", &metType1PhiJetEnDown, "metType1PhiJetEnDown/F");
+  // RazorEvents->Branch("metType1PhiMuonEnUp", &metType1PhiMuonEnUp, "metType1PhiMuonEnUp/F");
+  // RazorEvents->Branch("metType1PhiMuonEnDown", &metType1PhiMuonEnDown, "metType1PhiMuonEnDown/F");
+  // RazorEvents->Branch("metType1PhiElectronEnUp", &metType1PhiElectronEnUp, "metType1PhiElectronEnUp/F");
+  // RazorEvents->Branch("metType1PhiElectronEnDown", &metType1PhiElectronEnDown, "metType1PhiElectronEnDown/F");
+  // RazorEvents->Branch("metType1PhiTauEnUp", &metType1PhiTauEnUp, "metType1PhiTauEnUp/F");
+  // RazorEvents->Branch("metType1PhiTauEnDown", &metType1PhiTauEnDown, "metType1PhiTauEnDown/F");
+  // RazorEvents->Branch("metType1PhiUnclusteredEnUp", &metType1PhiUnclusteredEnUp, "metType1PhiUnclusteredEnUp/F");
+  // RazorEvents->Branch("metType1PhiUnclusteredEnDown", &metType1PhiUnclusteredEnDown, "metType1PhiUnclusteredEnDown/F");
+  // RazorEvents->Branch("metType1PhiPhotonEnUp", &metType1PhiPhotonEnUp, "metType1PhiPhotonEnUp/F");
+  // RazorEvents->Branch("metType1PhiPhotonEnDown", &metType1PhiPhotonEnDown, "metType1PhiPhotonEnDown/F");
 
   RazorEvents->Branch("Flag_HBHENoiseFilter", &Flag_HBHENoiseFilter, "Flag_HBHENoiseFilter/O");
   RazorEvents->Branch("Flag_HBHETightNoiseFilter", &Flag_HBHETightNoiseFilter, "Flag_HBHETightNoiseFilter/O");
   RazorEvents->Branch("Flag_HBHEIsoNoiseFilter", &Flag_HBHEIsoNoiseFilter, "Flag_HBHEIsoNoiseFilter/O");
+  RazorEvents->Branch("Flag_badChargedCandidateFilter", &Flag_badChargedCandidateFilter, "Flag_badChargedCandidateFilter/O");
+  RazorEvents->Branch("Flag_badMuonFilter", &Flag_badMuonFilter, "Flag_badMuonFilter/O");
+  RazorEvents->Branch("Flag_badGlobalMuonFilter", &Flag_badGlobalMuonFilter, "Flag_badGlobalMuonFilter/O");
+  RazorEvents->Branch("Flag_duplicateMuonFilter", &Flag_duplicateMuonFilter, "Flag_duplicateMuonFilter/O");
   RazorEvents->Branch("Flag_CSCTightHaloFilter", &Flag_CSCTightHaloFilter, "Flag_CSCTightHaloFilter/O");
   RazorEvents->Branch("Flag_hcalLaserEventFilter", &Flag_hcalLaserEventFilter, "Flag_hcalLaserEventFilter/O");
   RazorEvents->Branch("Flag_EcalDeadCellTriggerPrimitiveFilter", &Flag_EcalDeadCellTriggerPrimitiveFilter, "Flag_EcalDeadCellTriggerPrimitiveFilter/O");
@@ -619,12 +721,11 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genQScale", &genQScale, "genQScale/F");
   RazorEvents->Branch("genAlphaQCD", &genAlphaQCD, "genAlphaQCD/F");
   RazorEvents->Branch("genAlphaQED", &genAlphaQED, "genAlphaQED/F");
-  lheComments = new std::vector<std::string>; lheComments->clear();
   scaleWeights = new std::vector<float>; scaleWeights->clear();
   pdfWeights = new std::vector<float>; pdfWeights->clear();
   alphasWeights = new std::vector<float>; alphasWeights->clear();
   if (isFastsim_) {
-    RazorEvents->Branch("lheComments", "std::vector<std::string>",&lheComments);
+    RazorEvents->Branch("lheComments", "std::string",&lheComments);
   }
   RazorEvents->Branch("scaleWeights", "std::vector<float>",&scaleWeights);
   RazorEvents->Branch("pdfWeights", "std::vector<float>",&pdfWeights);
@@ -660,6 +761,12 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
   iEvent.getByToken(metToken_, mets);
+  if (isData_) {
+    iEvent.getByToken(metEGCleanToken_, metsEGClean);
+    iEvent.getByToken(metMuEGCleanToken_, metsMuEGClean);
+    iEvent.getByToken(metMuEGCleanCorrToken_, metsMuEGCleanCorr);
+    iEvent.getByToken(metUncorrectedToken_, metsUncorrected);
+  }
   //iEvent.getByToken(metNoHFToken_, metsNoHF);
   iEvent.getByToken(metPuppiToken_, metsPuppi);
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
@@ -685,12 +792,19 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(hbheNoiseFilterToken_, hbheNoiseFilter);
   iEvent.getByToken(hbheTightNoiseFilterToken_, hbheTightNoiseFilter);
   iEvent.getByToken(hbheIsoNoiseFilterToken_, hbheIsoNoiseFilter);
+  iEvent.getByToken(badChargedCandidateFilterToken_, badChargedCandidateFilter);
+  iEvent.getByToken(badMuonFilterToken_, badMuonFilter);
+  iEvent.getByToken(badGlobalMuonFilterToken_, badGlobalMuonFilter);
+  iEvent.getByToken(duplicateMuonFilterToken_, duplicateMuonFilter);
 
   if (useGen_) {
     iEvent.getByToken(prunedGenParticlesToken_,prunedGenParticles);
     iEvent.getByToken(packedGenParticlesToken_,packedGenParticles);
     iEvent.getByToken(genJetsToken_,genJets);
-    iEvent.getByToken(lheInfoToken_, lheInfo);
+
+    //for Spring16 fastsim, this has been changed and removed
+    if (!isFastsim_) iEvent.getByToken(lheInfoToken_, lheInfo);     
+    
     iEvent.getByToken(genInfoToken_,genInfo);
     iEvent.getByToken(puInfoToken_,puInfo);
   }
@@ -716,7 +830,18 @@ void RazorTuplizer::resetBranches(){
       triggerHLTPrescale[i] = 0;
     }
 
-    for(int i = 0; i < 99; i++){
+    for (int i=0; i < MAX_NPV; ++i) {
+      //pvAll
+      pvAllX[i] = 0.;
+      pvAllY[i] = 0.;
+      pvAllZ[i] = 0.;
+      pvAllLogSumPtSq[i] = 0.;
+      pvAllSumPx[i] = 0.;
+      pvAllSumPy[i] = 0.;
+    }
+    
+
+    for(int i = 0; i < OBJECTARRAYSIZE; i++){      
         //PU
         BunchXing[i] = -99;
         nPU[i] = -99;
@@ -748,6 +873,13 @@ void RazorTuplizer::resetBranches(){
 	muon_activityMiniIsoAnnulus[i] = -99.0;
 	muon_passSingleMuTagFilter[i] = false;
 	for (int q=0;q<MAX_MuonHLTFilters;q++) muon_passHLTFilter[i][q] = false;
+	muon_validFractionTrackerHits[i] = -99.0;
+        muon_isGlobal[i] = false;
+        muon_normChi2[i] = -99.0;
+        muon_chi2LocalPosition[i] = -99.0;
+        muon_kinkFinder[i] = -99.0;
+        muon_segmentCompatability[i] = -99.0;
+        muonIsICHEPMedium[i] = false;
 
         //Electron
         eleE[i] = 0.0;
@@ -774,8 +906,10 @@ void RazorTuplizer::resetBranches(){
 	ele_MissHits[i] = -99;
         ele_PassConvVeto[i] = false;
         ele_OneOverEminusOneOverP[i] = -99.0;
-        ele_IDMVATrig[i] = -99.0;
-        ele_IDMVANonTrig[i] = -99.0;
+        ele_IDMVAGeneralPurpose[i] = -99.0;
+        ele_IDMVACategoryGeneralPurpose[i] = -1;
+        ele_IDMVAHZZ[i] = -99.0;
+        ele_IDMVACategoryHZZ[i] = -1;
         ele_RegressionE[i] = -99.0;
         ele_CombineP4[i] = -99.0;
 	ele_ptrel[i] = -99.0;
@@ -837,7 +971,6 @@ void RazorTuplizer::resetBranches(){
         phoFull5x5SigmaIetaIeta[i] = -99.0;
         phoR9[i] = -99.0;
         pho_HoverE[i] = -99.0;
- 	for (int q=0;q<MAX_NPV;q++) pho_sumChargedHadronPtAllVertices[i][q] = -99.0;
 	pho_sumChargedHadronPt[i] = -99.0;
 	pho_sumNeutralHadronEt[i] = -99.0;
         pho_sumPhotonEt[i] = -99.0;
@@ -854,6 +987,7 @@ void RazorTuplizer::resetBranches(){
         pho_RegressionEUncertainty[i] = -99.0;
         pho_IDMVA[i] = -99.0;
 	pho_superClusterEnergy[i] = -99.0;
+	pho_superClusterRawEnergy[i] = -99.0;
         pho_superClusterEta[i]    = -99.0;
         pho_superClusterPhi[i]    = -99.0;
 	pho_superClusterX[i]      = -99.0;
@@ -861,7 +995,20 @@ void RazorTuplizer::resetBranches(){
 	pho_superClusterZ[i]      = -99.0;
         pho_hasPixelSeed[i] = false;
 	for (int q=0;q<MAX_PhotonHLTFilters;q++) pho_passHLTFilter[i][q] = false;
-
+        pho_convType[i] = -99;
+        pho_convTrkZ[i] = -99.;
+        pho_convTrkClusZ[i] = -99.;
+        
+        for (int ipv=0; ipv < MAX_NPV; ++ipv) {
+          pho_sumChargedHadronPtAllVertices[i][ipv] = -99.0;
+          pho_vtxSumPx[i][ipv] = 0.;
+          pho_vtxSumPy[i][ipv] = 0.;
+        }
+	pho_seedRecHitSwitchToGain6[i] = false;
+	pho_seedRecHitSwitchToGain1[i] = false;
+	pho_anyRecHitSwitchToGain6[i] = false;
+	pho_anyRecHitSwitchToGain1[i] = false;
+	
         //Jet
         jetE[i] = 0.0;
         jetPt[i] = 0.0;
@@ -892,6 +1039,7 @@ void RazorTuplizer::resetBranches(){
         jetAllMuonEta[i] = 0.0;
         jetAllMuonPhi[i] = 0.0;
         jetAllMuonM[i] = 0.0;
+	jetPtWeightedDZ[i] = 0.0;
 	
         //AK8 Jet
         fatJetE[i] = 0.0;
@@ -910,8 +1058,32 @@ void RazorTuplizer::resetBranches(){
         genJetEta[i] = 0.0;
         genJetPhi[i] = 0.0;
     }
+    ele_EcalRechitID.clear();
+    ele_SeedRechitID.clear();
+    pho_EcalRechitID.clear();
+    pho_SeedRechitID.clear();
+    ele_EcalRechitIndex->clear();
+    ele_SeedRechitIndex->clear();
+    pho_EcalRechitIndex->clear();
+    pho_SeedRechitIndex->clear();
 
-    for(int i = 0; i < 500; i++){
+    ecalRechitID_ToBeSaved.clear();
+    ecalRechitEtaPhi_ToBeSaved.clear();
+    ecalRechitJetEtaPhi_ToBeSaved.clear();
+    ecalRechit_Eta->clear();
+    ecalRechit_Phi->clear();
+    ecalRechit_X->clear();
+    ecalRechit_Y->clear();
+    ecalRechit_Z->clear();
+    ecalRechit_E->clear();
+    ecalRechit_T->clear();
+    ecalRechit_ID->clear();
+    ecalRechit_FlagOOT->clear();
+    ecalRechit_GainSwitch1->clear();
+    ecalRechit_GainSwitch6->clear();
+
+
+    for(int i = 0; i < GENPARTICLEARRAYSIZE; i++){
         //Gen Particle
         gParticleMotherId[i] = -99999;
         gParticleMotherIndex[i] = -99999;
@@ -943,9 +1115,15 @@ void RazorTuplizer::resetBranches(){
     metNoHFPhi = -99.0;
     metPuppiPt = -99.0;
     metPuppiPhi = -99.0;
+    metCaloPt = -999;
+    metCaloPhi = -999;
     Flag_HBHENoiseFilter = false;
     Flag_HBHETightNoiseFilter = false;
     Flag_HBHEIsoNoiseFilter = false;
+    Flag_badChargedCandidateFilter = false;
+    Flag_badMuonFilter = false;
+    Flag_badGlobalMuonFilter = false;
+    Flag_duplicateMuonFilter = false;
     Flag_CSCTightHaloFilter = false;
     Flag_hcalLaserEventFilter = false;
     Flag_EcalDeadCellTriggerPrimitiveFilter = false;
@@ -1006,7 +1184,6 @@ void RazorTuplizer::resetBranches(){
     genQScale = -999;
     genAlphaQCD = -999;
     genAlphaQED = -999;
-    lheComments->clear(); 
     scaleWeights->clear();
     pdfWeights->clear();
     alphasWeights->clear();
@@ -1017,8 +1194,10 @@ void RazorTuplizer::resetBranches(){
     //Event
     nPV = -1;
     eventNum = 0;
+    eventTime = 0;
     lumiNum = 0;
     runNum = 0;
+    nSlimmedSecondV = 0;
     pvX = -99.0;
     pvY = -99.0;
     pvZ = -99.0;
@@ -1038,7 +1217,11 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   runNum = iEvent.id().run();
   lumiNum = iEvent.luminosityBlock();
   eventNum = iEvent.id().event();
-  
+  eventTime = iEvent.eventAuxiliary().time().unixTime();
+ 
+  //number of slimmedSecondaryVertices
+  nSlimmedSecondV = secondaryVertices->size();
+
   //select the primary vertex, if any
   nPV = 0;
   myPV = &(vertices->front());
@@ -1065,6 +1248,58 @@ bool RazorTuplizer::fillEventInfo(const edm::Event& iEvent){
   fixedGridRhoFastjetCentralChargedPileUp = *rhoFastjetCentralChargedPileUp;
   fixedGridRhoFastjetCentralNeutral = *rhoFastjetCentralNeutral;
 
+  return true;
+}
+
+bool RazorTuplizer::fillPVAll() {
+  
+  nPVAll = std::min(int(vertices->size()),int(MAX_NPV));
+  
+  for (int ipv = 0; ipv < nPVAll; ++ipv) {
+    const reco::Vertex &vtx = vertices->at(ipv);
+    pvAllX[ipv] = vtx.x();
+    pvAllY[ipv] = vtx.y();
+    pvAllZ[ipv] = vtx.z();
+  }
+  
+  double pvAllSumPtSqD[MAX_NPV];
+  double pvAllSumPxD[MAX_NPV];
+  double pvAllSumPyD[MAX_NPV];
+  
+  for (int ipv=0; ipv<nPVAll; ++ipv) {
+    pvAllSumPtSqD[ipv] = 0.;
+    pvAllSumPxD[ipv] = 0.;
+    pvAllSumPyD[ipv] = 0.;
+  }
+  
+  for (const pat::PackedCandidate &pfcand : *packedPFCands) {
+    if (pfcand.charge()==0) continue;
+    double mindz = std::numeric_limits<double>::max();
+    int ipvmin = -1;
+    for (int ipv = 0; ipv < nPVAll; ++ipv) {
+      const reco::Vertex &vtx = vertices->at(ipv);
+      double dz = std::abs(pfcand.dz(vtx.position()));
+      if (dz<mindz) {
+        mindz = dz;
+        ipvmin = ipv;
+      }
+    }
+        
+    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
+      pvAllSumPtSqD[ipvmin] += pfcand.pt()*pfcand.pt();
+      pvAllSumPxD[ipvmin] += pfcand.px();
+      pvAllSumPyD[ipvmin] += pfcand.py();
+    }
+  }
+  
+  for (int ipv=0; ipv<nPVAll; ++ipv) {
+    pvAllLogSumPtSq[ipv] = log(pvAllSumPtSqD[ipv]);
+    pvAllSumPx[ipv] = pvAllSumPxD[ipv];
+    pvAllSumPy[ipv] = pvAllSumPyD[ipv];    
+  }
+  
+  
+  
   return true;
 }
 
@@ -1132,6 +1367,15 @@ bool RazorTuplizer::fillMuons(){
     muon_photonAndNeutralHadronMiniIso[nMuons] = std::get<1>(PFMiniIso);
     muon_chargedPileupMiniIso[nMuons] = std::get<2>(PFMiniIso);
     muon_activityMiniIsoAnnulus[nMuons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&mu), 0.4, 0.05, 0.2, 10.);
+    muon_validFractionTrackerHits[nMuons] = (mu.innerTrack().isNonnull() ? mu.track()->validFraction() : -99.0);
+    muon_isGlobal[nMuons] = muon::isGoodMuon(mu,muon::AllGlobalMuons);
+    muon_normChi2[nMuons] = ( muon::isGoodMuon(mu,muon::AllGlobalMuons) ? mu.globalTrack()->normalizedChi2() : -99.0);
+    muon_chi2LocalPosition[nMuons] = mu.combinedQuality().chi2LocalPosition;
+    muon_kinkFinder[nMuons] = mu.combinedQuality().trkKink;
+    muon_segmentCompatability[nMuons] = muon::segmentCompatibility(mu);
+
+    bool isGoodGlobal = mu.isGlobalMuon() && mu.globalTrack()->normalizedChi2() < 3 && mu.combinedQuality().chi2LocalPosition < 12 && mu.combinedQuality().trkKink < 20;
+    muonIsICHEPMedium[nMuons] = muon::isLooseMuon(mu) && muon_validFractionTrackerHits[nMuons] > 0.49 && muon::segmentCompatibility(mu) > (isGoodGlobal ? 0.303 : 0.451);
 
     //*************************************************
     //Trigger Object Matching
@@ -1167,68 +1411,85 @@ bool RazorTuplizer::fillMuons(){
   return true;
 };
 
-bool RazorTuplizer::fillElectrons(){
-  for(const pat::Electron &ele : *electrons){
-    if(ele.pt() < 5) continue;
-    eleE[nElectrons] = ele.energy();
-    elePt[nElectrons] = ele.pt();
-    eleEta[nElectrons] = ele.eta();
-    elePhi[nElectrons] = ele.phi();
-    eleCharge[nElectrons] = ele.charge();
-    eleE_SC[nElectrons] = ele.superCluster()->energy();
-    eleEta_SC[nElectrons] = ele.superCluster()->eta();
-    elePhi_SC[nElectrons] = ele.superCluster()->phi();
-    eleSigmaIetaIeta[nElectrons] = ele.sigmaIetaIeta();
-    eleFull5x5SigmaIetaIeta[nElectrons] = ele.full5x5_sigmaIetaIeta();
-    eleR9[nElectrons] = ele.r9();
-    ele_dEta[nElectrons] = ele.deltaEtaSuperClusterTrackAtVtx();
-    ele_dPhi[nElectrons] = ele.deltaPhiSuperClusterTrackAtVtx();
-    ele_HoverE[nElectrons] = ele.hcalOverEcal();
-    ele_d0[nElectrons] = -ele.gsfTrack().get()->dxy(myPV->position());
-    ele_dZ[nElectrons] = ele.gsfTrack().get()->dz(myPV->position());
-    ele_ip3d[nElectrons] = ele.dB(pat::Electron::PV3D);
-    ele_ip3dSignificance[nElectrons] = ele.dB(pat::Electron::PV3D)/ele.edB(pat::Electron::PV3D);   
-    ele_pileupIso[nElectrons] = ele.pfIsolationVariables().sumPUPt;
-    ele_chargedIso[nElectrons] = ele.pfIsolationVariables().sumChargedHadronPt;
-    ele_photonIso[nElectrons] = ele.pfIsolationVariables().sumPhotonEt;
-    ele_neutralHadIso[nElectrons] = ele.pfIsolationVariables().sumNeutralHadronEt;
-    ele_MissHits[nElectrons] = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
+
+  // Get MVA values and categories (optional)
+  edm::Handle<edm::ValueMap<float> > mvaGeneralPurposeValues;
+  edm::Handle<edm::ValueMap<int> > mvaGeneralPurposeCategories;
+  edm::Handle<edm::ValueMap<float> > mvaHZZValues;
+  edm::Handle<edm::ValueMap<int> > mvaHZZCategories;
+  iEvent.getByToken(mvaGeneralPurposeValuesMapToken_,mvaGeneralPurposeValues);
+  iEvent.getByToken(mvaGeneralPurposeCategoriesMapToken_,mvaGeneralPurposeCategories);
+  iEvent.getByToken(mvaHZZValuesMapToken_,mvaHZZValues);
+  iEvent.getByToken(mvaHZZCategoriesMapToken_,mvaHZZCategories);
+
+  // for(const pat::Electron &ele : *electrons){
+  for (size_t i = 0; i < electrons->size(); ++i){
+    const auto ele = electrons->ptrAt(i);
+
+    if(ele->pt() < 5) continue;
+    eleE[nElectrons] = ele->energy();
+    elePt[nElectrons] = ele->pt();
+    eleEta[nElectrons] = ele->eta();
+    elePhi[nElectrons] = ele->phi();
+    eleCharge[nElectrons] = ele->charge();
+    eleE_SC[nElectrons] = ele->superCluster()->energy();
+    eleEta_SC[nElectrons] = ele->superCluster()->eta();
+    elePhi_SC[nElectrons] = ele->superCluster()->phi();
+    eleSigmaIetaIeta[nElectrons] = ele->sigmaIetaIeta();
+    eleFull5x5SigmaIetaIeta[nElectrons] = ele->full5x5_sigmaIetaIeta();
+    eleR9[nElectrons] = ele->r9();
+    ele_dEta[nElectrons] = ele->deltaEtaSuperClusterTrackAtVtx();
+    ele_dPhi[nElectrons] = ele->deltaPhiSuperClusterTrackAtVtx();
+    ele_HoverE[nElectrons] = ele->hcalOverEcal();
+    ele_d0[nElectrons] = -ele->gsfTrack().get()->dxy(myPV->position());
+    ele_dZ[nElectrons] = ele->gsfTrack().get()->dz(myPV->position());
+    ele_ip3d[nElectrons] = ((edm::Ptr<pat::Electron>)(ele))->dB(pat::Electron::PV3D);
+    ele_ip3dSignificance[nElectrons] = ((edm::Ptr<pat::Electron>)(ele))->dB(pat::Electron::PV3D)/((edm::Ptr<pat::Electron>)(ele))->edB(pat::Electron::PV3D);   
+    ele_pileupIso[nElectrons] = ele->pfIsolationVariables().sumPUPt;
+    ele_chargedIso[nElectrons] = ele->pfIsolationVariables().sumChargedHadronPt;
+    ele_photonIso[nElectrons] = ele->pfIsolationVariables().sumPhotonEt;
+    ele_neutralHadIso[nElectrons] = ele->pfIsolationVariables().sumNeutralHadronEt;
+    ele_MissHits[nElectrons] = ele->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
 
     //*************************************************
     //Conversion Veto
     //*************************************************
     ele_PassConvVeto[nElectrons] = false;
     if( beamSpot.isValid() && conversions.isValid() ) {
-      ele_PassConvVeto[nElectrons] = !ConversionTools::hasMatchedConversion(ele,conversions,
-									    beamSpot->position());
+      ele_PassConvVeto[nElectrons] = !ConversionTools::hasMatchedConversion(*ele,conversions,
+    									    beamSpot->position());
     } else {
       cout << "\n\nERROR!!! conversions not found!!!\n";
     }
   
     // 1/E - 1/P
-    if( ele.ecalEnergy() == 0 ){
+    if( ele->ecalEnergy() == 0 ){
       ele_OneOverEminusOneOverP[nElectrons] = 1e30;
-    } else if( !std::isfinite(ele.ecalEnergy())){
+    } else if( !std::isfinite(ele->ecalEnergy())){
       ele_OneOverEminusOneOverP[nElectrons] = 1e30;
     } else {
-    ele_OneOverEminusOneOverP[nElectrons] = 1./ele.ecalEnergy()  -  ele.eSuperClusterOverP()/ele.ecalEnergy();    
+    ele_OneOverEminusOneOverP[nElectrons] = 1./ele->ecalEnergy()  -  ele->eSuperClusterOverP()/ele->ecalEnergy();    
     }
 
     //*************************************************
     //ID MVA
     //*************************************************
-    ele_IDMVATrig[nElectrons]    = myMVATrig->mvaValue(ele, false);
-    ele_IDMVANonTrig[nElectrons] = myMVANonTrig->mvaValue(ele,conversions, beamSpot->position(),false);
+    ele_IDMVAGeneralPurpose[nElectrons] = (*mvaGeneralPurposeValues)[ele];
+    ele_IDMVACategoryGeneralPurpose[nElectrons] = (*mvaGeneralPurposeCategories)[ele];
+    ele_IDMVAHZZ[nElectrons] = (*mvaHZZValues)[ele];
+    ele_IDMVACategoryHZZ[nElectrons] = (*mvaHZZCategories)[ele];
 
-    ele_RegressionE[nElectrons] = ele.ecalRegressionEnergy();
-    ele_CombineP4[nElectrons]   = ele.ecalTrackRegressionEnergy();
 
-    ele_ptrel[nElectrons]   = getLeptonPtRel( jets, &ele );
-    tuple<double,double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.05, 0.2, 10., false, false);
+    ele_RegressionE[nElectrons] = ((edm::Ptr<pat::Electron>)(ele))->ecalRegressionEnergy();
+    ele_CombineP4[nElectrons]   = ((edm::Ptr<pat::Electron>)(ele))->ecalTrackRegressionEnergy();
+
+    ele_ptrel[nElectrons]   = getLeptonPtRel( jets, &(*ele) );
+    tuple<double,double,double> PFMiniIso = getPFMiniIsolation(packedPFCands, dynamic_cast<const reco::Candidate *>(&(*ele)), 0.05, 0.2, 10., false, false);
     ele_chargedMiniIso[nElectrons] = std::get<0>(PFMiniIso);
     ele_photonAndNeutralHadronMiniIso[nElectrons] = std::get<1>(PFMiniIso);
     ele_chargedPileupMiniIso[nElectrons] = std::get<2>(PFMiniIso);
-    ele_activityMiniIsoAnnulus[nElectrons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&ele), 0.4, 0.05, 0.2, 10.);
+    ele_activityMiniIsoAnnulus[nElectrons] = ActivityPFMiniIsolationAnnulus( packedPFCands, dynamic_cast<const reco::Candidate *>(&(*ele)), 0.4, 0.05, 0.2, 10.);
 
     //*************************************************
     //Trigger Object Matching
@@ -1239,16 +1500,16 @@ bool RazorTuplizer::fillElectrons(){
     bool passTPOneProbeFilter= false;
     bool passTPTwoProbeFilter= false;
     for (pat::TriggerObjectStandAlone trigObject : *triggerObjects) {
-      if (deltaR(trigObject.eta(), trigObject.phi(),ele.eta(),ele.phi()) > 0.3) continue;
+      if (deltaR(trigObject.eta(), trigObject.phi(),ele->eta(),ele->phi()) > 0.3) continue;
 
       //check Single ele filters
       if (trigObject.hasFilterLabel("hltEle23WPLooseGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle27WPLooseGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle27WPTightGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle32WPLooseGsfTrackIsoFilter")  ||
-	  trigObject.hasFilterLabel("hltEle32WPTightGsfTrackIsoFilter")
-	  ) {
-	passSingleEleTagFilter = true;
+    	  trigObject.hasFilterLabel("hltEle27WPLooseGsfTrackIsoFilter")  ||
+    	  trigObject.hasFilterLabel("hltEle27WPTightGsfTrackIsoFilter")  ||
+    	  trigObject.hasFilterLabel("hltEle32WPLooseGsfTrackIsoFilter")  ||
+    	  trigObject.hasFilterLabel("hltEle32WPTightGsfTrackIsoFilter")
+    	  ) {
+    	passSingleEleTagFilter = true;
       }
       
       //check Tag and Probe Filters
@@ -1259,7 +1520,7 @@ bool RazorTuplizer::fillElectrons(){
 
       //check all filters
       for ( int q=0; q<MAX_ElectronHLTFilters;q++) {
-	if (trigObject.hasFilterLabel(eleHLTFilterNames[q].c_str())) ele_passHLTFilter[nElectrons][q] = true;
+    	if (trigObject.hasFilterLabel(eleHLTFilterNames[q].c_str())) ele_passHLTFilter[nElectrons][q] = true;
       }
 
     }
@@ -1271,6 +1532,20 @@ bool RazorTuplizer::fillElectrons(){
     ele_passTPTwoProbeFilter[nElectrons] = passTPTwoProbeFilter;
 
 
+    ele_SeedRechitID.push_back(ele->superCluster()->seed()->seed().rawId());
+
+    //*************************************************
+    //Find relevant rechits
+    //*************************************************
+    std::vector<uint> rechits; rechits.clear();
+    const std::vector< std::pair<DetId, float>>& v_id =ele->superCluster()->seed()->hitsAndFractions();
+    for ( size_t i = 0; i < v_id.size(); ++i ) {
+      ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+      rechits.push_back(v_id[i].first.rawId());
+    }
+    ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( ele->superCluster()->eta(), ele->superCluster()->phi() ));
+    ele_EcalRechitID.push_back(rechits);
+
     nElectrons++;
   }
   
@@ -1279,7 +1554,7 @@ bool RazorTuplizer::fillElectrons(){
 
 bool RazorTuplizer::fillTaus(){
   for (const pat::Tau &tau : *taus) {
-    if (tau.pt() < 20) continue;
+    if (tau.pt() < 18) continue;
     tauE[nTaus] = tau.energy();
     tauPt[nTaus] = tau.pt();
     tauEta[nTaus] = tau.eta();
@@ -1305,24 +1580,16 @@ bool RazorTuplizer::fillTaus(){
     //tau_isoMVAnewDMwoLT[nTaus] = tau.tauID("byIsolationMVA3newDMwoLTraw") ; //doesn't exist anymore in miniAOD 2015 v2 
 
     tau_ID[nTaus] = 
-      bool(tau.tauID("decayModeFinding")) +
-      bool(tau.tauID("decayModeFindingNewDMs")) +
-      bool(tau.tauID("byLooseCombinedIsolationDeltaBetaCorr3Hits")) +
-      bool(tau.tauID("byMediumCombinedIsolationDeltaBetaCorr3Hits")) +
-      bool(tau.tauID("byTightCombinedIsolationDeltaBetaCorr3Hits")) +
-      bool(tau.tauID("againstElectronVLooseMVA6")) +
-      bool(tau.tauID("againstElectronLooseMVA6")) +
-      bool(tau.tauID("againstElectronMediumMVA6")) +
-      bool(tau.tauID("againstElectronTightMVA6")) +
-      bool(tau.tauID("againstElectronVTightMVA6")) +
-      bool(tau.tauID("againstMuonLoose3")) +
-      bool(tau.tauID("againstMuonTight3")) +
-      bool(tau.tauID("byVLooseIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byLooseIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byMediumIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byVTightIsolationMVArun2v1DBnewDMwLT")) +
-      bool(tau.tauID("byVVTightIsolationMVArun2v1DBnewDMwLT"));
+      1 * bool(tau.tauID("decayModeFinding")) +
+      2 * bool(tau.tauID("decayModeFindingNewDMs")) +
+      4 * bool(tau.tauID("againstElectronVLooseMVA6")) +
+      8 * bool(tau.tauID("againstElectronVTightMVA6")) +
+      16 * bool(tau.tauID("byVLooseIsolationMVArun2v1DBnewDMwLT")) +
+      32 * bool(tau.tauID("byLooseIsolationMVArun2v1DBnewDMwLT")) +
+      64 * bool(tau.tauID("byMediumIsolationMVArun2v1DBnewDMwLT")) +
+      128 * bool(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) +
+      256 * bool(tau.tauID("byVTightIsolationMVArun2v1DBnewDMwLT")) +
+      512 * bool(tau.tauID("byVVTightIsolationMVArun2v1DBnewDMwLT"));
 
     tau_leadCandPt[nTaus] = 0;
     tau_leadCandID[nTaus] = 0;
@@ -1406,7 +1673,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
   noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
     
   for (const pat::Photon &pho : *photons) {
-    if (pho.pt() < 20) continue;
+    if (pho.pt() < 15) continue;
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
 
@@ -1434,7 +1701,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_HoverE[nPhotons] = pho.hadTowOverEm();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
     pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
-									   conversions, beamSpot->position());
+							  conversions, beamSpot->position());
 
     //**********************************************************
     // Fill default miniAOD isolation quantities
@@ -1446,6 +1713,56 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_pfIsoModFrixione[nPhotons] = pho.getPflowIsolationVariables().modFrixione;
     pho_pfIsoSumPUPt[nPhotons] = pho.sumPUPt();
     
+    pho_SeedRechitID.push_back(pho.superCluster()->seed()->seed().rawId());
+
+    //gain switch flag
+    //cout << "photon " << pho.pt() << " " << pho.eta() << " " << pho.phi() << "\n";
+    const std::vector< std::pair<DetId, float>>& v_id =pho.seed()->hitsAndFractions();
+    float max = 0;
+    DetId id(0);
+    bool maxSwitchToGain6 = false;
+    bool maxSwitchToGain1 = false;
+    bool anySwitchToGain6 = false;
+    bool anySwitchToGain1 = false;
+    std::vector<uint> rechits; rechits.clear();
+    for ( size_t i = 0; i < v_id.size(); ++i ) {
+      EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
+
+      ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+      rechits.push_back(v_id[i].first.rawId());
+
+      if (it != ebRecHits->end()) {
+	// cout << "rechit " << i << " : " << it->energy() << " "
+	//      << EcalRecHit::kHasSwitchToGain6 << " " << EcalRecHit::kHasSwitchToGain1 << " " 
+	//      << it->checkFlag(EcalRecHit::kHasSwitchToGain6) << " "
+	//      << it->checkFlag(EcalRecHit::kHasSwitchToGain1) 
+	//      << "\n";
+
+	float energy = it->energy() * v_id[i].second;
+	if (it->checkFlag(EcalRecHit::kHasSwitchToGain6)) anySwitchToGain6 = true;
+	if (it->checkFlag(EcalRecHit::kHasSwitchToGain1)) anySwitchToGain1 = true;
+	if ( energy > max ) {
+	  max = energy;
+	  id = v_id[i].first;
+	  maxSwitchToGain6 = it->checkFlag(EcalRecHit::kHasSwitchToGain6);
+	  maxSwitchToGain1 = it->checkFlag(EcalRecHit::kHasSwitchToGain1);
+	}
+      } else {
+	//cout << "rechit not found\n";
+      }           
+    }
+    pho_EcalRechitID.push_back(rechits);
+
+    pho_seedRecHitSwitchToGain6[nPhotons] = maxSwitchToGain6;
+    pho_seedRecHitSwitchToGain1[nPhotons] = maxSwitchToGain1;
+    pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;
+    pho_anyRecHitSwitchToGain1[nPhotons] = anySwitchToGain1;
+  
+    //*************************************************
+    //Find relevant rechits
+    //*************************************************
+    ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( pho.superCluster()->eta(), pho.superCluster()->phi() ));
+
     //**********************************************************
     //Compute PF isolation
     //absolute uncorrected isolations with footprint removal
@@ -1509,7 +1826,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	}
 
 	//loop over all vertices
-	for(unsigned int q = 0; q < vertices->size() && q < MAX_NPV; q++){
+	for(int q = 0; q < nPVAll; q++){
 	  if(!(vertices->at(q).isValid() && !vertices->at(q).isFake())) continue;
 
 	  dz = candidate.pseudoTrack().dz(vertices->at(q).position());
@@ -1527,14 +1844,13 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     }
 
     //fill the proper variables
-    for(unsigned int q = 0; q < vertices->size() && q < MAX_NPV; q++) {
+    for(int q = 0; q < nPVAll; q++) {
       pho_sumChargedHadronPtAllVertices[nPhotons][q] = chargedIsoSumAllVertices[q];
     }
     pho_sumChargedHadronPt[nPhotons] = chargedIsoSum;
     pho_sumNeutralHadronEt[nPhotons] = neutralHadronIsoSum;
     pho_sumPhotonEt[nPhotons] = photonIsoSum;
     
-
     //*****************************************************************
     //Compute Worst Isolation Looping over all vertices
     //*****************************************************************
@@ -1618,6 +1934,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     // super cluster position
     //-----------------------  
     pho_superClusterEnergy[nPhotons] = pho.superCluster()->energy();
+    pho_superClusterRawEnergy[nPhotons] = pho.superCluster()->rawEnergy();
     pho_superClusterEta[nPhotons]    = pho.superCluster()->eta();
     pho_superClusterPhi[nPhotons]    = pho.superCluster()->phi();
     pho_superClusterX[nPhotons]      = pho.superCluster()->x();
@@ -1636,13 +1953,290 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	if (trigObject.hasFilterLabel(photonHLTFilterNames[q].c_str())) pho_passHLTFilter[nPhotons][q] = true;
       }
     }
+    
+    //conversion matching for beamspot pointing
+    const reco::Conversion *convmatch = 0;
+    double drmin = std::numeric_limits<double>::max();
+    //double leg conversions
+    for (const reco::Conversion &conv : *conversions) {
+      if (conv.refittedPairMomentum().rho()<10.) continue;
+      if (!conv.conversionVertex().isValid()) continue;
+      if (TMath::Prob(conv.conversionVertex().chi2(),  conv.conversionVertex().ndof())<1e-6) continue;
+      
+      math::XYZVector mom(conv.refittedPairMomentum());      
+      math::XYZPoint scpos(pho.superCluster()->position());
+      math::XYZPoint cvtx(conv.conversionVertex().position());
+      math::XYZVector cscvector = scpos - cvtx;
+      
+      double dr = reco::deltaR(mom,cscvector);
+      
+      if (dr<drmin && dr<0.1) {
+        drmin = dr;
+        convmatch = &conv;
+      }
+    }
+    if (!convmatch) {
+      drmin = std::numeric_limits<double>::max();
+      //single leg conversions
+      for (const reco::Conversion &conv : *singleLegConversions) {      
+        math::XYZVector mom(conv.tracksPin()[0]);      
+        math::XYZPoint scpos(pho.superCluster()->position());
+        math::XYZPoint cvtx(conv.conversionVertex().position());
+        math::XYZVector cscvector = scpos - cvtx;
+        
+        double dr = reco::deltaR(mom,cscvector);
+        
+        if (dr<drmin && dr<0.1) {
+          drmin = dr;
+          convmatch = &conv;
+        }
+      }
+    }
+    
+    //matched conversion, compute conversion type
+    //and extrapolation to beamline
+    //*FIXME* Both of these additional two requirements are inconsistent and make the conversion
+    //selection depend on poorly defined criteria, but we keep them for sync purposes
+    if (convmatch && pho.hasConversionTracks() && conversions->size()>0) {
+      int ntracks = convmatch->nTracks();
+      
+      math::XYZVector mom(ntracks==2 ? convmatch->refittedPairMomentum() : convmatch->tracksPin()[0]);      
+      math::XYZPoint scpos(pho.superCluster()->position());
+      math::XYZPoint cvtx(convmatch->conversionVertex().position());
+      math::XYZVector cscvector = scpos - cvtx;
+
+      double z = cvtx.z();
+      double rho = cvtx.rho();
+
+      int legtype = ntracks==2 ? 0 : 1;
+      int dettype = pho.isEB() ? 0 : 1;
+      int postype =0;
+      
+      if (pho.isEB()) {
+        if (rho<15.) {
+          postype = 0;
+        }
+        else if (rho>=15. && rho<60.) {
+          postype = 1;
+        }
+        else {
+          postype = 2;
+        }
+      }
+      else {
+        if (std::abs(z) < 50.) {
+          postype = 0;
+        }
+        else if (std::abs(z) >= 50. && std::abs(z) < 100.) {
+          postype = 1;
+        }
+        else {
+          postype = 2;
+        }
+      }
+      
+      pho_convType[nPhotons] = legtype + 2*dettype + 4*postype;
+      pho_convTrkZ[nPhotons] = cvtx.z() - ((cvtx.x()-beamSpot->x0())*mom.x()+(cvtx.y()-beamSpot->y0())*mom.y())/mom.rho() * mom.z()/mom.rho();
+      pho_convTrkClusZ[nPhotons] = cvtx.z() - ((cvtx.x()-beamSpot->x0())*cscvector.x()+(cvtx.y()-beamSpot->y0())*cscvector.y())/cscvector.rho() * cscvector.z()/cscvector.rho();
+    }
 
     nPhotons++;
   }
-
+  
+  double pho_vtxSumPxD[OBJECTARRAYSIZE][MAX_NPV];
+  double pho_vtxSumPyD[OBJECTARRAYSIZE][MAX_NPV];
+  
+  for (int ipho = 0; ipho<nPhotons; ++ipho) {
+    for (int ipv = 0; ipv<nPVAll; ++ipv) {
+      pho_vtxSumPxD[ipho][ipv] = 0.;
+      pho_vtxSumPyD[ipho][ipv] = 0.;
+    }
+  }
+  
+  
+  //fill information on tracks to exclude around photons for vertex selection purposes
+  for (const pat::PackedCandidate &pfcand : *packedPFCands) {
+    if (pfcand.charge()==0) continue;
+    double mindz = std::numeric_limits<double>::max();
+    int ipvmin = -1;
+    for (int ipv = 0; ipv < nPVAll; ++ipv) {
+      const reco::Vertex &vtx = vertices->at(ipv);
+      double dz = std::abs(pfcand.dz(vtx.position()));
+      if (dz<mindz) {
+        mindz = dz;
+        ipvmin = ipv;
+      }
+    }
+    
+    if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
+      const reco::Vertex &vtx = vertices->at(ipvmin);
+      for (int ipho = 0; ipho < nPhotons; ++ipho) {
+        const pat::Photon &pho = photons->at(ipho);
+        math::XYZVector phodir(pho.superCluster()->x()-vtx.x(),pho.superCluster()->y()-vtx.y(),pho.superCluster()->z()-vtx.z());
+        double dr = reco::deltaR(phodir, pfcand);
+        if (dr<0.05) {
+          pho_vtxSumPxD[ipho][ipvmin] += pfcand.px();
+          pho_vtxSumPyD[ipho][ipvmin] += pfcand.py();
+        }
+      }
+    }
+  }
+  
+  for (int ipho = 0; ipho<nPhotons; ++ipho) {
+    for (int ipv = 0; ipv<nPVAll; ++ipv) {
+      pho_vtxSumPx[ipho][ipv] = pho_vtxSumPxD[ipho][ipv];
+      pho_vtxSumPy[ipho][ipv] = pho_vtxSumPyD[ipho][ipv];
+    }
+  }
+  
+  
   delete lazyToolnoZS;
   return true;
 };
+
+
+bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
+  
+  // geometry (from ECAL ELF)
+  edm::ESHandle<CaloGeometry> geoHandle;
+  iSetup.get<CaloGeometryRecord>().get(geoHandle);
+  const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
+  const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+
+  std::map<uint, uint> mapRecHitIdToIndex; mapRecHitIdToIndex.clear();
+  uint rechitIndex = 0;
+
+  //Barrel Rechits
+  for (EcalRecHitCollection::const_iterator recHit = ebRecHits->begin(); recHit != ebRecHits->end(); ++recHit) {
+    // first get detector id
+    
+    const DetId recHitId = recHit->detid();
+    //const uint32_t rhId  = recHitId.rawId();
+
+    //Find rechits by ID that are explicitly marked to be saved.
+    bool matchedRechit = false;
+    std::vector<uint>::iterator it;
+    it = find (ecalRechitID_ToBeSaved.begin(), ecalRechitID_ToBeSaved.end(), recHitId.rawId());
+    if (it == ecalRechitID_ToBeSaved.end()) {      
+      matchedRechit = true;
+    }
+  
+    const auto recHitPos = barrelGeometry->getGeometry(recHitId)->getPosition();
+
+    //Find rechits by deltaR proximity
+    bool dRProximity = false;
+    for (int k=0; k<int(ecalRechitEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitEtaPhi_ToBeSaved[k].first, ecalRechitEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.5) {
+	dRProximity = true;
+      }
+    }
+
+    bool dRJetProximity = false;
+
+    for (int k=0; k<int(ecalRechitJetEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitJetEtaPhi_ToBeSaved[k].first, ecalRechitJetEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.7) {
+	dRJetProximity = true;
+      }
+    }
+
+    //skip rechits that are not relevant
+    if (!(matchedRechit || dRProximity || dRJetProximity)) {
+      continue;
+    }
+
+    mapRecHitIdToIndex[recHitId.rawId()] = rechitIndex;
+    ecalRechit_ID->push_back(recHitId.rawId());
+    ecalRechit_Eta->push_back(recHitPos.eta());
+    ecalRechit_Phi->push_back(recHitPos.phi());
+    ecalRechit_X->push_back(recHitPos.x());
+    ecalRechit_Y->push_back(recHitPos.y());
+    ecalRechit_Z->push_back(recHitPos.z());
+    ecalRechit_E->push_back(recHit->energy());
+    ecalRechit_T->push_back(recHit->time());
+    ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+    ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+    ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    rechitIndex++;
+  }
+  
+  //Endcap Rechits
+  for (EcalRecHitCollection::const_iterator recHit = eeRecHits->begin(); recHit != eeRecHits->end(); ++recHit) {
+    // first get detector id
+    
+    const DetId recHitId = recHit->detid();
+    // const uint32_t rhId  = recHitId.rawId();
+ 
+   bool matchedRechit = false;
+    std::vector<uint>::iterator it;
+    it = find (ecalRechitID_ToBeSaved.begin(), ecalRechitID_ToBeSaved.end(), recHitId.rawId());
+    if (it == ecalRechitID_ToBeSaved.end()) {
+      matchedRechit = true;
+    }
+  
+    const auto recHitPos = endcapGeometry->getGeometry(recHitId)->getPosition();
+ 
+    //Find rechits by deltaR proximity
+    bool dRProximity = false;
+    for (int k=0; k<int(ecalRechitEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitEtaPhi_ToBeSaved[k].first, ecalRechitEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.5) {
+	dRProximity = true;
+      }
+    }
+
+    bool dRJetProximity = false;
+    for (int k=0; k<int(ecalRechitJetEtaPhi_ToBeSaved.size()); ++k) {
+      if ( deltaR(ecalRechitJetEtaPhi_ToBeSaved[k].first, ecalRechitJetEtaPhi_ToBeSaved[k].second, 
+		  recHitPos.eta(), recHitPos.phi()) < 0.7) {
+	dRJetProximity = true;
+      }
+    }
+
+    //skip rechits that are not relevant
+    if (!(matchedRechit || dRProximity || dRJetProximity)) {
+      continue;
+    }
+
+    mapRecHitIdToIndex[recHitId.rawId()] = rechitIndex;
+    ecalRechit_ID->push_back(recHitId.rawId());
+    ecalRechit_Eta->push_back(recHitPos.eta());
+    ecalRechit_Phi->push_back(recHitPos.phi());
+    ecalRechit_X->push_back(recHitPos.x());
+    ecalRechit_Y->push_back(recHitPos.y());
+    ecalRechit_Z->push_back(recHitPos.z());
+    ecalRechit_E->push_back(recHit->energy());
+    ecalRechit_T->push_back(recHit->time());
+    ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+    ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+    ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    rechitIndex++;
+
+  }
+  
+  //Fill Rechit Indices for electrons and photons
+  for (uint k=0; k<ele_EcalRechitID.size(); k++) {
+    std::vector<uint> tmpVector;
+    for (uint l=0; l<ele_EcalRechitID[k].size(); l++) {
+      tmpVector.push_back(mapRecHitIdToIndex[ele_EcalRechitID[k][l]]);
+    }
+    ele_EcalRechitIndex->push_back(tmpVector);
+    ele_SeedRechitIndex->push_back(mapRecHitIdToIndex[ele_SeedRechitID[k]]);
+  }
+  for (uint k=0; k<pho_EcalRechitID.size(); k++) {
+    std::vector<uint> tmpVector;
+    for (uint l=0; l<pho_EcalRechitID[k].size(); l++) {
+      tmpVector.push_back(mapRecHitIdToIndex[pho_EcalRechitID[k][l]]);
+    }
+    pho_EcalRechitIndex->push_back(tmpVector);
+    pho_SeedRechitIndex->push_back(mapRecHitIdToIndex[pho_SeedRechitID[k]]);
+ }
+ 
+
+  return true;
+}
+
 
 bool RazorTuplizer::fillJets(){
   for (const pat::Jet &j : *jets) {
@@ -1697,7 +2291,35 @@ bool RazorTuplizer::fillJets(){
     jetAllMuonEta[nJets] = AllMuonP4.Eta();
     jetAllMuonPhi[nJets] = AllMuonP4.Phi();
     jetAllMuonM[nJets] = AllMuonP4.M();
-   
+
+
+    //*************************************************
+    //Find relevant rechits
+    //*************************************************
+    // const std::vector< std::pair<DetId, float>>& v_id =ele->superCluster()->seed()->hitsAndFractions();
+    // for ( size_t i = 0; i < v_id.size(); ++i ) {
+    //   // EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
+    //   // if (it != ebRecHits->end()) {
+    //   ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+    //   // }
+    // }
+    ecalRechitJetEtaPhi_ToBeSaved.push_back( pair<double,double>( j.eta(), j.phi() ));
+
+
+    //*************************************************
+    //DZ Variable
+    //*************************************************    
+    double tmpTkPtWeightedDZ = 0;
+    double tmpSumTkPt = 0;
+    for (uint k=0; k < j.numberOfDaughters(); k++) {     	        
+      if (j.daughter(k)->charge() == 0) continue;
+     
+      tmpSumTkPt += ((pat::PackedCandidate*)j.daughter(k))->pt();
+      tmpTkPtWeightedDZ += ((pat::PackedCandidate*)j.daughter(k))->pt() * (((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() - pvZ);         
+    }
+    jetPtWeightedDZ[nJets] = double(bool(tmpSumTkPt>0) ? double(tmpTkPtWeightedDZ/tmpSumTkPt) :-999);  
+    
+
     nJets++;
   }
 
@@ -1714,8 +2336,8 @@ bool RazorTuplizer::fillJetsAK8(){
     //fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedLinks");
     //fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredLinks");
     fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSPrunedMass");                                                     
-    fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
-    fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  
+    //fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
+    //fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  
     fatJetTau1[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau1");
     fatJetTau2[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau2");
     fatJetTau3[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau3");
@@ -1727,7 +2349,7 @@ bool RazorTuplizer::fillJetsAK8(){
 
 bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   const pat::MET &Met = mets->front();
-  
+
   metPt = Met.uncorPt();
   metPhi = Met.uncorPhi();
   sumMET = Met.sumEt();
@@ -1737,47 +2359,64 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   metType1Phi = Met.phi();
   metType0Plus1Pt = 0;
   metType0Plus1Phi = 0;
+  metCaloPt = Met.caloMETPt();
+  metCaloPhi = Met.caloMETPhi();
 
-  if(!isData_)
-    {
-      metType1PtJetResUp           = Met.shiftedPt(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtJetResDown         = Met.shiftedPt(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtJetEnUp            = Met.shiftedPt(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtJetEnDown          = Met.shiftedPt(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtMuonEnUp           = Met.shiftedPt(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtMuonEnDown         = Met.shiftedPt(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtElectronEnUp       = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtElectronEnDown     = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtTauEnUp	           = Met.shiftedPt(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtTauEnDown          = Met.shiftedPt(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtUnclusteredEnUp    = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtUnclusteredEnDown  = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PtPhotonEnUp         = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PtPhotonEnDown       = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);
-      // metType1PtMETUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);
-      // metType1PtJetResUpSmear     = Met.shiftedPt(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PtJetResDownSmear   = Met.shiftedPt(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PtMETFullUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
+  //Only do this for reMiniAOD data
+  if (isData_) {
+    const pat::MET &MetEGClean = metsEGClean->front();
+    const pat::MET &MetMuEGClean = metsMuEGClean->front();
+    const pat::MET &MetMuEGCleanCorr = metsMuEGCleanCorr->front();
+    const pat::MET &MetUncorrected = metsUncorrected->front();
+    metEGCleanPt = MetEGClean.pt();
+    metEGCleanPhi = MetEGClean.phi();
+    metMuEGCleanPt = MetMuEGClean.pt();
+    metMuEGCleanPhi = MetMuEGClean.phi();
+    metMuEGCleanCorrPt = MetMuEGCleanCorr.pt();
+    metMuEGCleanCorrPhi = MetMuEGCleanCorr.phi();
+    metUncorrectedPt = MetUncorrected.pt();
+    metUncorrectedPhi = MetUncorrected.phi();
+  }
+
+  if(!isData_) {
+    metType1PtJetResUp           = Met.shiftedPt(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtJetResDown         = Met.shiftedPt(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtJetEnUp            = Met.shiftedPt(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtJetEnDown          = Met.shiftedPt(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtMuonEnUp           = Met.shiftedPt(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtMuonEnDown         = Met.shiftedPt(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtElectronEnUp       = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtElectronEnDown     = Met.shiftedPt(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtTauEnUp	           = Met.shiftedPt(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtTauEnDown          = Met.shiftedPt(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtUnclusteredEnUp    = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtUnclusteredEnDown  = Met.shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PtPhotonEnUp         = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PtPhotonEnDown       = Met.shiftedPt(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);
+    // metType1PtMETUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);
+    // metType1PtJetResUpSmear     = Met.shiftedPt(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PtJetResDownSmear   = Met.shiftedPt(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PtMETFullUncertaintySize = Met.shiftedPt(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
       
-      metType1PhiJetResUp          = Met.shiftedPhi(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
-      metType1PhiJetResDown        = Met.shiftedPhi(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
-      metType1PhiJetEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiJetEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiMuonEnUp          = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiMuonEnDown        = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);	 
-      metType1PhiElectronEnUp      = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiElectronEnDown    = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiTauEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiTauEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiUnclusteredEnUp   = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiUnclusteredEnDown = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiPhotonEnUp        = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);	      
-      metType1PhiPhotonEnDown      = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiMETUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiJetResUpSmear     = Met.shiftedPhi(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiJetResDownSmear   = Met.shiftedPhi(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
-      // metType1PhiMETFullUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
-    }
+    metType1PhiJetResUp          = Met.shiftedPhi(pat::MET::METUncertainty::JetResUp, pat::MET::METCorrectionLevel::Type1);
+    metType1PhiJetResDown        = Met.shiftedPhi(pat::MET::METUncertainty::JetResDown, pat::MET::METCorrectionLevel::Type1);
+    metType1PhiJetEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::JetEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiJetEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::JetEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiMuonEnUp          = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiMuonEnDown        = Met.shiftedPhi(pat::MET::METUncertainty::MuonEnDown, pat::MET::METCorrectionLevel::Type1);	 
+    metType1PhiElectronEnUp      = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiElectronEnDown    = Met.shiftedPhi(pat::MET::METUncertainty::ElectronEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiTauEnUp           = Met.shiftedPhi(pat::MET::METUncertainty::TauEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiTauEnDown         = Met.shiftedPhi(pat::MET::METUncertainty::TauEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiUnclusteredEnUp   = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiUnclusteredEnDown = Met.shiftedPhi(pat::MET::METUncertainty::UnclusteredEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiPhotonEnUp        = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnUp, pat::MET::METCorrectionLevel::Type1);	      
+    metType1PhiPhotonEnDown      = Met.shiftedPhi(pat::MET::METUncertainty::PhotonEnDown, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiMETUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METUncertaintySize, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiJetResUpSmear     = Met.shiftedPhi(pat::MET::METUncertainty::JetResUpSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiJetResDownSmear   = Met.shiftedPhi(pat::MET::METUncertainty::JetResDownSmear, pat::MET::METCorrectionLevel::Type1);	      
+    // metType1PhiMETFullUncertaintySize = Met.shiftedPhi(pat::MET::METUncertainty::METFullUncertaintySize, pat::MET::METCorrectionLevel::Type1);	     
+  }
   
   const pat::MET &MetPuppi = metsPuppi->front();
   //const pat::MET &MetNoHF = metsNoHF->front();
@@ -1802,7 +2441,7 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_trackingFailureFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_goodVertices") == 0)
 	Flag_goodVertices = metFilterBits->accept(i);
-      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_CSCTightHaloFilter") == 0)
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_globalTightHalo2016Filter") == 0)
 	Flag_CSCTightHaloFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOGFilters") == 0)
 	Flag_trkPOGFilters = metFilterBits->accept(i);
@@ -1820,20 +2459,30 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_eeBadScFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_METFilters") == 0)
 	Flag_METFilters = metFilterBits->accept(i);
-      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
-      //   Flag_HBHENoiseFilter = metFilterBits->accept(i);
-      // else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseIsoFilter") == 0)
-      //   HBHEIsoNoiseFilter = metFilterBits->accept(i);
+       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseFilter") == 0)
+         Flag_HBHENoiseFilter = metFilterBits->accept(i);
+       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_HBHENoiseIsoFilter") == 0)
+         Flag_HBHEIsoNoiseFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOG_toomanystripclus53X") == 0)
 	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
 	Flag_hcalLaserEventFilter = metFilterBits->accept(i);     
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badMuons") == 0) {
+	Flag_badGlobalMuonFilter = metFilterBits->accept(i);     
+	cout << "found bad muon flag : " << "\n";
+      }
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_duplicateMuons") == 0)
+	Flag_duplicateMuonFilter = metFilterBits->accept(i);     
+      //else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badChargedCandidateFilter") == 0)
+      //Flag_badChargedCandidateFilter = metFilterBits->accept(i);     
+      //else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badMuonFilter") == 0)
+      //Flag_badMuonFilter = metFilterBits->accept(i);     
     } //loop over met filters
 
-    //use custom hbhefilter, because miniAOD filters are problematic.
-    Flag_HBHENoiseFilter = *hbheNoiseFilter;
-    Flag_HBHETightNoiseFilter = *hbheTightNoiseFilter;
-    Flag_HBHEIsoNoiseFilter = *hbheIsoNoiseFilter;
+    Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
+    Flag_badMuonFilter = *badMuonFilter;
+
+    
   }
 
   return true;
@@ -1874,57 +2523,89 @@ bool RazorTuplizer::fillMC(){
     genAlphaQCD = genInfo->alphaQCD();
     genAlphaQED = genInfo->alphaQED();
     
-    //get lhe weights for systematic uncertainties:
-    if (lheInfo.isValid() && lheInfo->weights().size()>0) {
-      
-      double nomlheweight = lheInfo->weights()[0].wgt;
+
+    if (isFastsim_) {
+
+      //get lhe weights for systematic uncertainties:      
+      double nomlheweight = genInfo->weights()[0];
       
       //fill scale variation weights
-      if (lheInfo->weights().size()>=9) {  
-        for (unsigned int iwgt=0; iwgt<9; ++iwgt) {
-          double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
-          scaleWeights->push_back(wgtval);
-        }
+      if (genInfo->weights().size()>=10) {  
+	for (unsigned int iwgt=1; iwgt<10; ++iwgt) {
+	  //normalize to 
+	  double wgtval = genInfo->weights()[iwgt]*genWeight/genInfo->weights()[1];
+	  scaleWeights->push_back(wgtval);
+	}
       }
    
       //fill pdf variation weights
-      if (firstPdfWeight>=0 && lastPdfWeight>=0 && lastPdfWeight<int(lheInfo->weights().size()) && (lastPdfWeight-firstPdfWeight+1)==100) {
+      if (firstPdfWeight>=0 && lastPdfWeight>=0 && lastPdfWeight<int(genInfo->weights().size()) && (lastPdfWeight-firstPdfWeight+1)==100) {
         
-        //fill pdf variation weights after converting with mc2hessian transformation
-        std::array<double, 100> inpdfweights;
-        for (int iwgt=firstPdfWeight, ipdf=0; iwgt<=lastPdfWeight; ++iwgt, ++ipdf) {
-          inpdfweights[ipdf] = lheInfo->weights()[iwgt].wgt/nomlheweight;
-        }
+	//fill pdf variation weights after converting with mc2hessian transformation
+	std::array<double, 100> inpdfweights;
+	for (int iwgt=firstPdfWeight, ipdf=0; iwgt<=lastPdfWeight; ++iwgt, ++ipdf) {
+	  inpdfweights[ipdf] = genInfo->weights()[iwgt]/genInfo->weights()[firstPdfWeight-1];
+	}
         
-        std::array<double, 60> outpdfweights;
-        pdfweightshelper.DoMC2Hessian(inpdfweights.data(),outpdfweights.data());
+	std::array<double, 60> outpdfweights;
+	pdfweightshelper.DoMC2Hessian(inpdfweights.data(),outpdfweights.data());
         
-        for (unsigned int iwgt=0; iwgt<60; ++iwgt) {
-          double wgtval = outpdfweights[iwgt]*genWeight;
-          pdfWeights->push_back(wgtval);
-        }       
+	for (unsigned int iwgt=0; iwgt<60; ++iwgt) {
+	  double wgtval = outpdfweights[iwgt]*genWeight;
+	  pdfWeights->push_back(wgtval);
+	}       
               
-        //fill alpha_s variation weights
-        if (firstAlphasWeight>=0 && lastAlphasWeight>=0 && lastAlphasWeight<int(lheInfo->weights().size())) {
-          for (int iwgt = firstAlphasWeight; iwgt<=lastAlphasWeight; ++iwgt) {
-            double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
-            alphasWeights->push_back(wgtval);
-          }
-        }        
+	//fill alpha_s variation weights
+	if (firstAlphasWeight>=0 && lastAlphasWeight>=0 && lastAlphasWeight<int(genInfo->weights().size())) {
+	  for (int iwgt = firstAlphasWeight; iwgt<=lastAlphasWeight; ++iwgt) {
+	    double wgtval = genInfo->weights()[iwgt]*genWeight/nomlheweight;
+	    alphasWeights->push_back(wgtval);
+	  }
+	}        
         
-      }   
+      }
+    } else {
 
+      if (lheInfo.isValid() && lheInfo->weights().size()>0) {
+	
+	double nomlheweight = lheInfo->weights()[0].wgt;
+	
+	//fill scale variation weights
+	if (lheInfo->weights().size()>=9) {  
+	  for (unsigned int iwgt=0; iwgt<9; ++iwgt) {
+	    double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+	    scaleWeights->push_back(wgtval);
+	  }
+	}
+	
+	//fill pdf variation weights
+	if (firstPdfWeight>=0 && lastPdfWeight>=0 && lastPdfWeight<int(lheInfo->weights().size()) && (lastPdfWeight-firstPdfWeight+1)==100) {
+	  
+	  //fill pdf variation weights after converting with mc2hessian transformation
+	  std::array<double, 100> inpdfweights;
+	  for (int iwgt=firstPdfWeight, ipdf=0; iwgt<=lastPdfWeight; ++iwgt, ++ipdf) {
+	    inpdfweights[ipdf] = lheInfo->weights()[iwgt].wgt/nomlheweight;
+	  }
+	  
+	  std::array<double, 60> outpdfweights;
+	  pdfweightshelper.DoMC2Hessian(inpdfweights.data(),outpdfweights.data());
+	  
+	  for (unsigned int iwgt=0; iwgt<60; ++iwgt) {
+	    double wgtval = outpdfweights[iwgt]*genWeight;
+	    pdfWeights->push_back(wgtval);
+	  }       
+	  
+	  //fill alpha_s variation weights
+	  if (firstAlphasWeight>=0 && lastAlphasWeight>=0 && lastAlphasWeight<int(lheInfo->weights().size())) {
+	    for (int iwgt = firstAlphasWeight; iwgt<=lastAlphasWeight; ++iwgt) {
+	      double wgtval = lheInfo->weights()[iwgt].wgt*genWeight/nomlheweight;
+	      alphasWeights->push_back(wgtval);
+	    }
+	  }      	
+	}
+      }  
     }
-        
-    //fill lhe comment lines with SUSY model parameter information
-    if (lheInfo.isValid() && isFastsim_) {
-      std::vector<std::string>::const_iterator c_begin = lheInfo->comments_begin();
-      std::vector<std::string>::const_iterator c_end = lheInfo->comments_end();
-      for( std::vector<std::string>::const_iterator cit=c_begin; cit!=c_end; ++cit) {
-        lheComments->push_back(*cit);
-      } 
-    }
-    
+   
     //fill sum of weights histograms
     sumWeights->Fill(0.,genWeight);
     
@@ -1932,12 +2613,11 @@ bool RazorTuplizer::fillMC(){
       sumScaleWeights->Fill(double(iwgt),(*scaleWeights)[iwgt]);
     }
     for (unsigned int iwgt=0; iwgt<pdfWeights->size(); ++iwgt) {
-      sumPdfWeights->Fill(double(iwgt),(*pdfWeights)[iwgt]);
+      sumPdfWeights->Fill(double(iwgt),(*pdfWeights)[iwgt]);     
     }
     for (unsigned int iwgt=0; iwgt<alphasWeights->size(); ++iwgt) {
       sumAlphasWeights->Fill(double(iwgt),(*alphasWeights)[iwgt]);
-    }    
-    
+    }        
 
     return true;
 }
@@ -2121,72 +2801,144 @@ void RazorTuplizer::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup
   
   if (useGen_) {
   
-    edm::Handle<LHERunInfoProduct> lheRunInfo;
-    iRun.getByLabel(lheRunInfoTag_,lheRunInfo);
-    
-    if (lheRunInfo.isValid()) {
-      int pdfidx = lheRunInfo->heprup().PDFSUP.first;
-      
+    if (isFastsim_) {
+
+      //hardcode this for now. All SUSY signals use 5 flavor scheme, LO madgraph
+      //to do it properly, we would need to parse the LHE header
+      int pdfidx = 263000; 
+            
       if (pdfidx == 263000) {
-        //NNPDF30_lo_as_0130 (nf5) for LO madgraph samples and SUSY signals
-        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_hessian_60.csv"));
-        firstPdfWeight = 10;
-        lastPdfWeight = 109;
-        firstAlphasWeight = -1;
-        lastAlphasWeight = -1;      
+	//NNPDF30_lo_as_0130 (nf5) for LO madgraph samples and SUSY signals
+	pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_hessian_60.csv"));
+	firstPdfWeight = 11;
+	lastPdfWeight = 110;
+	firstAlphasWeight = -1;
+	lastAlphasWeight = -1;      
       }
       else if (pdfidx == 263400) {
-        //NNPdf30_lo_as_0130_nf4 for LO madgraph samples
-        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_nf_4_hessian_60.csv"));
-        firstPdfWeight = 111;
-        lastPdfWeight = 210;
-        firstAlphasWeight = -1;
-        lastAlphasWeight = -1;            
+	//NNPdf30_lo_as_0130_nf4 for LO madgraph samples
+	pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_nf_4_hessian_60.csv"));
+	firstPdfWeight = 112;
+	lastPdfWeight = 211;
+	firstAlphasWeight = -1;
+	lastAlphasWeight = -1;            
       }
       else if (pdfidx == 260000 || pdfidx == -1) {
-        //NNPdf30_nlo_as_0118 (nf5) for NLO powheg samples
-        //(work around apparent bug in current powheg samples by catching "-1" as well)
-        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
-        firstPdfWeight = 9;
-        lastPdfWeight = 108;
-        firstAlphasWeight = 109;
-        lastAlphasWeight = 110; 
+	//NNPdf30_nlo_as_0118 (nf5) for NLO powheg samples
+	//(work around apparent bug in current powheg samples by catching "-1" as well)
+	pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
+	firstPdfWeight = 10;
+	lastPdfWeight = 109;
+	firstAlphasWeight = 110;
+	lastAlphasWeight = 111; 
       }
       else if (pdfidx == 292200) {
-        //NNPdf30_nlo_as_0118 (nf5) with built-in alphas variations for NLO aMC@NLO samples
-        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
-        firstPdfWeight = 9;
-        lastPdfWeight = 108;
-        firstAlphasWeight = 109;
-        lastAlphasWeight = 110; 
+	//NNPdf30_nlo_as_0118 (nf5) with built-in alphas variations for NLO aMC@NLO samples
+	pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
+	firstPdfWeight = 10;
+	lastPdfWeight = 109;
+	firstAlphasWeight = 110;
+	lastAlphasWeight = 111; 
       }   
       else if (pdfidx == 292000) {
-        //NNPdf30_nlo_as_0118_nf4 with built-in alphas variations for NLO aMC@NLO samples
-        pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_nf_4_hessian_60.csv"));
-        firstPdfWeight = 9;
-        lastPdfWeight = 108;
-        firstAlphasWeight = 109;
-        lastAlphasWeight = 110;
+	//NNPdf30_nlo_as_0118_nf4 with built-in alphas variations for NLO aMC@NLO samples
+	pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_nf_4_hessian_60.csv"));
+	firstPdfWeight = 10;
+	lastPdfWeight = 109;
+	firstAlphasWeight = 110;
+	lastAlphasWeight = 111;
       }
       else {
-        firstPdfWeight = -1;
-        lastPdfWeight = -1;
-        firstAlphasWeight = -1;
-        lastAlphasWeight = -1;
+	firstPdfWeight = -1;
+	lastPdfWeight = -1;
+	firstAlphasWeight = -1;
+	lastAlphasWeight = -1;
       }    
-      
-    }
-    else {
-      firstPdfWeight = -1;
-      lastPdfWeight = -1;
-      firstAlphasWeight = -1;
-      lastAlphasWeight = -1;
-    }
+    } else {
+      edm::Handle<LHERunInfoProduct> lheRunInfo;
+      iRun.getByLabel(lheRunInfoTag_,lheRunInfo);
     
+      if (lheRunInfo.isValid()) {
+	int pdfidx = lheRunInfo->heprup().PDFSUP.first;
+      
+	if (pdfidx == 263000) {
+	  //NNPDF30_lo_as_0130 (nf5) for LO madgraph samples and SUSY signals
+	  pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_hessian_60.csv"));
+	  firstPdfWeight = 10;
+	  lastPdfWeight = 109;
+	  firstAlphasWeight = -1;
+	  lastAlphasWeight = -1;      
+	}
+	else if (pdfidx == 263400) {
+	  //NNPdf30_lo_as_0130_nf4 for LO madgraph samples
+	  pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_lo_as_0130_nf_4_hessian_60.csv"));
+	  firstPdfWeight = 111;
+	  lastPdfWeight = 210;
+	  firstAlphasWeight = -1;
+	  lastAlphasWeight = -1;            
+	}
+	else if (pdfidx == 260000 || pdfidx == -1) {
+	  //NNPdf30_nlo_as_0118 (nf5) for NLO powheg samples
+	  //(work around apparent bug in current powheg samples by catching "-1" as well)
+	  pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
+	  firstPdfWeight = 9;
+	  lastPdfWeight = 108;
+	  firstAlphasWeight = 109;
+	  lastAlphasWeight = 110; 
+	}
+	else if (pdfidx == 292200) {
+	  //NNPdf30_nlo_as_0118 (nf5) with built-in alphas variations for NLO aMC@NLO samples
+	  pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_hessian_60.csv"));
+	  firstPdfWeight = 9;
+	  lastPdfWeight = 108;
+	  firstAlphasWeight = 109;
+	  lastAlphasWeight = 110; 
+	}   
+	else if (pdfidx == 292000) {
+	  //NNPdf30_nlo_as_0118_nf4 with built-in alphas variations for NLO aMC@NLO samples
+	  pdfweightshelper.Init(100,60,edm::FileInPath("SUSYBSMAnalysis/RazorTuplizer/data/NNPDF30_nlo_as_0118_nf_4_hessian_60.csv"));
+	  firstPdfWeight = 9;
+	  lastPdfWeight = 108;
+	  firstAlphasWeight = 109;
+	  lastAlphasWeight = 110;
+	}
+	else {
+	  firstPdfWeight = -1;
+	  lastPdfWeight = -1;
+	  firstAlphasWeight = -1;
+	  lastAlphasWeight = -1;
+	}    
+      }
+    }    
   }
-  
+  else {
+    firstPdfWeight = -1;
+    lastPdfWeight = -1;
+    firstAlphasWeight = -1;
+    lastAlphasWeight = -1;
+  }      
   
 }
+
+
+//------ Method called for each lumi block ------//
+void RazorTuplizer::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm::EventSetup const&) {
+
+  if (useGen_) {  
+    iLumi.getByToken(genLumiHeaderToken_,genLumiHeader);
+  }
+  
+  //fill lhe comment lines with SUSY model parameter information
+  lheComments = "";
+  if (genLumiHeader.isValid() && isFastsim_) {
+    lheComments = genLumiHeader->configDescription();    
+  }    
+
+  //Below: To check what the weights mean
+  //for (uint i=0; i<genLumiHeader->weightNames().size(); ++i) cout << "Weights: " << genLumiHeader->weightNames()[i] << "\n";
+
+}
+
 
 //------ Method called for each event ------//
 
@@ -2200,10 +2952,13 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   NEvents->Fill(0); //increment event count
 
   //filler methods should fill relevant tree variables and return false if the event should be rejected
-  bool isGoodEvent = 
-    fillEventInfo(iEvent)
+  bool isGoodEvent = fillEventInfo(iEvent) 
+    && fillPVAll();
+
+  //Fill Standard Objects
+  isGoodEvent = isGoodEvent 
     && fillMuons() 
-    && fillElectrons()
+    && fillElectrons(iEvent)
     && fillTaus()
     && fillIsoPFCandidates()
     && fillPhotons(iEvent,iSetup)
@@ -2212,6 +2967,9 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillMet(iEvent);
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
+  //Fill Rechits
+  if (enableEcalRechits_) isGoodEvent = isGoodEvent && fillEcalRechits(iSetup);
+
   bool isGoodMCEvent = true;
   if (useGen_) {
     isGoodMCEvent = fillMC()
