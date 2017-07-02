@@ -111,7 +111,6 @@ public:
   virtual void enableJetBranches();
   virtual void enableJetAK8Branches();
   virtual void enableMetBranches();
-  virtual void enableRazorBranches();
   virtual void enableTriggerBranches();
   virtual void enableMCBranches();
   virtual void enableGenParticleBranches();
@@ -121,7 +120,7 @@ public:
   virtual bool fillEventInfo(const edm::Event& iEvent);
   virtual bool fillPVAll();
   virtual bool fillPileUp();//Fill summary PU info
-  virtual bool fillMuons();//Fills looseID muon 4-momentum only. PT > 5GeV
+  virtual bool fillMuons(const edm::Event& iEvent);//Fills looseID muon 4-momentum only. PT > 5GeV
   virtual bool fillElectrons(const edm::Event& iEvent);//Fills Ele 4-momentum only. PT > 5GeV
   virtual bool fillTaus();//Fills Tau 4-momentum only. PT > 20GeV
   virtual bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
@@ -129,7 +128,6 @@ public:
   virtual bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV 
   virtual bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
   virtual bool fillMet(const edm::Event& iEvent);//Fills MET(mag, phi)
-  virtual bool fillRazor();//Fills MR and RSQ
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
   virtual bool fillGenParticles();
@@ -714,9 +712,8 @@ protected:
   float gParticlePhi[GENPARTICLEARRAYSIZE];
 
   //razor variables
-  float MR, RSQ;
-  float MR_AK8, RSQ_AK8;
-  
+  float HLTMR, HLTRSQ;
+
   //event info
   bool isData;
   int nPV;
