@@ -2311,13 +2311,18 @@ bool RazorTuplizer::fillJets(){
     double tmpSumTkPt = 0;
     for (uint k=0; k < j.numberOfDaughters(); k++) {     	        
       if (j.daughter(k)->charge() == 0) continue;
-     
       tmpSumTkPt += ((pat::PackedCandidate*)j.daughter(k))->pt();
-      tmpTkPtWeightedDZ += ((pat::PackedCandidate*)j.daughter(k))->pt() * (((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() - pvZ);         
+      cout << "here1 " << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
+      if (((pat::PackedCandidate*)j.daughter(k))->hasTrackDetails()) {
+	cout << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
+	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().pt() << "\n";
+	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() << "\n";
+	
+	tmpTkPtWeightedDZ += ((pat::PackedCandidate*)j.daughter(k))->pt() * (((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() - pvZ);         
+      }
     }
     jetPtWeightedDZ[nJets] = double(bool(tmpSumTkPt>0) ? double(tmpTkPtWeightedDZ/tmpSumTkPt) :-999);  
     
-
     nJets++;
   }
 
@@ -2880,17 +2885,17 @@ void RazorTuplizer::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm:
 
 void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   using namespace edm;
-  
+  cout << "Event: " << iEvent.id().run() << " " << iEvent.luminosityBlock() << " " << iEvent.id().event() << "\n";
+
   //initialize
   resetBranches();
   loadEvent(iEvent); //loads objects and resets tree branches
   
-  NEvents->Fill(0); //increment event count
+  NEvents->Fill(0); //increment event count  
 
   //filler methods should fill relevant tree variables and return false if the event should be rejected
   bool isGoodEvent = fillEventInfo(iEvent) 
     && fillPVAll();
-
   isGoodEvent = isGoodEvent && fillMuons(iEvent);
   isGoodEvent = isGoodEvent && fillElectrons(iEvent);
   isGoodEvent = isGoodEvent && fillTaus();
@@ -2913,7 +2918,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   
   isGoodEvent = isGoodEvent&&isGoodMCEvent;
   if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && fillTrigger(iEvent));
-  
+
   //fill the tree (just always fill it)
   RazorEvents->Fill();
 }
