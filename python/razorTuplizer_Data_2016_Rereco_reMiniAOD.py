@@ -14,7 +14,7 @@ process.source = cms.Source("PoolSource",
         '/store/data/Run2016C/DoubleEG/MINIAOD/03Feb2017-v1/80000/00371362-6AEC-E611-9845-842B2B758BAA.root'
     )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
@@ -79,7 +79,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     photons = cms.InputTag("slimmedPhotons"),
     jets = cms.InputTag("slimmedJets"),
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
-    jetsAK8 = cms.InputTag("slimmedJetsAK8"),
+    jetsAK8 = cms.InputTag("selectedPatJetsAK8PFCHS"),
+    puppiSDjetLabel = cms.InputTag('packedPatJetsAK8PFPuppiSoftDrop'),
     mets = cms.InputTag("slimmedMETs","","PAT"),
     metsEGClean = cms.InputTag("slimmedMETsEGClean","","PAT"),
     metsMuEGClean = cms.InputTag("slimmedMETsMuEGClean","","PAT"),
@@ -186,6 +187,121 @@ process.egcorrMET = cms.Sequence(
         process.patPFMetT1ElectronEnDownMuEGClean+process.patPFMetT1PhotonEnDownMuEGClean+
         process.patPFMetT1MuonEnDownMuEGClean+process.patPFMetT1TauEnDownMuEGClean+
         process.patPFMetT1UnclusteredEnDownMuEGClean+process.slimmedMETsMuEGClean)
+
+
+#####################################################################
+#Jet Reclustering for AK8 jets
+#####################################################################
+process.options = cms.untracked.PSet( allowUnscheduled = cms.untracked.bool(True) )
+
+from JMEAnalysis.JetToolbox.jetToolbox_cff import jetToolbox
+listBTagInfos = [
+     'pfInclusiveSecondaryVertexFinderTagInfos',
+     ]
+listBtagDiscriminatorsAK4 = [ 
+		'pfJetProbabilityBJetTags',
+		'pfCombinedInclusiveSecondaryVertexV2BJetTags',
+		'pfCombinedMVAV2BJetTags',
+		'pfCombinedCvsLJetTags',
+		'pfCombinedCvsBJetTags',
+		]
+listBtagDiscriminatorsAK8 = [ 
+		'pfJetProbabilityBJetTags',
+		'pfCombinedInclusiveSecondaryVertexV2BJetTags',
+		'pfCombinedMVAV2BJetTags',
+		'pfCombinedCvsLJetTags',
+		'pfCombinedCvsBJetTags',
+		'pfBoostedDoubleSecondaryVertexAK8BJetTags',
+		'pfBoostedDoubleSecondaryVertexCA15BJetTags',
+		]
+# JER Twiki:
+#   https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Scale_factors
+# Get Latest txt files from:
+#   https://github.com/cms-jet/JRDatabase/tree/master/textFiles
+jetAlgoAK8      = 'AK8PFchs'
+jetAlgoAK8Puppi = 'AK8PFPuppi'
+
+ak8Cut='pt > 170 && abs(eta) < 2.4'
+
+jetToolbox( process, 
+		'ak8', 
+		'analysisPath', 
+		'edmNtuplesOut', 
+		runOnMC=False, 
+		#updateCollection=jetAK8Label, 
+		#updateCollectionSubjets=subjetAK8Label, 
+		#JETCorrPayload=jetAlgoAK8, 
+		addSoftDropSubjets=True, 
+		addTrimming=True, 
+		rFiltTrim=0.1, 
+		addPruning=True, 
+		addFiltering=True, 
+		addSoftDrop=True, 
+		addNsub=True, 
+		bTagInfos=listBTagInfos, 
+		bTagDiscriminators=listBtagDiscriminatorsAK8, 
+		Cut=ak8Cut, 
+		addNsubSubjets=True, 
+		subjetMaxTau=4 )
+
+jetToolbox( process, 
+		'ak8', 
+		'analysisPath', 
+		'edmNtuplesOut', 
+		runOnMC=False, 
+		PUMethod='Puppi', 
+		addSoftDropSubjets=True, 
+		addTrimming=True, 
+		addPruning=True, 
+		addFiltering=True, 
+		addSoftDrop=True, 
+		addNsub=True, 
+		bTagInfos=listBTagInfos, 
+		bTagDiscriminators=listBtagDiscriminatorsAK8, 
+		Cut=ak8Cut, 
+		addNsubSubjets=True, 
+		subjetMaxTau=4 )
+
+jLabelAK8	= 'selectedPatJetsAK8PFCHS'
+jLabelAK8Puppi  = 'selectedPatJetsAK8PFPuppi'
+
+process.ak8PFJetsPuppiValueMap = cms.EDProducer("RecoJetToPatJetDeltaRValueMapProducer",
+				    src = cms.InputTag("ak8PFJetsCHS"),
+				    matched = cms.InputTag("patJetsAK8PFPuppi"),                                         
+				    distMax = cms.double(0.8),
+				    values = cms.vstring([
+					'userFloat("NjettinessAK8Puppi:tau1")',
+					'userFloat("NjettinessAK8Puppi:tau2")',
+					'userFloat("NjettinessAK8Puppi:tau3")',
+          				'userFloat("ak8PFJetsPuppiSoftDropMass")', 
+					'pt','eta','phi','mass'
+				    ]),
+				    valueLabels = cms.vstring( [
+					'NjettinessAK8PuppiTau1',
+					'NjettinessAK8PuppiTau2',
+					'NjettinessAK8PuppiTau3',
+					'softDropMassPuppi',
+					'pt','eta','phi','mass'
+				    ])
+)
+
+getattr( process, 'patJetsAK8PFCHS' ).userData.userFloats.src += [
+                cms.InputTag('ak8PFJetsPuppiValueMap','NjettinessAK8PuppiTau1'),
+		cms.InputTag('ak8PFJetsPuppiValueMap','NjettinessAK8PuppiTau2'),
+		cms.InputTag('ak8PFJetsPuppiValueMap','NjettinessAK8PuppiTau3'),
+                cms.InputTag('ak8PFJetsPuppiValueMap','softDropMassPuppi'),
+		cms.InputTag('ak8PFJetsPuppiValueMap','pt'),
+		cms.InputTag('ak8PFJetsPuppiValueMap','eta'),
+		cms.InputTag('ak8PFJetsPuppiValueMap','phi'),
+		cms.InputTag('ak8PFJetsPuppiValueMap','mass'),
+]
+
+#####################################################################
+#####################################################################
+
+
+
+
 
 process.ntupleStep = cms.Path(process.fullPatMetSequence *
                               process.egcorrMET * 

@@ -127,7 +127,7 @@ public:
   virtual bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
   virtual bool fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup);//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   virtual bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV 
-  virtual bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
+  virtual bool fillJetsAK8(const edm::Event& iEvent);//Fills AK8 Jet 4-momentum.
   virtual bool fillMet(const edm::Event& iEvent);//Fills MET(mag, phi)
   virtual bool fillRazor();//Fills MR and RSQ
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
@@ -213,6 +213,7 @@ protected:
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsPuppiToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsAK8Token_;
+  edm::EDGetTokenT<pat::JetCollection> puppiSDjetToken_;
   edm::EDGetTokenT<pat::PackedCandidateCollection> packedPFCandsToken_;
   edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenParticlesToken_;
   edm::EDGetTokenT<edm::View<pat::PackedGenParticle> > packedGenParticlesToken_;
@@ -577,9 +578,15 @@ protected:
   float fatJetPt[OBJECTARRAYSIZE];
   float fatJetEta[OBJECTARRAYSIZE];
   float fatJetPhi[OBJECTARRAYSIZE];
+  float fatJetCorrectedPt[OBJECTARRAYSIZE];
+  float fatJetCorrectedEta[OBJECTARRAYSIZE];
+  float fatJetCorrectedPhi[OBJECTARRAYSIZE];
   float fatJetTrimmedM[OBJECTARRAYSIZE];
   float fatJetPrunedM[OBJECTARRAYSIZE];
   float fatJetFilteredM[OBJECTARRAYSIZE];
+  float fatJetSoftDropM[OBJECTARRAYSIZE];
+  float fatJetCorrectedSoftDropM[OBJECTARRAYSIZE];
+  float fatJetUncorrectedSoftDropM[OBJECTARRAYSIZE];
   float fatJetTau1[OBJECTARRAYSIZE];
   float fatJetTau2[OBJECTARRAYSIZE];
   float fatJetTau3[OBJECTARRAYSIZE];

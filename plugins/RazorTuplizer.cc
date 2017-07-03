@@ -27,6 +27,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
   jetsPuppiToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsPuppi"))),
   jetsAK8Token_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8"))),
+  puppiSDjetToken_ (consumes<std::vector<pat::Jet> > ( iConfig.getParameter<edm::InputTag>("puppiSDjetLabel")) ),
   packedPFCandsToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("packedPfCands"))),
   prunedGenParticlesToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("prunedGenParticles"))),
   packedGenParticlesToken_(consumes<edm::View<pat::PackedGenParticle> >(iConfig.getParameter<edm::InputTag>("packedGenParticles"))),
@@ -315,6 +316,7 @@ void RazorTuplizer::setBranches(){
   //enableIsoPFCandidateBranches();
   enablePhotonBranches();
   enableJetBranches();
+  enableJetAK8Branches();
   enableMetBranches();
   
   if (enableTriggerInfo_) enableTriggerBranches();
@@ -609,9 +611,15 @@ void RazorTuplizer::enableJetAK8Branches(){
   RazorEvents->Branch("fatJetPt", fatJetPt,"fatJetPt[nFatJets]/F");
   RazorEvents->Branch("fatJetEta", fatJetEta,"fatJetEta[nFatJets]/F");
   RazorEvents->Branch("fatJetPhi", fatJetPhi,"fatJetPhi[nFatJets]/F");
+  RazorEvents->Branch("fatJetCorrectedPt", fatJetCorrectedPt,"fatJetCorrectedPt[nFatJets]/F");
+  // RazorEvents->Branch("fatJetCorrectedEta", fatJetCorrectedEta,"fatJetCorrectedEta[nFatJets]/F");
+  // RazorEvents->Branch("fatJetCorrectedPhi", fatJetCorrectedPhi,"fatJetCorrectedPhi[nFatJets]/F");
   RazorEvents->Branch("fatJetPrunedM", fatJetPrunedM,"fatJetPrunedM[nFatJets]/F");
   RazorEvents->Branch("fatJetTrimmedM", fatJetTrimmedM,"fatJetTrimmedM[nFatJets]/F");
   RazorEvents->Branch("fatJetFilteredM", fatJetFilteredM,"fatJetFilteredM[nFatJets]/F");
+  RazorEvents->Branch("fatJetSoftDropM", fatJetSoftDropM,"fatJetSoftDropM[nFatJets]/F");
+  RazorEvents->Branch("fatJetCorrectedSoftDropM", fatJetCorrectedSoftDropM,"fatJetCorrectedSoftDropM[nFatJets]/F");
+  RazorEvents->Branch("fatJetUncorrectedSoftDropM", fatJetUncorrectedSoftDropM,"fatJetUncorrectedSoftDropM[nFatJets]/F");
   RazorEvents->Branch("fatJetTau1", fatJetTau1,"fatJetTau1[nFatJets]/F");
   RazorEvents->Branch("fatJetTau2", fatJetTau2,"fatJetTau2[nFatJets]/F");
   RazorEvents->Branch("fatJetTau3", fatJetTau3,"fatJetTau3[nFatJets]/F");
@@ -1046,10 +1054,16 @@ void RazorTuplizer::resetBranches(){
         fatJetPt[i] = 0.0;
         fatJetEta[i] = 0.0;
         fatJetPhi[i] = 0.0;
-        fatJetPrunedM[i] = 0.0;
+	fatJetCorrectedPt[i] = 0.0;
+        fatJetCorrectedEta[i] = 0.0;
+        fatJetCorrectedPhi[i] = 0.0;
+	fatJetPrunedM[i] = 0.0;
         fatJetTrimmedM[i] = 0.0;
         fatJetFilteredM[i] = 0.0;
-        fatJetTau1[i] = 0.0;
+        fatJetSoftDropM[i] = 0.0;
+        fatJetCorrectedSoftDropM[i] = 0.0;
+	fatJetUncorrectedSoftDropM[i] = 0.0;
+	fatJetTau1[i] = 0.0;
         fatJetTau2[i] = 0.0;
         fatJetTau3[i] = 0.0;
 
@@ -1058,30 +1072,32 @@ void RazorTuplizer::resetBranches(){
         genJetEta[i] = 0.0;
         genJetPhi[i] = 0.0;
     }
-    ele_EcalRechitID.clear();
-    ele_SeedRechitID.clear();
-    pho_EcalRechitID.clear();
-    pho_SeedRechitID.clear();
-    ele_EcalRechitIndex->clear();
-    ele_SeedRechitIndex->clear();
-    pho_EcalRechitIndex->clear();
-    pho_SeedRechitIndex->clear();
 
-    ecalRechitID_ToBeSaved.clear();
-    ecalRechitEtaPhi_ToBeSaved.clear();
-    ecalRechitJetEtaPhi_ToBeSaved.clear();
-    ecalRechit_Eta->clear();
-    ecalRechit_Phi->clear();
-    ecalRechit_X->clear();
-    ecalRechit_Y->clear();
-    ecalRechit_Z->clear();
-    ecalRechit_E->clear();
-    ecalRechit_T->clear();
-    ecalRechit_ID->clear();
-    ecalRechit_FlagOOT->clear();
-    ecalRechit_GainSwitch1->clear();
-    ecalRechit_GainSwitch6->clear();
+    if (enableEcalRechits_){
+      ele_EcalRechitID.clear();
+      ele_SeedRechitID.clear();
+      pho_EcalRechitID.clear();
+      pho_SeedRechitID.clear();
+      ele_EcalRechitIndex->clear();
+      ele_SeedRechitIndex->clear();
+      pho_EcalRechitIndex->clear();
+      pho_SeedRechitIndex->clear();
 
+      ecalRechitID_ToBeSaved.clear();
+      ecalRechitEtaPhi_ToBeSaved.clear();
+      ecalRechitJetEtaPhi_ToBeSaved.clear();
+      ecalRechit_Eta->clear();
+      ecalRechit_Phi->clear();
+      ecalRechit_X->clear();
+      ecalRechit_Y->clear();
+      ecalRechit_Z->clear();
+      ecalRechit_E->clear();
+      ecalRechit_T->clear();
+      ecalRechit_ID->clear();
+      ecalRechit_FlagOOT->clear();
+      ecalRechit_GainSwitch1->clear();
+      ecalRechit_GainSwitch6->clear();
+    }
 
     for(int i = 0; i < GENPARTICLEARRAYSIZE; i++){
         //Gen Particle
@@ -1531,20 +1547,21 @@ bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
     ele_passTPOneProbeFilter[nElectrons] = passTPOneProbeFilter;
     ele_passTPTwoProbeFilter[nElectrons] = passTPTwoProbeFilter;
 
-
-    ele_SeedRechitID.push_back(ele->superCluster()->seed()->seed().rawId());
-
-    //*************************************************
-    //Find relevant rechits
-    //*************************************************
-    std::vector<uint> rechits; rechits.clear();
-    const std::vector< std::pair<DetId, float>>& v_id =ele->superCluster()->seed()->hitsAndFractions();
-    for ( size_t i = 0; i < v_id.size(); ++i ) {
-      ecalRechitID_ToBeSaved.push_back(v_id[i].first);
-      rechits.push_back(v_id[i].first.rawId());
+    if (enableEcalRechits_) {
+      ele_SeedRechitID.push_back(ele->superCluster()->seed()->seed().rawId());
+      
+      //*************************************************
+      //Find relevant rechits
+      //*************************************************
+      std::vector<uint> rechits; rechits.clear();
+      const std::vector< std::pair<DetId, float>>& v_id =ele->superCluster()->seed()->hitsAndFractions();
+      for ( size_t i = 0; i < v_id.size(); ++i ) {
+	ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+	rechits.push_back(v_id[i].first.rawId());
+      }
+      ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( ele->superCluster()->eta(), ele->superCluster()->phi() ));
+      ele_EcalRechitID.push_back(rechits);
     }
-    ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( ele->superCluster()->eta(), ele->superCluster()->phi() ));
-    ele_EcalRechitID.push_back(rechits);
 
     nElectrons++;
   }
@@ -1713,37 +1730,31 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_pfIsoModFrixione[nPhotons] = pho.getPflowIsolationVariables().modFrixione;
     pho_pfIsoSumPUPt[nPhotons] = pho.sumPUPt();
     
-    pho_SeedRechitID.push_back(pho.superCluster()->seed()->seed().rawId());
-
-    //gain switch flag
-    //cout << "photon " << pho.pt() << " " << pho.eta() << " " << pho.phi() << "\n";
+    //*************************************************
+    //Gain Switch Flags
+    //*************************************************    
     const std::vector< std::pair<DetId, float>>& v_id =pho.seed()->hitsAndFractions();
     float max = 0;
-    DetId id(0);
+    // DetId id(0);
     bool maxSwitchToGain6 = false;
     bool maxSwitchToGain1 = false;
     bool anySwitchToGain6 = false;
     bool anySwitchToGain1 = false;
-    std::vector<uint> rechits; rechits.clear();
+    
+    pho_seedRecHitSwitchToGain6[nPhotons] = maxSwitchToGain6;
+    pho_seedRecHitSwitchToGain1[nPhotons] = maxSwitchToGain1;
+    pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;
+    pho_anyRecHitSwitchToGain1[nPhotons] = anySwitchToGain1;
+
     for ( size_t i = 0; i < v_id.size(); ++i ) {
       EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
-
-      ecalRechitID_ToBeSaved.push_back(v_id[i].first);
-      rechits.push_back(v_id[i].first.rawId());
-
-      if (it != ebRecHits->end()) {
-	// cout << "rechit " << i << " : " << it->energy() << " "
-	//      << EcalRecHit::kHasSwitchToGain6 << " " << EcalRecHit::kHasSwitchToGain1 << " " 
-	//      << it->checkFlag(EcalRecHit::kHasSwitchToGain6) << " "
-	//      << it->checkFlag(EcalRecHit::kHasSwitchToGain1) 
-	//      << "\n";
-
+      
+      if (it != ebRecHits->end()) {	
 	float energy = it->energy() * v_id[i].second;
 	if (it->checkFlag(EcalRecHit::kHasSwitchToGain6)) anySwitchToGain6 = true;
 	if (it->checkFlag(EcalRecHit::kHasSwitchToGain1)) anySwitchToGain1 = true;
 	if ( energy > max ) {
 	  max = energy;
-	  id = v_id[i].first;
 	  maxSwitchToGain6 = it->checkFlag(EcalRecHit::kHasSwitchToGain6);
 	  maxSwitchToGain1 = it->checkFlag(EcalRecHit::kHasSwitchToGain1);
 	}
@@ -1751,17 +1762,42 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	//cout << "rechit not found\n";
       }           
     }
-    pho_EcalRechitID.push_back(rechits);
 
-    pho_seedRecHitSwitchToGain6[nPhotons] = maxSwitchToGain6;
-    pho_seedRecHitSwitchToGain1[nPhotons] = maxSwitchToGain1;
-    pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;
-    pho_anyRecHitSwitchToGain1[nPhotons] = anySwitchToGain1;
+    //*************************************************
+    //Ecal RecHits in Photons
+    //*************************************************    
+    if (enableEcalRechits_) {
+      pho_SeedRechitID.push_back(pho.superCluster()->seed()->seed().rawId());
+
+      std::vector<uint> rechits; rechits.clear();
+      for ( size_t i = 0; i < v_id.size(); ++i ) {
+	EcalRecHitCollection::const_iterator it = ebRecHits->find( v_id[i].first );
+
+	ecalRechitID_ToBeSaved.push_back(v_id[i].first);
+	rechits.push_back(v_id[i].first.rawId());
+
+	if (it != ebRecHits->end()) {	
+	  float energy = it->energy() * v_id[i].second;
+	  if (it->checkFlag(EcalRecHit::kHasSwitchToGain6)) anySwitchToGain6 = true;
+	  if (it->checkFlag(EcalRecHit::kHasSwitchToGain1)) anySwitchToGain1 = true;
+	  if ( energy > max ) {
+	    max = energy;
+	    maxSwitchToGain6 = it->checkFlag(EcalRecHit::kHasSwitchToGain6);
+	    maxSwitchToGain1 = it->checkFlag(EcalRecHit::kHasSwitchToGain1);
+	  }
+	} else {
+	  //cout << "rechit not found\n";
+	}           
+      }
+      pho_EcalRechitID.push_back(rechits);
+
+      //*************************************************
+      //Find relevant rechits
+      //*************************************************
+      ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( pho.superCluster()->eta(), pho.superCluster()->phi() ));
+    }
+    
   
-    //*************************************************
-    //Find relevant rechits
-    //*************************************************
-    ecalRechitEtaPhi_ToBeSaved.push_back( pair<double,double>( pho.superCluster()->eta(), pho.superCluster()->phi() ));
 
     //**********************************************************
     //Compute PF isolation
@@ -2326,21 +2362,52 @@ bool RazorTuplizer::fillJets(){
   return true;
 };
 
-bool RazorTuplizer::fillJetsAK8(){
+bool RazorTuplizer::fillJetsAK8(const edm::Event& iEvent) {
+
+  edm::Handle<std::vector<pat::Jet> > puppiSDjetHandle;
+  iEvent.getByToken(puppiSDjetToken_, puppiSDjetHandle);
+
   for (const pat::Jet &j : *jetsAK8) {
     fatJetE[nFatJets] = j.correctedP4(0).E();
     fatJetPt[nFatJets] = j.correctedP4(0).Pt();
     fatJetEta[nFatJets] = j.correctedP4(0).Eta();
     fatJetPhi[nFatJets] = j.correctedP4(0).Phi();
-    //fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSPrunedLinks");
-    //fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedLinks");
-    //fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredLinks");
+    fatJetCorrectedPt[nFatJets] = j.pt();
+    fatJetCorrectedEta[nFatJets] = j.eta();
+    fatJetCorrectedPhi[nFatJets] = j.phi();
     fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSPrunedMass");                                                     
-    //fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
-    //fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  
-    fatJetTau1[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau1");
-    fatJetTau2[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau2");
-    fatJetTau3[nFatJets] =  (float) j.userFloat("NjettinessAK8:tau3");
+    fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
+    fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  
+    fatJetSoftDropM[nFatJets] = (float) j.userFloat("ak8PFJetsPuppiValueMap:softDropMassPuppi");
+    fatJetTau1[nFatJets] =  (float) j.userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau1");
+    fatJetTau2[nFatJets] =  (float) j.userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau2");
+    fatJetTau3[nFatJets] =  (float) j.userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau3");
+
+    double min_dR = 999;
+    double uncorrSDMass = -999;
+    double corrSDMass = -999;   
+    const double distMax_ = 0.8;
+    for ( auto const & puppiSDJet : *puppiSDjetHandle ) {
+      float temp_dR = reco::deltaR(j.eta(),j.phi(),puppiSDJet.eta(),puppiSDJet.phi());
+      if ( temp_dR < distMax_ && temp_dR < min_dR ) {
+	min_dR = temp_dR;
+	TLorentzVector puppi_softdrop, puppi_softdrop_subjet;
+	TLorentzVector puppi_softdrop_corr, puppi_softdrop_subjet_corr;
+	auto const & sbSubjetsPuppi = puppiSDJet.subjets("SoftDrop");
+	for ( auto const & it : sbSubjetsPuppi ) {
+	  puppi_softdrop_subjet.SetPtEtaPhiM(it->correctedP4(0).pt(),it->correctedP4(0).eta(),it->correctedP4(0).phi(),it->correctedP4(0).mass());
+	  puppi_softdrop+=puppi_softdrop_subjet;
+	  puppi_softdrop_subjet_corr.SetPtEtaPhiM(it->pt(),it->eta(),it->phi(),it->mass());
+	  puppi_softdrop_corr+=puppi_softdrop_subjet_corr;
+	}
+	uncorrSDMass = puppi_softdrop.M();
+	corrSDMass   = puppi_softdrop_corr.M();
+      }
+      
+    }    
+    fatJetCorrectedSoftDropM[nFatJets] = corrSDMass;
+    fatJetUncorrectedSoftDropM[nFatJets] = uncorrSDMass;
+
     nFatJets++;
   }
 
@@ -2963,7 +3030,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillIsoPFCandidates()
     && fillPhotons(iEvent,iSetup)
     && fillJets()
-    && fillJetsAK8()
+    && fillJetsAK8(iEvent)
     && fillMet(iEvent);
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
