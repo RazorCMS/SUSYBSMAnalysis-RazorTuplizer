@@ -1,3 +1,4 @@
+import os
 import FWCore.ParameterSet.Config as cms
 
 #------ Setup ------#
@@ -161,7 +162,7 @@ process.hipMetFiltersPath = cms.Path(process.BadChargedCandidateFilter *
 #####################################################################
 process.load("CondCore.CondDB.CondDB_cfi")
 jec_era = "Spring16_25nsFastSimMC_V1"
-dBFile = "data/"+jec_era+".db"
+dBFile = os.environ['CMSSW_BASE']+"/src/SUSYBSMAnalysis/RazorTuplizer/data/"+jec_era+".db"
 print "\nUsing private SQLite file", dBFile, "\n"
 process.jec = cms.ESSource("PoolDBESSource",
                            process.CondDB.clone(
