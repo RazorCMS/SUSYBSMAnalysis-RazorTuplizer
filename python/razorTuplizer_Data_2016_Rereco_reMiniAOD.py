@@ -14,7 +14,7 @@ process.source = cms.Source("PoolSource",
         '/store/data/Run2016C/DoubleEG/MINIAOD/03Feb2017-v1/80000/00371362-6AEC-E611-9845-842B2B758BAA.root'
     )
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
@@ -298,10 +298,6 @@ getattr( process, 'patJetsAK8PFCHS' ).userData.userFloats.src += [
 
 #####################################################################
 #####################################################################
-
-
-
-
 
 process.ntupleStep = cms.Path(process.fullPatMetSequence *
                               process.egcorrMET * 
