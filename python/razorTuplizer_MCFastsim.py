@@ -162,11 +162,11 @@ process.hipMetFiltersPath = cms.Path(process.BadChargedCandidateFilter *
 #####################################################################
 process.load("CondCore.CondDB.CondDB_cfi")
 jec_era = "Spring16_25nsFastSimMC_V1"
-dBFile = os.environ['CMSSW_BASE']+"/src/SUSYBSMAnalysis/RazorTuplizer/data/"+jec_era+".db"
+dBFile = "SUSYBSMAnalysis/RazorTuplizer/data/"+jec_era+".db"
 print "\nUsing private SQLite file", dBFile, "\n"
 process.jec = cms.ESSource("PoolDBESSource",
                            process.CondDB.clone(
-        connect = cms.string( "sqlite_file:"+dBFile ),
+        connect = cms.string( "sqlite_fip:"+dBFile ),
         toGet =  cms.VPSet(
             cms.PSet(
                 record = cms.string("JetCorrectionsRecord"),
