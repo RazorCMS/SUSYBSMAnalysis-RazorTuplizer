@@ -2682,8 +2682,37 @@ bool RazorTuplizer::fillGenParticles(){
     gParticlePhi[i] = prunedV[i]->phi();
     gParticleMotherId[i] = 0;
     gParticleMotherIndex[i] = -1;
-    if(prunedV[i]->numberOfMothers() > 0){
-      
+
+    //For Neutralinos we try to find the decay vertex locaton.
+    //Algorithm: Find the first daughter particle that is not a neutralino,
+    //and call that the daughter. get the creation vertex of that daughter.
+    if (gParticleId[i] == 1000022 && gParticleStatus[i] == 22) {
+      const reco::Candidate *dau = 0;
+      bool foundDaughter = false;
+      bool noDaughter = false;
+      const reco::Candidate *tmpParticle = prunedV[i];
+
+      while (!foundDaughter && !noDaughter) {
+	if (tmpParticle->numberOfDaughters() > 0) {
+	  dau = tmpParticle->daughter(0);
+	  if (dau && dau->pdgId() != 1000022) {
+	    foundDaughter = true;
+	  } else {
+	    tmpParticle = dau;
+	  }
+	} else {
+	  noDaughter = true;
+	}
+      }
+
+      if (foundDaughter) {
+	gParticleDecayVertexX[i] = dau->vx(); 
+	gParticleDecayVertexY[i] = dau->vy();
+	gParticleDecayVertexZ[i] = dau->vz();
+      }
+    }
+   
+    if(prunedV[i]->numberOfMothers() > 0){      
       //find the ID of the first mother that has a different ID than the particle itself
       const reco::Candidate* firstMotherWithDifferentID = findFirstMotherWithDifferentID(prunedV[i]);
       if (firstMotherWithDifferentID) {
@@ -2697,117 +2726,11 @@ bool RazorTuplizer::fillGenParticles(){
 	  gParticleMotherIndex[i] = j;
 	  break;
 	}
-      }
-
-      //cout << "particle: " << i << ":" << gParticleId[i] << " " << gParticleStatus[i] << ":" << gParticlePt[i] << " " << gParticleEta[i] << " " << gParticlePhi[i] << ":" << prunedV[i]->vx() << " " << prunedV[i]->vy() << "" << prunedV[i]->vz() << ":" <<gParticleMotherId[i] << " " << gParticleMotherIndex[i] << "\n";
-
-      gParticleDecayVertexX[i] = prunedV[i]->vx();
-      gParticleDecayVertexY[i] = prunedV[i]->vy();
-      gParticleDecayVertexZ[i] = prunedV[i]->vz();
-
+      }      
     } else {
       gParticleMotherIndex[i] = -1;
     }
   }
-
-  for(unsigned int i = 0; i < prunedV.size(); i++){ //this is gen particle loop within event loop
-	if ( foundN1 == 0 && gParticleId[i] == 1000022 &&  gParticleMotherIndex[i]==0){
-          neu1_index = i;
-          foundN1 = 1;
-          for(unsigned int j = 0; j < prunedV.size(); j++){
-	  	if ( gParticleId[j] == 22 && gParticleMotherIndex[j] == neu1_index ){
-                pho1_index = j;
-                //cout << "neutralino 1 index  "<<neu1_index<< "  photon 1 index  "<<pho1_index<<endl;
-                }
-          }
-      }
- 	else if ( foundN1 == 1 && foundN2 == 0 && gParticleId[i] == 1000022 &&  gParticleMotherIndex[i]==0 ){
-          neu2_index = i;
-          foundN2 = 1;
-          for(unsigned int j = 0; j < prunedV.size(); j++){
-		if ( gParticleId[j] == 22 && gParticleMotherIndex[j] == neu2_index ){
-                pho2_index = j;
-                //cout << "neutralino 2 index  "<<neu2_index<< "  photon 2 index  "<<pho2_index<<endl;
-                }
-          }
-      }
-    }
-
-if(foundN1==1 && foundN2==1){
-
-  float decay_x1;
-  float decay_y1;
-  float decay_z1;
-  float decay_x2;
-  float decay_y2;
-  float decay_z2;
-
-
-  decay_x1 = prunedV[pho1_index]->vx();
-  decay_y1 = prunedV[pho1_index]->vy();
-  decay_z1 = prunedV[pho1_index]->vz();
-
-  decay_x2 = prunedV[pho2_index]->vx();
-  decay_y2 = prunedV[pho2_index]->vy();
-  decay_z2 = prunedV[pho2_index]->vz();
-
-  float primary_x1;
-  float primary_y1;
-  float primary_z1;
-  float NeutraPt;
-  float NeutraEta;
-
-  primary_x1 = prunedV[neu1_index]->vx();
-  primary_y1 = prunedV[neu1_index]->vy();
-  primary_z1 = prunedV[neu1_index]->vz();
-  NeutraPt = prunedV[neu1_index]->pt(); // transverse momentum of neutralino particles when created
-  NeutraEta = prunedV[neu1_index]->eta(); // eta value used to find momentum
- float distanceX1;
-  float distanceX2;
-  float distanceY1;
-  float distanceY2;
-  float distanceZ1;
-  float distanceZ2;
-
-  distanceX1 = decay_x1 - primary_x1;
-  distanceX2 = decay_x2 - primary_x1;
-  gParticle1_SecondaryX = decay_x1;
-  gParticle2_SecondaryX = decay_x2;
-
-  distanceY1 = decay_y1 - primary_y1;
-  distanceY2 = decay_y2 - primary_y1;
-  gParticle1_SecondaryY = decay_y1;
-  gParticle2_SecondaryY = decay_y2;
-
-  distanceZ1 = decay_z1 - primary_z1;
-  distanceZ2 = decay_z2 - primary_z1;
-  gParticle1_SecondaryZ = decay_z1;
-  gParticle2_SecondaryZ = decay_z2;
-
-  gParticle_PrimaryX = primary_x1;
-  gParticle_PrimaryY = primary_y1;
-  gParticle_PrimaryZ = primary_z1;
-  // now do the calculation for the time of flight for the neutralino
-  // find the total distance the particle traveled
-   float distance1 = pow( pow(distanceX1,2) + pow(distanceY1,2) + pow(distanceZ1,2),0.5) ;
-  float distance2 = pow( pow(distanceX2,2) + pow(distanceY2,2) + pow(distanceZ2,2),0.5) ;
-  // find the momentum from the transverse momentum and the eta value
-  float momentum = NeutraPt * cosh(NeutraEta);
-
-  float mass = 1000;
-
-  const float speed_of_light = 29.9792; //cm/ns
-
-  float time1 = distance1 / (speed_of_light*momentum) * pow((pow(mass,2) + pow(momentum,2)),0.5);
-  float time2 = distance2 / (speed_of_light*momentum) * pow((pow(mass,2) + pow(momentum,2)),0.5);
-  gParticleNeutralinoTOF1 = time1; // fill the ROOT branch histogram with the TOF of first neutralino
-  gParticleNeutralinoTOF2 = time2;
-
-      //cout<<"px1: "<<primary_x1<<"  dx1: "<<decay_x1<<"py1: "<<primary_y1<<"  dy1: "<<decay_y1<<"pz1: "<<primary_z1<<"  dz1: "<<decay_z1<<endl;
-      //cout<<"NeutraPt: "<<NeutraPt<<"  NeutraEta: "<<NeutraEta<<endl;
-      //cout<<"distances: "<<distanceY1<<"  x direction:"<<distanceX1<<endl;
-      //cout << "distance: "<<distance1<<"  momentum: "<<momentum<<"time of flight: " << time1 << endl;
-}
 
   return true;
 };
