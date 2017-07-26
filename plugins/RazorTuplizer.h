@@ -715,20 +715,6 @@ protected:
   float gParticleDecayVertexY[GENPARTICLEARRAYSIZE];
   float gParticleDecayVertexZ[GENPARTICLEARRAYSIZE];
 
-  float gParticle1_SecondaryX;
-  float gParticle2_SecondaryX;
-  float gParticle1_SecondaryY;
-  float gParticle2_SecondaryY;
-  float gParticle1_SecondaryZ;
-  float gParticle2_SecondaryZ;
-
-  float gParticle_PrimaryX;
-  float gParticle_PrimaryY;
-  float gParticle_PrimaryZ;
-
-  float gParticleNeutralinoTOF1;
-  float gParticleNeutralinoTOF2;
-
 
   //razor variables
   float HLTMR, HLTRSQ;

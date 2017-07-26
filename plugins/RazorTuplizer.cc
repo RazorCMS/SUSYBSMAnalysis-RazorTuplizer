@@ -696,6 +696,8 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genJetPhi", genJetPhi, "genJetPhi[nGenJets]/F");
   RazorEvents->Branch("genMetPt", &genMetPt, "genMetPt/F");
   RazorEvents->Branch("genMetPhi", &genMetPhi, "genMetPhi/F");
+  RazorEvents->Branch("genVertexX", &genVertexX, "genVertexX/F");
+  RazorEvents->Branch("genVertexY", &genVertexY, "genVertexY/F");
   RazorEvents->Branch("genVertexZ", &genVertexZ, "genVertexZ/F");
   RazorEvents->Branch("genWeight", &genWeight, "genWeight/F");
   RazorEvents->Branch("genSignalProcessID", &genSignalProcessID, "genSignalProcessID/i");
@@ -726,20 +728,6 @@ void RazorTuplizer::enableGenParticleBranches(){
   RazorEvents->Branch("gParticleDecayVertexX", gParticleDecayVertexX, "gParticleDecayVertexX[nGenParticle]/F");
   RazorEvents->Branch("gParticleDecayVertexY", gParticleDecayVertexY, "gParticleDecayVertexY[nGenParticle]/F");
   RazorEvents->Branch("gParticleDecayVertexZ", gParticleDecayVertexZ, "gParticleDecayVertexZ[nGenParticle]/F");
-
-  RazorEvents->Branch("gParticle1_SecondaryX", &gParticle1_SecondaryX, "gParticle1_SecondaryX/F");
-  RazorEvents->Branch("gParticle2_SecondaryX", &gParticle2_SecondaryX, "gParticle2_SecondaryX/F");
-  RazorEvents->Branch("gParticle1_SecondaryY", &gParticle1_SecondaryY, "gParticle1_SecondaryY/F");
-  RazorEvents->Branch("gParticle2_SecondaryY", &gParticle2_SecondaryY, "gParticle2_SecondaryY/F");
-  RazorEvents->Branch("gParticle1_SecondaryZ", &gParticle1_SecondaryZ, "gParticle1_SecondaryZ/F");
-  RazorEvents->Branch("gParticle2_SecondaryZ", &gParticle2_SecondaryZ, "gParticle2_SecondaryZ/F");
-
-  RazorEvents->Branch("gParticle_PrimaryX", &gParticle_PrimaryX, "gParticle_PrimaryX/F");
-  RazorEvents->Branch("gParticle_PrimaryY", &gParticle_PrimaryY, "gParticle_PrimaryY/F");
-  RazorEvents->Branch("gParticle_PrimaryZ", &gParticle_PrimaryZ, "gParticle_PrimaryZ/F");
-
-  RazorEvents->Branch("gParticleNeutralinoTOF1", &gParticleNeutralinoTOF1, "gParticleNeutralinoTOF1/F");
-  RazorEvents->Branch("gParticleNeutralinoTOF2", &gParticleNeutralinoTOF2, "gParticleNeutralinoTOF2/F");
 
 }
 
@@ -1090,20 +1078,6 @@ void RazorTuplizer::resetBranches(){
         gParticleDecayVertexY[i] = -99999.0;
         gParticleDecayVertexZ[i] = -99999.0;
 
-        gParticle1_SecondaryX = 0;
-        gParticle2_SecondaryX = 0;
-        gParticle1_SecondaryY = 0;
-        gParticle2_SecondaryY = 0;
-        gParticle1_SecondaryZ = 0;
-        gParticle2_SecondaryZ = 0;
-
-        gParticle_PrimaryX = 0;
-        gParticle_PrimaryY = 0;
-        gParticle_PrimaryZ = 0;
-
-        gParticleNeutralinoTOF1 = 0;
-        gParticleNeutralinoTOF2 = 0;
-
     }
 
     //MET
@@ -1188,6 +1162,8 @@ void RazorTuplizer::resetBranches(){
 
     genMetPt = -999;
     genMetPhi = -999;
+    genVertexX = -999;
+    genVertexY = -999;
     genVertexZ = -999;
     genWeight = 1;
     genSignalProcessID = -999;
@@ -2663,13 +2639,6 @@ bool RazorTuplizer::fillGenParticles(){
 
   //Total number of gen particles
   nGenParticle = prunedV.size();
-
-  bool foundN1 = 0;
-  bool foundN2 = 0; 
-  int pho1_index = 0;
-  int pho2_index = 0;
-  int neu1_index = 0;
-  int neu2_index = 0;
 
 
   //Look for mother particle and Fill gen variables
