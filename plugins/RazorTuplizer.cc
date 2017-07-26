@@ -723,6 +723,24 @@ void RazorTuplizer::enableGenParticleBranches(){
   RazorEvents->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
   RazorEvents->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
   RazorEvents->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
+  RazorEvents->Branch("gParticleDecayVertexX", gParticleDecayVertexX, "gParticleDecayVertexX[nGenParticle]/F");
+  RazorEvents->Branch("gParticleDecayVertexY", gParticleDecayVertexY, "gParticleDecayVertexY[nGenParticle]/F");
+  RazorEvents->Branch("gParticleDecayVertexZ", gParticleDecayVertexZ, "gParticleDecayVertexZ[nGenParticle]/F");
+
+  RazorEvents->Branch("gParticle1_SecondaryX", &gParticle1_SecondaryX, "gParticle1_SecondaryX/F");
+  RazorEvents->Branch("gParticle2_SecondaryX", &gParticle2_SecondaryX, "gParticle2_SecondaryX/F");
+  RazorEvents->Branch("gParticle1_SecondaryY", &gParticle1_SecondaryY, "gParticle1_SecondaryY/F");
+  RazorEvents->Branch("gParticle2_SecondaryY", &gParticle2_SecondaryY, "gParticle2_SecondaryY/F");
+  RazorEvents->Branch("gParticle1_SecondaryZ", &gParticle1_SecondaryZ, "gParticle1_SecondaryZ/F");
+  RazorEvents->Branch("gParticle2_SecondaryZ", &gParticle2_SecondaryZ, "gParticle2_SecondaryZ/F");
+
+  RazorEvents->Branch("gParticle_PrimaryX", &gParticle_PrimaryX, "gParticle_PrimaryX/F");
+  RazorEvents->Branch("gParticle_PrimaryY", &gParticle_PrimaryY, "gParticle_PrimaryY/F");
+  RazorEvents->Branch("gParticle_PrimaryZ", &gParticle_PrimaryZ, "gParticle_PrimaryZ/F");
+
+  RazorEvents->Branch("gParticleNeutralinoTOF1", &gParticleNeutralinoTOF1, "gParticleNeutralinoTOF1/F");
+  RazorEvents->Branch("gParticleNeutralinoTOF2", &gParticleNeutralinoTOF2, "gParticleNeutralinoTOF2/F");
+
 }
 
 //------ Load the miniAOD objects and reset tree variables for each event ------//
@@ -1067,6 +1085,24 @@ void RazorTuplizer::resetBranches(){
         gParticlePt[i] = -99999.0;
         gParticleEta[i] = -99999.0;
         gParticlePhi[i] = -99999.0;
+
+        gParticleDecayVertexX[i] = -99999.0;
+        gParticleDecayVertexY[i] = -99999.0;
+        gParticleDecayVertexZ[i] = -99999.0;
+
+        gParticle1_SecondaryX = 0;
+        gParticle2_SecondaryX = 0;
+        gParticle1_SecondaryY = 0;
+        gParticle2_SecondaryY = 0;
+        gParticle1_SecondaryZ = 0;
+        gParticle2_SecondaryZ = 0;
+
+        gParticle_PrimaryX = 0;
+        gParticle_PrimaryY = 0;
+        gParticle_PrimaryZ = 0;
+
+        gParticleNeutralinoTOF1 = 0;
+        gParticleNeutralinoTOF2 = 0;
 
     }
 
@@ -2312,11 +2348,11 @@ bool RazorTuplizer::fillJets(){
     for (uint k=0; k < j.numberOfDaughters(); k++) {     	        
       if (j.daughter(k)->charge() == 0) continue;
       tmpSumTkPt += ((pat::PackedCandidate*)j.daughter(k))->pt();
-      cout << "here1 " << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
+//      cout << "here1 " << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
       if (((pat::PackedCandidate*)j.daughter(k))->hasTrackDetails()) {
-	cout << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
-	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().pt() << "\n";
-	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() << "\n";
+//	cout << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
+//	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().pt() << "\n";
+//	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() << "\n";
 	
 	tmpTkPtWeightedDZ += ((pat::PackedCandidate*)j.daughter(k))->pt() * (((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() - pvZ);         
       }
@@ -2627,6 +2663,15 @@ bool RazorTuplizer::fillGenParticles(){
 
   //Total number of gen particles
   nGenParticle = prunedV.size();
+
+  bool foundN1 = 0;
+  bool foundN2 = 0; 
+  int pho1_index = 0;
+  int pho2_index = 0;
+  int neu1_index = 0;
+  int neu2_index = 0;
+
+
   //Look for mother particle and Fill gen variables
   for(unsigned int i = 0; i < prunedV.size(); i++){
     gParticleId[i] = prunedV[i]->pdgId();
@@ -2653,10 +2698,117 @@ bool RazorTuplizer::fillGenParticles(){
 	  break;
 	}
       }
+
+      //cout << "particle: " << i << ":" << gParticleId[i] << " " << gParticleStatus[i] << ":" << gParticlePt[i] << " " << gParticleEta[i] << " " << gParticlePhi[i] << ":" << prunedV[i]->vx() << " " << prunedV[i]->vy() << "" << prunedV[i]->vz() << ":" <<gParticleMotherId[i] << " " << gParticleMotherIndex[i] << "\n";
+
+      gParticleDecayVertexX[i] = prunedV[i]->vx();
+      gParticleDecayVertexY[i] = prunedV[i]->vy();
+      gParticleDecayVertexZ[i] = prunedV[i]->vz();
+
     } else {
       gParticleMotherIndex[i] = -1;
     }
   }
+
+  for(unsigned int i = 0; i < prunedV.size(); i++){ //this is gen particle loop within event loop
+	if ( foundN1 == 0 && gParticleId[i] == 1000022 &&  gParticleMotherIndex[i]==0){
+          neu1_index = i;
+          foundN1 = 1;
+          for(unsigned int j = 0; j < prunedV.size(); j++){
+	  	if ( gParticleId[j] == 22 && gParticleMotherIndex[j] == neu1_index ){
+                pho1_index = j;
+                //cout << "neutralino 1 index  "<<neu1_index<< "  photon 1 index  "<<pho1_index<<endl;
+                }
+          }
+      }
+ 	else if ( foundN1 == 1 && foundN2 == 0 && gParticleId[i] == 1000022 &&  gParticleMotherIndex[i]==0 ){
+          neu2_index = i;
+          foundN2 = 1;
+          for(unsigned int j = 0; j < prunedV.size(); j++){
+		if ( gParticleId[j] == 22 && gParticleMotherIndex[j] == neu2_index ){
+                pho2_index = j;
+                //cout << "neutralino 2 index  "<<neu2_index<< "  photon 2 index  "<<pho2_index<<endl;
+                }
+          }
+      }
+    }
+
+if(foundN1==1 && foundN2==1){
+
+  float decay_x1;
+  float decay_y1;
+  float decay_z1;
+  float decay_x2;
+  float decay_y2;
+  float decay_z2;
+
+
+  decay_x1 = prunedV[pho1_index]->vx();
+  decay_y1 = prunedV[pho1_index]->vy();
+  decay_z1 = prunedV[pho1_index]->vz();
+
+  decay_x2 = prunedV[pho2_index]->vx();
+  decay_y2 = prunedV[pho2_index]->vy();
+  decay_z2 = prunedV[pho2_index]->vz();
+
+  float primary_x1;
+  float primary_y1;
+  float primary_z1;
+  float NeutraPt;
+  float NeutraEta;
+
+  primary_x1 = prunedV[neu1_index]->vx();
+  primary_y1 = prunedV[neu1_index]->vy();
+  primary_z1 = prunedV[neu1_index]->vz();
+  NeutraPt = prunedV[neu1_index]->pt(); // transverse momentum of neutralino particles when created
+  NeutraEta = prunedV[neu1_index]->eta(); // eta value used to find momentum
+ float distanceX1;
+  float distanceX2;
+  float distanceY1;
+  float distanceY2;
+  float distanceZ1;
+  float distanceZ2;
+
+  distanceX1 = decay_x1 - primary_x1;
+  distanceX2 = decay_x2 - primary_x1;
+  gParticle1_SecondaryX = decay_x1;
+  gParticle2_SecondaryX = decay_x2;
+
+  distanceY1 = decay_y1 - primary_y1;
+  distanceY2 = decay_y2 - primary_y1;
+  gParticle1_SecondaryY = decay_y1;
+  gParticle2_SecondaryY = decay_y2;
+
+  distanceZ1 = decay_z1 - primary_z1;
+  distanceZ2 = decay_z2 - primary_z1;
+  gParticle1_SecondaryZ = decay_z1;
+  gParticle2_SecondaryZ = decay_z2;
+
+  gParticle_PrimaryX = primary_x1;
+  gParticle_PrimaryY = primary_y1;
+  gParticle_PrimaryZ = primary_z1;
+  // now do the calculation for the time of flight for the neutralino
+  // find the total distance the particle traveled
+   float distance1 = pow( pow(distanceX1,2) + pow(distanceY1,2) + pow(distanceZ1,2),0.5) ;
+  float distance2 = pow( pow(distanceX2,2) + pow(distanceY2,2) + pow(distanceZ2,2),0.5) ;
+  // find the momentum from the transverse momentum and the eta value
+  float momentum = NeutraPt * cosh(NeutraEta);
+
+  float mass = 1000;
+
+  const float speed_of_light = 29.9792; //cm/ns
+
+  float time1 = distance1 / (speed_of_light*momentum) * pow((pow(mass,2) + pow(momentum,2)),0.5);
+  float time2 = distance2 / (speed_of_light*momentum) * pow((pow(mass,2) + pow(momentum,2)),0.5);
+  gParticleNeutralinoTOF1 = time1; // fill the ROOT branch histogram with the TOF of first neutralino
+  gParticleNeutralinoTOF2 = time2;
+
+      //cout<<"px1: "<<primary_x1<<"  dx1: "<<decay_x1<<"py1: "<<primary_y1<<"  dy1: "<<decay_y1<<"pz1: "<<primary_z1<<"  dz1: "<<decay_z1<<endl;
+      //cout<<"NeutraPt: "<<NeutraPt<<"  NeutraEta: "<<NeutraEta<<endl;
+      //cout<<"distances: "<<distanceY1<<"  x direction:"<<distanceX1<<endl;
+      //cout << "distance: "<<distance1<<"  momentum: "<<momentum<<"time of flight: " << time1 << endl;
+}
+
   return true;
 };
 
@@ -2885,7 +3037,7 @@ void RazorTuplizer::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm:
 
 void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   using namespace edm;
-  cout << "Event: " << iEvent.id().run() << " " << iEvent.luminosityBlock() << " " << iEvent.id().event() << "\n";
+//  cout << "Event: " << iEvent.id().run() << " " << iEvent.luminosityBlock() << " " << iEvent.id().event() << "\n";
 
   //initialize
   resetBranches();
