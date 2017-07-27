@@ -21,7 +21,6 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
   photonHLTFilterNamesFile_(iConfig.getParameter<string> ("photonHLTFilterNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
-  genParticles_t0_Token_(consumes<float>(iConfig.getParameter<edm::InputTag>("genParticles_t0"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   tausToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
@@ -76,6 +75,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   mvaHZZValuesMapToken_(consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("mvaHZZValuesMap"))),
   mvaHZZCategoriesMapToken_(consumes<edm::ValueMap<int> >(iConfig.getParameter<edm::InputTag>("mvaHZZCategoriesMap")))
 {
+  if(readGenVertexTime_) genParticles_t0_Token_ = consumes<float>(iConfig.getParameter<edm::InputTag>("genParticles_t0"));
   //declare the TFileService for output
   edm::Service<TFileService> fs;
   
@@ -756,7 +756,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
   iEvent.getByToken(rhoAllToken_,rhoAll);
-  iEvent.getByToken(genParticles_t0_Token_,genParticles_t0);
+  if(readGenVertexTime_) iEvent.getByToken(genParticles_t0_Token_,genParticles_t0);
   iEvent.getByToken(rhoFastjetAllToken_,rhoFastjetAll);
   iEvent.getByToken(rhoFastjetAllCaloToken_,rhoFastjetAllCalo);
   iEvent.getByToken(rhoFastjetCentralCaloToken_,rhoFastjetCentralCalo);
