@@ -15,11 +15,13 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   isFastsim_(iConfig.getParameter<bool> ("isFastsim")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   enableEcalRechits_(iConfig.getParameter<bool> ("enableEcalRechits")),
+  readGenVertexTime_(iConfig.getUntrackedParameter<bool> ("readGenVertexTime", false)),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
   photonHLTFilterNamesFile_(iConfig.getParameter<string> ("photonHLTFilterNamesFile")),
   verticesToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertices"))),
+  genParticles_t0_Token_(consumes<float>(iConfig.getParameter<edm::InputTag>("genParticles_t0"))),
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   tausToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
@@ -699,6 +701,7 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genVertexX", &genVertexX, "genVertexX/F");
   RazorEvents->Branch("genVertexY", &genVertexY, "genVertexY/F");
   RazorEvents->Branch("genVertexZ", &genVertexZ, "genVertexZ/F");
+  RazorEvents->Branch("genVertexT", &genVertexT, "genVertexT/F");
   RazorEvents->Branch("genWeight", &genWeight, "genWeight/F");
   RazorEvents->Branch("genSignalProcessID", &genSignalProcessID, "genSignalProcessID/i");
   RazorEvents->Branch("genQScale", &genQScale, "genQScale/F");
@@ -753,6 +756,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
   iEvent.getByToken(rhoAllToken_,rhoAll);
+  iEvent.getByToken(genParticles_t0_Token_,genParticles_t0);
   iEvent.getByToken(rhoFastjetAllToken_,rhoFastjetAll);
   iEvent.getByToken(rhoFastjetAllCaloToken_,rhoFastjetAllCalo);
   iEvent.getByToken(rhoFastjetCentralCaloToken_,rhoFastjetCentralCalo);
@@ -1165,6 +1169,7 @@ void RazorTuplizer::resetBranches(){
     genVertexX = -999;
     genVertexY = -999;
     genVertexZ = -999;
+    genVertexT = -999;
     genWeight = 1;
     genSignalProcessID = -999;
     genQScale = -999;
@@ -2500,6 +2505,7 @@ bool RazorTuplizer::fillMC(){
 	    genVertexX = dau->vx();
 	    genVertexY = dau->vy();
 	    genVertexZ = dau->vz();
+	    if(readGenVertexTime_) genVertexT = *genParticles_t0;
 	    foundGenVertex = true;
 	    break;
 	  }

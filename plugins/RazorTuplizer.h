@@ -187,6 +187,7 @@ protected:
   bool    isFastsim_;
   bool enableTriggerInfo_;
   bool enableEcalRechits_;
+  bool readGenVertexTime_;
   
   // Mapping of the HLT Triggers and Filters
   string triggerPathNamesFile_;
@@ -204,6 +205,7 @@ protected:
 
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
+  edm::EDGetTokenT<float> genParticles_t0_Token_;
   edm::EDGetTokenT<pat::MuonCollection> muonsToken_;
   edm::EDGetTokenT<edm::View<reco::GsfElectron> > electronsToken_;
   edm::EDGetTokenT<pat::TauCollection> tausToken_;
@@ -271,6 +273,7 @@ protected:
   edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
   edm::Handle<edm::TriggerResults> metFilterBits;
   edm::Handle<reco::VertexCollection> vertices;
+  edm::Handle<float> genParticles_t0;
   edm::Handle<pat::PackedCandidateCollection> packedPFCands;
   edm::Handle<pat::MuonCollection> muons;
   edm::Handle<edm::View<reco::GsfElectron> > electrons;
@@ -685,6 +688,7 @@ protected:
   float genVertexX;
   float genVertexY;
   float genVertexZ;
+  float genVertexT;
   float genWeight;
   unsigned int genSignalProcessID;
   float genQScale;
