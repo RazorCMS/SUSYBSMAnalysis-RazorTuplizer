@@ -556,6 +556,7 @@ void RazorTuplizer::enableEcalRechitBranches(){
   ecalRechit_FlagOOT = new std::vector<bool>; ecalRechit_FlagOOT->clear();
   ecalRechit_GainSwitch1 = new std::vector<bool>; ecalRechit_GainSwitch1->clear();
   ecalRechit_GainSwitch6 = new std::vector<bool>; ecalRechit_GainSwitch6->clear();
+  ecalRechit_transpCorr = new std::vector<float>; ecalRechit_transpCorr->clear();
 
   RazorEvents->Branch("ecalRechit_Eta", "std::vector<float>",&ecalRechit_Eta);
   RazorEvents->Branch("ecalRechit_Phi", "std::vector<float>",&ecalRechit_Phi);
@@ -568,6 +569,7 @@ void RazorTuplizer::enableEcalRechitBranches(){
   RazorEvents->Branch("ecalRechit_FlagOOT", "std::vector<bool>",&ecalRechit_FlagOOT);
   RazorEvents->Branch("ecalRechit_GainSwitch1", "std::vector<bool>",&ecalRechit_GainSwitch1);
   RazorEvents->Branch("ecalRechit_GainSwitch6", "std::vector<bool>",&ecalRechit_GainSwitch6);
+  RazorEvents->Branch("ecalRechit_transpCorr", "std::vector<float>",&ecalRechit_transpCorr);
 
 }
 
@@ -1097,6 +1099,7 @@ void RazorTuplizer::resetBranches(){
       ecalRechit_FlagOOT->clear();
       ecalRechit_GainSwitch1->clear();
       ecalRechit_GainSwitch6->clear();
+      ecalRechit_transpCorr->clear();
     }
 
     for(int i = 0; i < GENPARTICLEARRAYSIZE; i++){
@@ -2131,8 +2134,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 };
 
 
-bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
-  
+bool RazorTuplizer::fillEcalRechits(const edm::Event& iEvent, const edm::EventSetup& iSetup){  
+
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> geoHandle;
   iSetup.get<CaloGeometryRecord>().get(geoHandle);
@@ -2141,6 +2144,10 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
 
   std::map<uint, uint> mapRecHitIdToIndex; mapRecHitIdToIndex.clear();
   uint rechitIndex = 0;
+
+  //ECAL conditions
+  edm::ESHandle<EcalLaserDbService> laser_;
+  iSetup.get<EcalLaserDbRecord>().get(laser_);
 
   //Barrel Rechits
   for (EcalRecHitCollection::const_iterator recHit = ebRecHits->begin(); recHit != ebRecHits->end(); ++recHit) {
@@ -2194,6 +2201,7 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
     ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
     ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
     ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    ecalRechit_transpCorr->push_back(laser_->getLaserCorrection(recHitId, iEvent.eventAuxiliary().time()));	
     rechitIndex++;
   }
   
@@ -2247,6 +2255,7 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
     ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
     ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
     ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    ecalRechit_transpCorr->push_back(laser_->getLaserCorrection(recHitId, iEvent.eventAuxiliary().time()));	
     rechitIndex++;
 
   }
@@ -3035,7 +3044,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
   //Fill Rechits
-  if (enableEcalRechits_) isGoodEvent = isGoodEvent && fillEcalRechits(iSetup);
+  if (enableEcalRechits_) isGoodEvent = isGoodEvent && fillEcalRechits(iEvent, iSetup);
 
   bool isGoodMCEvent = true;
   if (useGen_) {

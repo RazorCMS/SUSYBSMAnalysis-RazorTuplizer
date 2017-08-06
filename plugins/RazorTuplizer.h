@@ -69,6 +69,10 @@ using namespace std;
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
+//ECAL conditions
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbService.h"
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbRecord.h"
+
 // Geometry
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
@@ -133,7 +137,7 @@ public:
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
   virtual bool fillGenParticles();
-  virtual bool fillEcalRechits(const edm::EventSetup& iSetup);
+  virtual bool fillEcalRechits(const edm::Event& iEvent, const edm::EventSetup& iSetup); 
   
   //------ HELPER FUNCTIONS ------//
   
@@ -538,6 +542,7 @@ protected:
   vector<bool> *ecalRechit_FlagOOT;
   vector<bool> *ecalRechit_GainSwitch1;
   vector<bool> *ecalRechit_GainSwitch6;
+  vector<float> *ecalRechit_transpCorr;
 
   //AK4 Jets
   int nJets;
