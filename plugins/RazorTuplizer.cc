@@ -726,6 +726,9 @@ void RazorTuplizer::enableGenParticleBranches(){
   RazorEvents->Branch("gParticleStatus", gParticleStatus, "gParticleStatus[nGenParticle]/I");
   RazorEvents->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
   RazorEvents->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePx", gParticlePx, "gParticlePx[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePy", gParticlePy, "gParticlePy[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePz", gParticlePz, "gParticlePz[nGenParticle]/F");
   RazorEvents->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
   RazorEvents->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
   RazorEvents->Branch("gParticleDecayVertexX", gParticleDecayVertexX, "gParticleDecayVertexX[nGenParticle]/F");
@@ -1075,6 +1078,9 @@ void RazorTuplizer::resetBranches(){
         gParticleStatus[i] = -99999;
         gParticleE[i] = -99999.0;
         gParticlePt[i] = -99999.0;
+        gParticlePx[i] = -99999.0;
+        gParticlePy[i] = -99999.0;
+        gParticlePz[i] = -99999.0;
         gParticleEta[i] = -99999.0;
         gParticlePhi[i] = -99999.0;
 
@@ -2653,6 +2659,9 @@ bool RazorTuplizer::fillGenParticles(){
     gParticleStatus[i] = prunedV[i]->status();
     gParticleE[i] = prunedV[i]->energy();
     gParticlePt[i] = prunedV[i]->pt();
+    gParticlePx[i] = prunedV[i]->px();
+    gParticlePy[i] = prunedV[i]->py();
+    gParticlePz[i] = prunedV[i]->pz();
     gParticleEta[i] = prunedV[i]->eta();
     gParticlePhi[i] = prunedV[i]->phi();
     gParticleMotherId[i] = 0;

@@ -712,6 +712,9 @@ protected:
   int gParticleStatus[GENPARTICLEARRAYSIZE];
   float gParticleE[GENPARTICLEARRAYSIZE];
   float gParticlePt[GENPARTICLEARRAYSIZE];
+  float gParticlePx[GENPARTICLEARRAYSIZE];
+  float gParticlePy[GENPARTICLEARRAYSIZE];
+  float gParticlePz[GENPARTICLEARRAYSIZE];
   float gParticleEta[GENPARTICLEARRAYSIZE];
   float gParticlePhi[GENPARTICLEARRAYSIZE];
 
