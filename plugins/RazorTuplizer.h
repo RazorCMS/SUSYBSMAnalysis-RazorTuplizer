@@ -209,7 +209,8 @@ protected:
   edm::EDGetTokenT<pat::MuonCollection> muonsToken_;
   edm::EDGetTokenT<edm::View<reco::GsfElectron> > electronsToken_;
   edm::EDGetTokenT<pat::TauCollection> tausToken_;
-  edm::EDGetTokenT<pat::PhotonCollection> photonsToken_;
+  std::vector<edm::EDGetTokenT<pat::PhotonCollection>> v_photonsToken_;
+  std::vector<edm::InputTag> v_photonsInputTag;
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsPuppiToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsAK8Token_;
@@ -277,7 +278,7 @@ protected:
   edm::Handle<pat::PackedCandidateCollection> packedPFCands;
   edm::Handle<pat::MuonCollection> muons;
   edm::Handle<edm::View<reco::GsfElectron> > electrons;
-  edm::Handle<pat::PhotonCollection> photons;
+  std::vector<edm::Handle<pat::PhotonCollection>> photons;
   edm::Handle<pat::TauCollection> taus;
   edm::Handle<pat::JetCollection> jets;
   edm::Handle<pat::JetCollection> jetsPuppi;

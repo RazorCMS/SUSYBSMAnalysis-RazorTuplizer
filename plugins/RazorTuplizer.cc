@@ -24,7 +24,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   tausToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
-  photonsToken_(consumes<pat::PhotonCollection>(iConfig.getParameter<edm::InputTag>("photons"))),
+  //photonsToken_(consumes<pat::PhotonCollection>(iConfig.getParameter<edm::VInputTag>("photons"))),
+  v_photonsInputTag(iConfig.getParameter<std::vector<edm::InputTag>>("photons")),
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
   jetsPuppiToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsPuppi"))),
   jetsAK8Token_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8"))),
@@ -76,6 +77,10 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   mvaHZZCategoriesMapToken_(consumes<edm::ValueMap<int> >(iConfig.getParameter<edm::InputTag>("mvaHZZCategoriesMap")))
 {
   if(readGenVertexTime_) genParticles_t0_Token_ = consumes<float>(iConfig.getParameter<edm::InputTag>("genParticles_t0"));
+  for(unsigned int i=0;i<v_photonsInputTag.size();i++)
+  {
+   	v_photonsToken_.push_back(consumes<pat::PhotonCollection>(v_photonsInputTag[i]));
+  }
   //declare the TFileService for output
   edm::Service<TFileService> fs;
   
@@ -748,7 +753,14 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(packedPFCandsToken_, packedPFCands);
   iEvent.getByToken(muonsToken_, muons);
   iEvent.getByToken(electronsToken_, electrons);
-  iEvent.getByToken(photonsToken_, photons);
+//  iEvent.getByToken(photonsToken_, photons);
+  photons.clear();
+  for(unsigned int i=0;i<v_photonsToken_.size();i++)
+  {
+	edm::Handle<pat::PhotonCollection> temp_photons;
+   	iEvent.getByToken(v_photonsToken_[i],temp_photons); 
+	if(temp_photons->size() < OBJECTARRAYSIZE) photons.push_back(temp_photons);
+  }
   iEvent.getByToken(tausToken_, taus);
   iEvent.getByToken(jetsToken_, jets);
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
@@ -1672,8 +1684,11 @@ bool RazorTuplizer::fillIsoPFCandidates(){
 bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
   noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
-    
-  for (const pat::Photon &pho : *photons) {
+  
+  for(unsigned int ind_photons = 0; ind_photons<photons.size();ind_photons++)
+  {
+
+  for (const pat::Photon &pho : *photons[ind_photons]) {
     if (pho.pt() < 15) continue;
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
@@ -2064,6 +2079,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     nPhotons++;
   }
   
+  }
+
   double pho_vtxSumPxD[OBJECTARRAYSIZE][MAX_NPV];
   double pho_vtxSumPyD[OBJECTARRAYSIZE][MAX_NPV];
   
@@ -2091,14 +2108,29 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     
     if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
       const reco::Vertex &vtx = vertices->at(ipvmin);
+        unsigned int gr_pho = 0;
+	unsigned int ind_in_group = 0;
+	unsigned int num_allpho_last_group = 0;
+	unsigned int ind_allpho = 0;
       for (int ipho = 0; ipho < nPhotons; ++ipho) {
-        const pat::Photon &pho = photons->at(ipho);
+	if(ind_allpho - num_allpho_last_group + 1 > photons[gr_pho]->size())
+	{
+		gr_pho++;
+		ind_in_group = 0;
+		num_allpho_last_group = ind_allpho;
+		
+	}
+	
+        const pat::Photon &pho = photons[gr_pho]->at(ind_in_group);
         math::XYZVector phodir(pho.superCluster()->x()-vtx.x(),pho.superCluster()->y()-vtx.y(),pho.superCluster()->z()-vtx.z());
         double dr = reco::deltaR(phodir, pfcand);
         if (dr<0.05) {
           pho_vtxSumPxD[ipho][ipvmin] += pfcand.px();
           pho_vtxSumPyD[ipho][ipvmin] += pfcand.py();
         }
+	
+	ind_in_group ++;
+	ind_allpho ++;
       }
     }
   }
@@ -2109,7 +2141,6 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
       pho_vtxSumPy[ipho][ipv] = pho_vtxSumPyD[ipho][ipv];
     }
   }
-  
   
   delete lazyToolnoZS;
   return true;
