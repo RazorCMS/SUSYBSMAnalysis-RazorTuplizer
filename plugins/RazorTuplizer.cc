@@ -529,6 +529,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_convTrkClusZ", pho_convTrkClusZ, "pho_convTrkClusZ[nPhotons]/F");
   RazorEvents->Branch("pho_vtxSumPx", &pho_vtxSumPx,Form("pho_vtxSumPx[nPhotons][%d]/F",MAX_NPV));
   RazorEvents->Branch("pho_vtxSumPy", &pho_vtxSumPy,Form("pho_vtxSumPy[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_isStandardPhoton", pho_isStandardPhoton, "pho_isStandardPhoton[nPhotons]/O");
   RazorEvents->Branch("pho_seedRecHitSwitchToGain6", pho_seedRecHitSwitchToGain6, "pho_seedRecHitSwitchToGain6[nPhotons]/F");
   RazorEvents->Branch("pho_seedRecHitSwitchToGain1", pho_seedRecHitSwitchToGain1, "pho_seedRecHitSwitchToGain1[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain6", pho_anyRecHitSwitchToGain6, "pho_anyRecHitSwitchToGain6[nPhotons]/F");
@@ -1001,6 +1002,7 @@ void RazorTuplizer::resetBranches(){
           pho_vtxSumPx[i][ipv] = 0.;
           pho_vtxSumPy[i][ipv] = 0.;
         }
+	pho_isStandardPhoton[i] = true;
 	pho_seedRecHitSwitchToGain6[i] = false;
 	pho_seedRecHitSwitchToGain1[i] = false;
 	pho_anyRecHitSwitchToGain6[i] = false;
@@ -1740,6 +1742,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     bool anySwitchToGain6 = false;
     bool anySwitchToGain1 = false;
     
+    if(ind_photons>0) pho_isStandardPhoton[nPhotons] = false;
     pho_seedRecHitSwitchToGain6[nPhotons] = maxSwitchToGain6;
     pho_seedRecHitSwitchToGain1[nPhotons] = maxSwitchToGain1;
     pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;

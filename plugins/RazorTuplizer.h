@@ -515,6 +515,7 @@ protected:
   float pho_convTrkClusZ[OBJECTARRAYSIZE];
   float pho_vtxSumPx[OBJECTARRAYSIZE][MAX_NPV];
   float pho_vtxSumPy[OBJECTARRAYSIZE][MAX_NPV];
+  bool  pho_isStandardPhoton[OBJECTARRAYSIZE];
   bool  pho_seedRecHitSwitchToGain6[OBJECTARRAYSIZE];
   bool  pho_seedRecHitSwitchToGain1[OBJECTARRAYSIZE];
   bool  pho_anyRecHitSwitchToGain6[OBJECTARRAYSIZE];
