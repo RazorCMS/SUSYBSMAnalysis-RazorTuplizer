@@ -16,7 +16,7 @@ Instructions for compiling in CMSSW
     git clone git@github.com:cms-jet/JetToolbox.git JMEAnalysis/JetToolbox -b jetToolbox_80X_V3
     git clone git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
     cd  SUSYBSMAnalysis/RazorTuplizer; git checkout CMSSW_8_0_X;
-   
+    cd ../../   
     scram b
 
 ---------------------    
