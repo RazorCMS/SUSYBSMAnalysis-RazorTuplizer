@@ -193,6 +193,7 @@ protected:
   bool    isFastsim_;
   bool enableTriggerInfo_;
   bool enableEcalRechits_;
+  bool enableAK8Jets_;
   
   // Mapping of the HLT Triggers and Filters
   string triggerPathNamesFile_;

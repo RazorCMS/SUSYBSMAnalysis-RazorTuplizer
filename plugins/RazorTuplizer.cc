@@ -15,6 +15,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   isFastsim_(iConfig.getParameter<bool> ("isFastsim")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   enableEcalRechits_(iConfig.getParameter<bool> ("enableEcalRechits")),
+  enableAK8Jets_(iConfig.getParameter<bool> ("enableAK8Jets")),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
@@ -316,7 +317,7 @@ void RazorTuplizer::setBranches(){
   //enableIsoPFCandidateBranches();
   enablePhotonBranches();
   enableJetBranches();
-  enableJetAK8Branches();
+  if (enableAK8Jets_) enableJetAK8Branches();
   enableMetBranches();
   
   if (enableTriggerInfo_) enableTriggerBranches();
@@ -3039,10 +3040,12 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillIsoPFCandidates()
     && fillPhotons(iEvent,iSetup)
     && fillJets()
-    && fillJetsAK8(iEvent)
     && fillMet(iEvent);
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
+  //Fill AK8Jets
+  if (enableAK8Jets_) isGoodEvent = isGoodEvent && fillJetsAK8(iEvent);
+
   //Fill Rechits
   if (enableEcalRechits_) isGoodEvent = isGoodEvent && fillEcalRechits(iEvent, iSetup);
 
