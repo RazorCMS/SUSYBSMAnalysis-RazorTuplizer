@@ -626,6 +626,8 @@ void RazorTuplizer::enableJetAK8Branches(){
   RazorEvents->Branch("fatJetTau1", fatJetTau1,"fatJetTau1[nFatJets]/F");
   RazorEvents->Branch("fatJetTau2", fatJetTau2,"fatJetTau2[nFatJets]/F");
   RazorEvents->Branch("fatJetTau3", fatJetTau3,"fatJetTau3[nFatJets]/F");
+  RazorEvents->Branch("fatJetPassIDLoose", fatJetPassIDLoose,"fatJetPassIDLoose[nFatJets]/O");
+  RazorEvents->Branch("fatJetPassIDTight", fatJetPassIDTight,"fatJetPassIDTight[nFatJets]/O");
 }
 
 void RazorTuplizer::enableMetBranches(){
@@ -1069,6 +1071,8 @@ void RazorTuplizer::resetBranches(){
 	fatJetTau1[i] = 0.0;
         fatJetTau2[i] = 0.0;
         fatJetTau3[i] = 0.0;
+        fatJetPassIDLoose[i] = false;
+        fatJetPassIDTight[i] = false;
 
         genJetE[i] = 0.0;
         genJetPt[i] = 0.0;
@@ -2385,6 +2389,8 @@ bool RazorTuplizer::fillJetsAK8(const edm::Event& iEvent) {
     fatJetCorrectedPt[nFatJets] = j.pt();
     fatJetCorrectedEta[nFatJets] = j.eta();
     fatJetCorrectedPhi[nFatJets] = j.phi();
+    fatJetPassIDLoose[nFatJets] = passJetID(&j, 0);
+    fatJetPassIDTight[nFatJets] = passJetID(&j, 1);
     fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSPrunedMass");                                                     
     fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
     fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  

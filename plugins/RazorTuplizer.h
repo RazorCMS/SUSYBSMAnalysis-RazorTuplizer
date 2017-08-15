@@ -596,6 +596,8 @@ protected:
   float fatJetTau1[OBJECTARRAYSIZE];
   float fatJetTau2[OBJECTARRAYSIZE];
   float fatJetTau3[OBJECTARRAYSIZE];
+  bool fatJetPassIDLoose[OBJECTARRAYSIZE];
+  bool fatJetPassIDTight[OBJECTARRAYSIZE];
 
   //MET 
   float metPt;
