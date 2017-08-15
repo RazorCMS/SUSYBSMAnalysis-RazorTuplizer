@@ -218,6 +218,8 @@ protected:
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsPuppiToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsAK8Token_;
+  edm::EDGetTokenT<pat::JetCollection> jetsAK8SoftDropPackedToken_;
+  edm::EDGetTokenT<pat::JetCollection> jetsAK8SubjetsToken_;
   edm::EDGetTokenT<pat::JetCollection> puppiSDjetToken_;
   edm::EDGetTokenT<pat::PackedCandidateCollection> packedPFCandsToken_;
   edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenParticlesToken_;
@@ -287,6 +289,8 @@ protected:
   edm::Handle<pat::JetCollection> jets;
   edm::Handle<pat::JetCollection> jetsPuppi;
   edm::Handle<pat::JetCollection> jetsAK8;
+  edm::Handle<pat::JetCollection> jetsAK8SoftDropPacked;
+  edm::Handle<pat::JetCollection> jetsAK8Subjets;
   edm::Handle<pat::METCollection> mets;
   edm::Handle<pat::METCollection> metsEGClean;
   edm::Handle<pat::METCollection> metsMuEGClean;
@@ -596,6 +600,7 @@ protected:
   float fatJetTau1[OBJECTARRAYSIZE];
   float fatJetTau2[OBJECTARRAYSIZE];
   float fatJetTau3[OBJECTARRAYSIZE];
+  float fatJetMaxSubjetCSV[OBJECTARRAYSIZE];
   bool fatJetPassIDLoose[OBJECTARRAYSIZE];
   bool fatJetPassIDTight[OBJECTARRAYSIZE];
 

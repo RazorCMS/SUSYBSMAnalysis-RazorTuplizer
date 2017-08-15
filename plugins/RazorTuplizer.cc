@@ -28,6 +28,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
   jetsPuppiToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsPuppi"))),
   jetsAK8Token_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8"))),
+  jetsAK8SoftDropPackedToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8SoftDropPacked"))),
+  jetsAK8SubjetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8Subjets"))),
   puppiSDjetToken_ (consumes<std::vector<pat::Jet> > ( iConfig.getParameter<edm::InputTag>("puppiSDjetLabel")) ),
   packedPFCandsToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("packedPfCands"))),
   prunedGenParticlesToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("prunedGenParticles"))),
@@ -626,6 +628,7 @@ void RazorTuplizer::enableJetAK8Branches(){
   RazorEvents->Branch("fatJetTau1", fatJetTau1,"fatJetTau1[nFatJets]/F");
   RazorEvents->Branch("fatJetTau2", fatJetTau2,"fatJetTau2[nFatJets]/F");
   RazorEvents->Branch("fatJetTau3", fatJetTau3,"fatJetTau3[nFatJets]/F");
+  RazorEvents->Branch("fatJetMaxSubjetCSV", fatJetMaxSubjetCSV, "fatJetMaxSubjetCSV[nFatJets]/F");
   RazorEvents->Branch("fatJetPassIDLoose", fatJetPassIDLoose,"fatJetPassIDLoose[nFatJets]/O");
   RazorEvents->Branch("fatJetPassIDTight", fatJetPassIDTight,"fatJetPassIDTight[nFatJets]/O");
 }
@@ -773,6 +776,8 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(jetsToken_, jets);
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
+  iEvent.getByToken(jetsAK8SoftDropPackedToken_, jetsAK8SoftDropPacked);
+  iEvent.getByToken(jetsAK8SubjetsToken_, jetsAK8Subjets);
   iEvent.getByToken(metToken_, mets);
   if (isData_) {
     iEvent.getByToken(metEGCleanToken_, metsEGClean);
@@ -1071,6 +1076,7 @@ void RazorTuplizer::resetBranches(){
 	fatJetTau1[i] = 0.0;
         fatJetTau2[i] = 0.0;
         fatJetTau3[i] = 0.0;
+        fatJetMaxSubjetCSV[i] = 0.0;
         fatJetPassIDLoose[i] = false;
         fatJetPassIDTight[i] = false;
 
@@ -2380,7 +2386,6 @@ bool RazorTuplizer::fillJetsAK8(const edm::Event& iEvent) {
 
   edm::Handle<std::vector<pat::Jet> > puppiSDjetHandle;
   iEvent.getByToken(puppiSDjetToken_, puppiSDjetHandle);
-
   for (const pat::Jet &j : *jetsAK8) {
     fatJetE[nFatJets] = j.correctedP4(0).E();
     fatJetPt[nFatJets] = j.correctedP4(0).Pt();
@@ -2423,6 +2428,36 @@ bool RazorTuplizer::fillJetsAK8(const edm::Event& iEvent) {
     }    
     fatJetCorrectedSoftDropM[nFatJets] = corrSDMass;
     fatJetUncorrectedSoftDropM[nFatJets] = uncorrSDMass;
+
+    // Loop over this collection to find the indices of this jet's subjets
+    min_dR = 999;
+    int vSubjet0 = -1;
+    int vSubjet1 = -1;
+    for (const pat::Jet &packedJet : *jetsAK8SoftDropPacked) {
+        float temp_dR = reco::deltaR(j.eta(), j.phi(), packedJet.eta(), packedJet.phi());
+        if ( temp_dR < distMax_ && temp_dR < min_dR ) {
+            min_dR = temp_dR;
+            if (packedJet.numberOfDaughters() > 0) {
+                vSubjet0 = packedJet.daughterPtr(0).key();
+            }
+            if (packedJet.numberOfDaughters() > 1) {
+                vSubjet1 = packedJet.daughterPtr(1).key();
+            }
+        }
+    }
+    float maxSubjetCSV = -999.;
+    if (vSubjet0 >= 0) {
+        maxSubjetCSV = (*jetsAK8Subjets)[vSubjet0].bDiscriminator(
+                "pfCombinedInclusiveSecondaryVertexV2BJetTags");
+    }
+    if (vSubjet1 >= 0) {
+        float subjet1CSV = (*jetsAK8Subjets)[vSubjet1].bDiscriminator(
+                "pfCombinedInclusiveSecondaryVertexV2BJetTags");
+        if (subjet1CSV > maxSubjetCSV) {
+            maxSubjetCSV = subjet1CSV;
+        }
+    }
+    fatJetMaxSubjetCSV[nFatJets] = maxSubjetCSV;
 
     nFatJets++;
   }
