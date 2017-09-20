@@ -3090,7 +3090,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   //Fill Standard Objects
   isGoodEvent = isGoodEvent 
-    && fillMuons() 
+    && fillMuons(iEvent)
     && fillElectrons(iEvent)
     && fillTaus()
     && fillIsoPFCandidates()
