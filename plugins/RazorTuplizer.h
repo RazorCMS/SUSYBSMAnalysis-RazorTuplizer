@@ -187,6 +187,7 @@ protected:
   bool    isFastsim_;
   bool enableTriggerInfo_;
   bool enableEcalRechits_;
+  bool readGenVertexTime_;
   
   // Mapping of the HLT Triggers and Filters
   string triggerPathNamesFile_;
@@ -204,10 +205,12 @@ protected:
 
   //EDM tokens for each miniAOD input object
   edm::EDGetTokenT<reco::VertexCollection> verticesToken_;
+  edm::EDGetTokenT<float> genParticles_t0_Token_;
   edm::EDGetTokenT<pat::MuonCollection> muonsToken_;
   edm::EDGetTokenT<edm::View<reco::GsfElectron> > electronsToken_;
   edm::EDGetTokenT<pat::TauCollection> tausToken_;
-  edm::EDGetTokenT<pat::PhotonCollection> photonsToken_;
+  std::vector<edm::EDGetTokenT<pat::PhotonCollection>> v_photonsToken_;
+  std::vector<edm::InputTag> v_photonsInputTag;
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsPuppiToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsAK8Token_;
@@ -271,10 +274,11 @@ protected:
   edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
   edm::Handle<edm::TriggerResults> metFilterBits;
   edm::Handle<reco::VertexCollection> vertices;
+  edm::Handle<float> genParticles_t0;
   edm::Handle<pat::PackedCandidateCollection> packedPFCands;
   edm::Handle<pat::MuonCollection> muons;
   edm::Handle<edm::View<reco::GsfElectron> > electrons;
-  edm::Handle<pat::PhotonCollection> photons;
+  std::vector<edm::Handle<pat::PhotonCollection>> photons;
   edm::Handle<pat::TauCollection> taus;
   edm::Handle<pat::JetCollection> jets;
   edm::Handle<pat::JetCollection> jetsPuppi;
@@ -511,6 +515,7 @@ protected:
   float pho_convTrkClusZ[OBJECTARRAYSIZE];
   float pho_vtxSumPx[OBJECTARRAYSIZE][MAX_NPV];
   float pho_vtxSumPy[OBJECTARRAYSIZE][MAX_NPV];
+  bool  pho_isStandardPhoton[OBJECTARRAYSIZE];
   bool  pho_seedRecHitSwitchToGain6[OBJECTARRAYSIZE];
   bool  pho_seedRecHitSwitchToGain1[OBJECTARRAYSIZE];
   bool  pho_anyRecHitSwitchToGain6[OBJECTARRAYSIZE];
@@ -685,6 +690,7 @@ protected:
   float genVertexX;
   float genVertexY;
   float genVertexZ;
+  float genVertexT;
   float genWeight;
   unsigned int genSignalProcessID;
   float genQScale;
@@ -708,8 +714,16 @@ protected:
   int gParticleStatus[GENPARTICLEARRAYSIZE];
   float gParticleE[GENPARTICLEARRAYSIZE];
   float gParticlePt[GENPARTICLEARRAYSIZE];
+  float gParticlePx[GENPARTICLEARRAYSIZE];
+  float gParticlePy[GENPARTICLEARRAYSIZE];
+  float gParticlePz[GENPARTICLEARRAYSIZE];
   float gParticleEta[GENPARTICLEARRAYSIZE];
   float gParticlePhi[GENPARTICLEARRAYSIZE];
+
+  float gParticleDecayVertexX[GENPARTICLEARRAYSIZE];
+  float gParticleDecayVertexY[GENPARTICLEARRAYSIZE];
+  float gParticleDecayVertexZ[GENPARTICLEARRAYSIZE];
+
 
   //razor variables
   float HLTMR, HLTRSQ;

@@ -15,6 +15,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   isFastsim_(iConfig.getParameter<bool> ("isFastsim")),  
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   enableEcalRechits_(iConfig.getParameter<bool> ("enableEcalRechits")),
+  readGenVertexTime_(iConfig.getUntrackedParameter<bool> ("readGenVertexTime", false)),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
@@ -23,7 +24,8 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   muonsToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
   electronsToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   tausToken_(consumes<pat::TauCollection>(iConfig.getParameter<edm::InputTag>("taus"))),
-  photonsToken_(consumes<pat::PhotonCollection>(iConfig.getParameter<edm::InputTag>("photons"))),
+  //photonsToken_(consumes<pat::PhotonCollection>(iConfig.getParameter<edm::VInputTag>("photons"))),
+  v_photonsInputTag(iConfig.getParameter<std::vector<edm::InputTag>>("photons")),
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
   jetsPuppiToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsPuppi"))),
   jetsAK8Token_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8"))),
@@ -74,6 +76,11 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   mvaHZZValuesMapToken_(consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("mvaHZZValuesMap"))),
   mvaHZZCategoriesMapToken_(consumes<edm::ValueMap<int> >(iConfig.getParameter<edm::InputTag>("mvaHZZCategoriesMap")))
 {
+  if(readGenVertexTime_) genParticles_t0_Token_ = consumes<float>(iConfig.getParameter<edm::InputTag>("genParticles_t0"));
+  for(unsigned int i=0;i<v_photonsInputTag.size();i++)
+  {
+   	v_photonsToken_.push_back(consumes<pat::PhotonCollection>(v_photonsInputTag[i]));
+  }
   //declare the TFileService for output
   edm::Service<TFileService> fs;
   
@@ -522,6 +529,7 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_convTrkClusZ", pho_convTrkClusZ, "pho_convTrkClusZ[nPhotons]/F");
   RazorEvents->Branch("pho_vtxSumPx", &pho_vtxSumPx,Form("pho_vtxSumPx[nPhotons][%d]/F",MAX_NPV));
   RazorEvents->Branch("pho_vtxSumPy", &pho_vtxSumPy,Form("pho_vtxSumPy[nPhotons][%d]/F",MAX_NPV));
+  RazorEvents->Branch("pho_isStandardPhoton", pho_isStandardPhoton, "pho_isStandardPhoton[nPhotons]/O");
   RazorEvents->Branch("pho_seedRecHitSwitchToGain6", pho_seedRecHitSwitchToGain6, "pho_seedRecHitSwitchToGain6[nPhotons]/F");
   RazorEvents->Branch("pho_seedRecHitSwitchToGain1", pho_seedRecHitSwitchToGain1, "pho_seedRecHitSwitchToGain1[nPhotons]/F");
   RazorEvents->Branch("pho_anyRecHitSwitchToGain6", pho_anyRecHitSwitchToGain6, "pho_anyRecHitSwitchToGain6[nPhotons]/F");
@@ -696,7 +704,10 @@ void RazorTuplizer::enableMCBranches(){
   RazorEvents->Branch("genJetPhi", genJetPhi, "genJetPhi[nGenJets]/F");
   RazorEvents->Branch("genMetPt", &genMetPt, "genMetPt/F");
   RazorEvents->Branch("genMetPhi", &genMetPhi, "genMetPhi/F");
+  RazorEvents->Branch("genVertexX", &genVertexX, "genVertexX/F");
+  RazorEvents->Branch("genVertexY", &genVertexY, "genVertexY/F");
   RazorEvents->Branch("genVertexZ", &genVertexZ, "genVertexZ/F");
+  RazorEvents->Branch("genVertexT", &genVertexT, "genVertexT/F");
   RazorEvents->Branch("genWeight", &genWeight, "genWeight/F");
   RazorEvents->Branch("genSignalProcessID", &genSignalProcessID, "genSignalProcessID/i");
   RazorEvents->Branch("genQScale", &genQScale, "genQScale/F");
@@ -721,8 +732,15 @@ void RazorTuplizer::enableGenParticleBranches(){
   RazorEvents->Branch("gParticleStatus", gParticleStatus, "gParticleStatus[nGenParticle]/I");
   RazorEvents->Branch("gParticleE", gParticleE, "gParticleE[nGenParticle]/F");
   RazorEvents->Branch("gParticlePt", gParticlePt, "gParticlePt[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePx", gParticlePx, "gParticlePx[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePy", gParticlePy, "gParticlePy[nGenParticle]/F");
+  RazorEvents->Branch("gParticlePz", gParticlePz, "gParticlePz[nGenParticle]/F");
   RazorEvents->Branch("gParticleEta", gParticleEta, "gParticleEta[nGenParticle]/F");
   RazorEvents->Branch("gParticlePhi", gParticlePhi, "gParticlePhi[nGenParticle]/F");
+  RazorEvents->Branch("gParticleDecayVertexX", gParticleDecayVertexX, "gParticleDecayVertexX[nGenParticle]/F");
+  RazorEvents->Branch("gParticleDecayVertexY", gParticleDecayVertexY, "gParticleDecayVertexY[nGenParticle]/F");
+  RazorEvents->Branch("gParticleDecayVertexZ", gParticleDecayVertexZ, "gParticleDecayVertexZ[nGenParticle]/F");
+
 }
 
 //------ Load the miniAOD objects and reset tree variables for each event ------//
@@ -736,7 +754,14 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(packedPFCandsToken_, packedPFCands);
   iEvent.getByToken(muonsToken_, muons);
   iEvent.getByToken(electronsToken_, electrons);
-  iEvent.getByToken(photonsToken_, photons);
+//  iEvent.getByToken(photonsToken_, photons);
+  photons.clear();
+  for(unsigned int i=0;i<v_photonsToken_.size();i++)
+  {
+	edm::Handle<pat::PhotonCollection> temp_photons;
+   	iEvent.getByToken(v_photonsToken_[i],temp_photons); 
+	if(temp_photons->size() < OBJECTARRAYSIZE) photons.push_back(temp_photons);
+  }
   iEvent.getByToken(tausToken_, taus);
   iEvent.getByToken(jetsToken_, jets);
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
@@ -747,6 +772,7 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(hcalNoiseInfoToken_,hcalNoiseInfo);
   iEvent.getByToken(secondaryVerticesToken_,secondaryVertices);
   iEvent.getByToken(rhoAllToken_,rhoAll);
+  if(readGenVertexTime_) iEvent.getByToken(genParticles_t0_Token_,genParticles_t0);
   iEvent.getByToken(rhoFastjetAllToken_,rhoFastjetAll);
   iEvent.getByToken(rhoFastjetAllCaloToken_,rhoFastjetAllCalo);
   iEvent.getByToken(rhoFastjetCentralCaloToken_,rhoFastjetCentralCalo);
@@ -976,6 +1002,7 @@ void RazorTuplizer::resetBranches(){
           pho_vtxSumPx[i][ipv] = 0.;
           pho_vtxSumPy[i][ipv] = 0.;
         }
+	pho_isStandardPhoton[i] = true;
 	pho_seedRecHitSwitchToGain6[i] = false;
 	pho_seedRecHitSwitchToGain1[i] = false;
 	pho_anyRecHitSwitchToGain6[i] = false;
@@ -1065,8 +1092,15 @@ void RazorTuplizer::resetBranches(){
         gParticleStatus[i] = -99999;
         gParticleE[i] = -99999.0;
         gParticlePt[i] = -99999.0;
+        gParticlePx[i] = -99999.0;
+        gParticlePy[i] = -99999.0;
+        gParticlePz[i] = -99999.0;
         gParticleEta[i] = -99999.0;
         gParticlePhi[i] = -99999.0;
+
+        gParticleDecayVertexX[i] = -99999.0;
+        gParticleDecayVertexY[i] = -99999.0;
+        gParticleDecayVertexZ[i] = -99999.0;
 
     }
 
@@ -1152,7 +1186,10 @@ void RazorTuplizer::resetBranches(){
 
     genMetPt = -999;
     genMetPhi = -999;
+    genVertexX = -999;
+    genVertexY = -999;
     genVertexZ = -999;
+    genVertexT = -999;
     genWeight = 1;
     genSignalProcessID = -999;
     genQScale = -999;
@@ -1649,8 +1686,11 @@ bool RazorTuplizer::fillIsoPFCandidates(){
 bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
   noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
-    
-  for (const pat::Photon &pho : *photons) {
+  
+  for(unsigned int ind_photons = 0; ind_photons<photons.size();ind_photons++)
+  {
+
+  for (const pat::Photon &pho : *photons[ind_photons]) {
     if (pho.pt() < 15) continue;
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
@@ -1702,6 +1742,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     bool anySwitchToGain6 = false;
     bool anySwitchToGain1 = false;
     
+    if(ind_photons>0) pho_isStandardPhoton[nPhotons] = false;
     pho_seedRecHitSwitchToGain6[nPhotons] = maxSwitchToGain6;
     pho_seedRecHitSwitchToGain1[nPhotons] = maxSwitchToGain1;
     pho_anyRecHitSwitchToGain6[nPhotons] = anySwitchToGain6;
@@ -2041,6 +2082,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     nPhotons++;
   }
   
+  }
+
   double pho_vtxSumPxD[OBJECTARRAYSIZE][MAX_NPV];
   double pho_vtxSumPyD[OBJECTARRAYSIZE][MAX_NPV];
   
@@ -2068,14 +2111,29 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     
     if (mindz<0.2 && ipvmin>=0 && ipvmin<MAX_NPV) {
       const reco::Vertex &vtx = vertices->at(ipvmin);
+        unsigned int gr_pho = 0;
+	unsigned int ind_in_group = 0;
+	unsigned int num_allpho_last_group = 0;
+	unsigned int ind_allpho = 0;
       for (int ipho = 0; ipho < nPhotons; ++ipho) {
-        const pat::Photon &pho = photons->at(ipho);
+	if(ind_allpho - num_allpho_last_group + 1 > photons[gr_pho]->size())
+	{
+		gr_pho++;
+		ind_in_group = 0;
+		num_allpho_last_group = ind_allpho;
+		
+	}
+	
+        const pat::Photon &pho = photons[gr_pho]->at(ind_in_group);
         math::XYZVector phodir(pho.superCluster()->x()-vtx.x(),pho.superCluster()->y()-vtx.y(),pho.superCluster()->z()-vtx.z());
         double dr = reco::deltaR(phodir, pfcand);
         if (dr<0.05) {
           pho_vtxSumPxD[ipho][ipvmin] += pfcand.px();
           pho_vtxSumPyD[ipho][ipvmin] += pfcand.py();
         }
+	
+	ind_in_group ++;
+	ind_allpho ++;
       }
     }
   }
@@ -2086,7 +2144,6 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
       pho_vtxSumPy[ipho][ipv] = pho_vtxSumPyD[ipho][ipv];
     }
   }
-  
   
   delete lazyToolnoZS;
   return true;
@@ -2311,13 +2368,18 @@ bool RazorTuplizer::fillJets(){
     double tmpSumTkPt = 0;
     for (uint k=0; k < j.numberOfDaughters(); k++) {     	        
       if (j.daughter(k)->charge() == 0) continue;
-     
       tmpSumTkPt += ((pat::PackedCandidate*)j.daughter(k))->pt();
-      tmpTkPtWeightedDZ += ((pat::PackedCandidate*)j.daughter(k))->pt() * (((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() - pvZ);         
+//      cout << "here1 " << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
+      if (((pat::PackedCandidate*)j.daughter(k))->hasTrackDetails()) {
+//	cout << ((pat::PackedCandidate*)j.daughter(k))->pt() << "\n";
+//	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().pt() << "\n";
+//	cout << ((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() << "\n";
+	
+	tmpTkPtWeightedDZ += ((pat::PackedCandidate*)j.daughter(k))->pt() * (((pat::PackedCandidate*)j.daughter(k))->pseudoTrack().vz() - pvZ);         
+      }
     }
     jetPtWeightedDZ[nJets] = double(bool(tmpSumTkPt>0) ? double(tmpTkPtWeightedDZ/tmpSumTkPt) :-999);  
     
-
     nJets++;
   }
 
@@ -2483,6 +2545,7 @@ bool RazorTuplizer::fillMC(){
 	    genVertexX = dau->vx();
 	    genVertexY = dau->vy();
 	    genVertexZ = dau->vz();
+	    if(readGenVertexTime_) genVertexT = *genParticles_t0;
 	    foundGenVertex = true;
 	    break;
 	  }
@@ -2622,18 +2685,52 @@ bool RazorTuplizer::fillGenParticles(){
 
   //Total number of gen particles
   nGenParticle = prunedV.size();
+
+
   //Look for mother particle and Fill gen variables
   for(unsigned int i = 0; i < prunedV.size(); i++){
     gParticleId[i] = prunedV[i]->pdgId();
     gParticleStatus[i] = prunedV[i]->status();
     gParticleE[i] = prunedV[i]->energy();
     gParticlePt[i] = prunedV[i]->pt();
+    gParticlePx[i] = prunedV[i]->px();
+    gParticlePy[i] = prunedV[i]->py();
+    gParticlePz[i] = prunedV[i]->pz();
     gParticleEta[i] = prunedV[i]->eta();
     gParticlePhi[i] = prunedV[i]->phi();
     gParticleMotherId[i] = 0;
     gParticleMotherIndex[i] = -1;
-    if(prunedV[i]->numberOfMothers() > 0){
-      
+
+    //For Neutralinos we try to find the decay vertex locaton.
+    //Algorithm: Find the first daughter particle that is not a neutralino,
+    //and call that the daughter. get the creation vertex of that daughter.
+    if (gParticleId[i] == 1000022 && gParticleStatus[i] == 22) {
+      const reco::Candidate *dau = 0;
+      bool foundDaughter = false;
+      bool noDaughter = false;
+      const reco::Candidate *tmpParticle = prunedV[i];
+
+      while (!foundDaughter && !noDaughter) {
+	if (tmpParticle->numberOfDaughters() > 0) {
+	  dau = tmpParticle->daughter(0);
+	  if (dau && dau->pdgId() != 1000022) {
+	    foundDaughter = true;
+	  } else {
+	    tmpParticle = dau;
+	  }
+	} else {
+	  noDaughter = true;
+	}
+      }
+
+      if (foundDaughter) {
+	gParticleDecayVertexX[i] = dau->vx(); 
+	gParticleDecayVertexY[i] = dau->vy();
+	gParticleDecayVertexZ[i] = dau->vz();
+      }
+    }
+   
+    if(prunedV[i]->numberOfMothers() > 0){      
       //find the ID of the first mother that has a different ID than the particle itself
       const reco::Candidate* firstMotherWithDifferentID = findFirstMotherWithDifferentID(prunedV[i]);
       if (firstMotherWithDifferentID) {
@@ -2647,11 +2744,12 @@ bool RazorTuplizer::fillGenParticles(){
 	  gParticleMotherIndex[i] = j;
 	  break;
 	}
-      }
+      }      
     } else {
       gParticleMotherIndex[i] = -1;
     }
   }
+
   return true;
 };
 
@@ -2880,17 +2978,17 @@ void RazorTuplizer::beginLuminosityBlock(edm::LuminosityBlock const& iLumi, edm:
 
 void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   using namespace edm;
-  
+//  cout << "Event: " << iEvent.id().run() << " " << iEvent.luminosityBlock() << " " << iEvent.id().event() << "\n";
+
   //initialize
   resetBranches();
   loadEvent(iEvent); //loads objects and resets tree branches
   
-  NEvents->Fill(0); //increment event count
+  NEvents->Fill(0); //increment event count  
 
   //filler methods should fill relevant tree variables and return false if the event should be rejected
   bool isGoodEvent = fillEventInfo(iEvent) 
     && fillPVAll();
-
   isGoodEvent = isGoodEvent && fillMuons(iEvent);
   isGoodEvent = isGoodEvent && fillElectrons(iEvent);
   isGoodEvent = isGoodEvent && fillTaus();
@@ -2913,7 +3011,7 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   
   isGoodEvent = isGoodEvent&&isGoodMCEvent;
   if (enableTriggerInfo_) isGoodEvent = (isGoodEvent && fillTrigger(iEvent));
-  
+
   //fill the tree (just always fill it)
   RazorEvents->Fill();
 }

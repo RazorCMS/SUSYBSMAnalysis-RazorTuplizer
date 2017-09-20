@@ -13,7 +13,8 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
 #        '/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v1/000/272/775/00000/4EA77143-2A16-E611-81F2-02163E01412F.root'
 #        '/store/data/Run2017B/SingleElectron/MINIAOD/PromptReco-v1/000/297/050/00000/B0F32AAC-4556-E711-9763-02163E013676.root'
-        '/store/data/Run2017B/SingleElectron/MINIAOD/PromptReco-v1/000/297/050/00000/B0F32AAC-4556-E711-9763-02163E013676.root'
+        #'/store/data/Run2017B/SingleElectron/MINIAOD/PromptReco-v1/000/297/050/00000/B0F32AAC-4556-E711-9763-02163E013676.root'
+        '/store/data/Run2017C/SingleElectron/MINIAOD/PromptReco-v1/000/299/649/00000/145BE3EC-CE71-E711-85CE-02163E019E7C.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -83,7 +84,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     muons = cms.InputTag("slimmedMuons"),
     electrons = cms.InputTag("slimmedElectrons"),
     taus = cms.InputTag("slimmedTaus"),
-    photons = cms.InputTag("slimmedPhotons"),
+    photons = cms.VInputTag(cms.InputTag("slimmedPhotons")),
     jets = cms.InputTag("slimmedJets"),
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),

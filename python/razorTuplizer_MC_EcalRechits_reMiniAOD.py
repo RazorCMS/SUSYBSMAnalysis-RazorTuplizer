@@ -14,10 +14,13 @@ process.source = cms.Source("PoolSource",
         #'/store/mc/RunIISpring16MiniAODv1/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1/20000/0017320C-7BFC-E511-9B2D-0CC47A4C8E34.root'
         #'/store/mc/RunIISpring16MiniAODv1/SMS-T2bH_mSbottom-300_mLSP-1_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1/30000/329EF9EB-C217-E611-A0A1-0CC47A6C1818.root'
 #        '/store/mc/RunIISpring16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_miniAODv2_v0_ext1-v1/00000/001B3734-EE39-E611-9D0B-A0000420FE80.root'
-         '/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/120000/0EA60289-18C4-E611-8A8F-008CFA110AB4.root'
-  )
+        #'/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/120000/0EA60289-18C4-E611-8A8F-008CFA110AB4.root'
+        #'file:/afs/cern.ch/user/d/dgawerc/public/CMSSW_9_2_5/src/step3_PAT.root'
+	#'file:/afs/cern.ch/work/z/zhicaiz/public/release/McM/forGillian/withGenParticleFix/CMSSW_9_2_5/src/step3_PAT.root'
+	'/store/user/zhicaiz/NeutralinoNeutralinoToGravitinoGravitinoPhotonPhoton/Mass1000_LifeTime5000_08Aug2017_MINIAODSIM/NeutralinoNeutralinoToGravitinoGravitinoPhotonPhoton_M-1000_CTau-5000mm_13TeV-pythia8/crab_CMSSW_9_2_5_NeutNeutToGravGrav_Mass1000_LifeTime5000_08Aug2017_MINIAODSIM_T2Caltech_v1/170809_090054/0000/step3_PAT_1.root'
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+)
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 #TFileService for output 
@@ -68,13 +71,16 @@ for idmod in my_id_modules:
 
 #------ Analyzer ------#
 
+
 #list input collections
 process.ntuples = cms.EDAnalyzer('RazorTuplizer', 
     isData = cms.bool(False),    
     useGen = cms.bool(True),
     isFastsim = cms.bool(False),
     enableTriggerInfo = cms.bool(True),                                 
-    enableEcalRechits = cms.bool(False), 
+    enableEcalRechits = cms.bool(True),                                 
+    readGenVertexTime = cms.untracked.bool(True),
+    genParticles_t0 = cms.InputTag("genParticles", "t0", ""), 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
     eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
     muonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorMuonHLTFilterNames.dat"),
@@ -85,7 +91,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     muons = cms.InputTag("slimmedMuons"),
     electrons = cms.InputTag("slimmedElectrons"),
     taus = cms.InputTag("slimmedTaus"),
-    photons = cms.VInputTag(cms.InputTag("slimmedPhotons")),
+    photons = cms.VInputTag(cms.InputTag("slimmedPhotons"),cms.InputTag("slimmedOOTPhotons")), # please put the standard photon collection to the first one
     jets = cms.InputTag("slimmedJets"),
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
     jetsAK8 = cms.InputTag("slimmedJetsAK8"),
@@ -104,7 +110,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     triggerBits = cms.InputTag("TriggerResults","","HLT"),
     triggerPrescales = cms.InputTag("patTrigger"),
-    triggerObjects = cms.InputTag("selectedPatTrigger"),
+    triggerObjects = cms.InputTag("slimmedPatTrigger"),
     metFilterBits = cms.InputTag("TriggerResults", "", "PAT"),
     hbheNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResult"),
     hbheTightNoiseFilter = cms.InputTag("HBHENoiseFilterResultProducer","HBHENoiseFilterResultRun2Tight"),
@@ -131,16 +137,20 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
 
     beamSpot = cms.InputTag("offlineBeamSpot", "", "RECO"),
 
-    ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "PAT"),
+    ebRecHits = cms.InputTag("reducedEgamma", "reducedEBRecHits", "PAT"), 
     eeRecHits = cms.InputTag("reducedEgamma", "reducedEERecHits", "PAT"),
     esRecHits = cms.InputTag("reducedEgamma", "reducedESRecHits", "PAT"),
     ebeeClusters = cms.InputTag("reducedEgamma", "reducedEBEEClusters", "PAT"),
+    #ebeeClusters = cms.VInputTag(cms.InputTag("reducedEgamma", "reducedEBEEClusters", "PAT"), cms.InputTag("reducedEgamma", "reducedOOTEBEEClusters", "PAT")),
     esClusters = cms.InputTag("reducedEgamma", "reducedESClusters", "PAT"),
+    #esClusters = cms.VInputTag(cms.InputTag("reducedEgamma", "reducedESClusters", "PAT"), cms.InputTag("reducedEgamma", "reducedOOTESClusters", "PAT")),
     conversions = cms.InputTag("reducedEgamma", "reducedConversions", "PAT"),
     singleLegConversions = cms.InputTag("reducedEgamma", "reducedSingleLegConversions", "PAT"),
     gedGsfElectronCores = cms.InputTag("reducedEgamma", "reducedGedGsfElectronCores", "PAT"),
     gedPhotonCores = cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "PAT"),
+    #gedPhotonCores = cms.VInputTag(cms.InputTag("reducedEgamma", "reducedGedPhotonCores", "PAT"), cms.InputTag("reducedEgamma", "reducedOOTPhotonCores", "PAT")),
     superClusters = cms.InputTag("reducedEgamma", "reducedSuperClusters", "PAT"),
+    #superClusters = cms.VInputTag(cms.InputTag("reducedEgamma", "reducedSuperClusters", "PAT"), cms.InputTag("reducedEgamma", "reducedOOTSuperClusters", "PAT")),
 
     lostTracks = cms.InputTag("lostTracks", "", "PAT"),
     mvaGeneralPurposeValuesMap     = cms.InputTag("electronMVAValueMapProducer:ElectronMVAEstimatorRun2Spring16GeneralPurposeV1Values"),
