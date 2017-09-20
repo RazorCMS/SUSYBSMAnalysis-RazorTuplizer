@@ -66,6 +66,7 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     isFastsim = cms.bool(False),
     enableTriggerInfo = cms.bool(True),                                 
     enableEcalRechits = cms.bool(True), 
+    enableAK8Jets = cms.bool(False), 
     triggerPathNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorHLTPathnames.dat"),
     eleHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorElectronHLTFilterNames.dat"),
     muonHLTFilterNamesFile = cms.string("SUSYBSMAnalysis/RazorTuplizer/data/RazorMuonHLTFilterNames.dat"),
@@ -79,7 +80,8 @@ process.ntuples = cms.EDAnalyzer('RazorTuplizer',
     photons = cms.VInputTag(cms.InputTag("slimmedPhotons")),
     jets = cms.InputTag("slimmedJets"),
     jetsPuppi = cms.InputTag("slimmedJetsPuppi"),
-    jetsAK8 = cms.InputTag("slimmedJetsAK8"),
+    jetsAK8 = cms.InputTag("selectedPatJetsAK8PFCHS"),
+    puppiSDjetLabel = cms.InputTag('packedPatJetsAK8PFPuppiSoftDrop'),
     mets = cms.InputTag("slimmedMETs","","PAT"),
     metsEGClean = cms.InputTag("slimmedMETsEGClean","","PAT"),
     metsMuEGClean = cms.InputTag("slimmedMETsMuEGClean","","PAT"),
@@ -186,6 +188,8 @@ process.egcorrMET = cms.Sequence(
         process.patPFMetT1ElectronEnDownMuEGClean+process.patPFMetT1PhotonEnDownMuEGClean+
         process.patPFMetT1MuonEnDownMuEGClean+process.patPFMetT1TauEnDownMuEGClean+
         process.patPFMetT1UnclusteredEnDownMuEGClean+process.slimmedMETsMuEGClean)
+
+
 
 process.ntupleStep = cms.Path(process.fullPatMetSequence *
                               process.egcorrMET * 

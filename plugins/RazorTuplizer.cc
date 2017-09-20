@@ -16,6 +16,7 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   enableTriggerInfo_(iConfig.getParameter<bool> ("enableTriggerInfo")),
   enableEcalRechits_(iConfig.getParameter<bool> ("enableEcalRechits")),
   readGenVertexTime_(iConfig.getUntrackedParameter<bool> ("readGenVertexTime", false)),
+  enableAK8Jets_(iConfig.getParameter<bool> ("enableAK8Jets")),
   triggerPathNamesFile_(iConfig.getParameter<string> ("triggerPathNamesFile")),
   eleHLTFilterNamesFile_(iConfig.getParameter<string> ("eleHLTFilterNamesFile")),
   muonHLTFilterNamesFile_(iConfig.getParameter<string> ("muonHLTFilterNamesFile")),
@@ -29,6 +30,9 @@ RazorTuplizer::RazorTuplizer(const edm::ParameterSet& iConfig):
   jetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
   jetsPuppiToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsPuppi"))),
   jetsAK8Token_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8"))),
+  jetsAK8SoftDropPackedToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8SoftDropPacked"))),
+  jetsAK8SubjetsToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jetsAK8Subjets"))),
+  puppiSDjetToken_ (consumes<std::vector<pat::Jet> > ( iConfig.getParameter<edm::InputTag>("puppiSDjetLabel")) ),
   packedPFCandsToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("packedPfCands"))),
   prunedGenParticlesToken_(consumes<edm::View<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("prunedGenParticles"))),
   packedGenParticlesToken_(consumes<edm::View<pat::PackedGenParticle> >(iConfig.getParameter<edm::InputTag>("packedGenParticles"))),
@@ -316,6 +320,7 @@ void RazorTuplizer::setBranches(){
   //enableIsoPFCandidateBranches();
   enablePhotonBranches();
   enableJetBranches();
+  if (enableAK8Jets_) enableJetAK8Branches();
   enableMetBranches();
   
   if (enableTriggerInfo_) enableTriggerBranches();
@@ -556,6 +561,7 @@ void RazorTuplizer::enableEcalRechitBranches(){
   ecalRechit_FlagOOT = new std::vector<bool>; ecalRechit_FlagOOT->clear();
   ecalRechit_GainSwitch1 = new std::vector<bool>; ecalRechit_GainSwitch1->clear();
   ecalRechit_GainSwitch6 = new std::vector<bool>; ecalRechit_GainSwitch6->clear();
+  ecalRechit_transpCorr = new std::vector<float>; ecalRechit_transpCorr->clear();
 
   RazorEvents->Branch("ecalRechit_Eta", "std::vector<float>",&ecalRechit_Eta);
   RazorEvents->Branch("ecalRechit_Phi", "std::vector<float>",&ecalRechit_Phi);
@@ -568,6 +574,7 @@ void RazorTuplizer::enableEcalRechitBranches(){
   RazorEvents->Branch("ecalRechit_FlagOOT", "std::vector<bool>",&ecalRechit_FlagOOT);
   RazorEvents->Branch("ecalRechit_GainSwitch1", "std::vector<bool>",&ecalRechit_GainSwitch1);
   RazorEvents->Branch("ecalRechit_GainSwitch6", "std::vector<bool>",&ecalRechit_GainSwitch6);
+  RazorEvents->Branch("ecalRechit_transpCorr", "std::vector<float>",&ecalRechit_transpCorr);
 
 }
 
@@ -611,12 +618,21 @@ void RazorTuplizer::enableJetAK8Branches(){
   RazorEvents->Branch("fatJetPt", fatJetPt,"fatJetPt[nFatJets]/F");
   RazorEvents->Branch("fatJetEta", fatJetEta,"fatJetEta[nFatJets]/F");
   RazorEvents->Branch("fatJetPhi", fatJetPhi,"fatJetPhi[nFatJets]/F");
+  RazorEvents->Branch("fatJetCorrectedPt", fatJetCorrectedPt,"fatJetCorrectedPt[nFatJets]/F");
+  // RazorEvents->Branch("fatJetCorrectedEta", fatJetCorrectedEta,"fatJetCorrectedEta[nFatJets]/F");
+  // RazorEvents->Branch("fatJetCorrectedPhi", fatJetCorrectedPhi,"fatJetCorrectedPhi[nFatJets]/F");
   RazorEvents->Branch("fatJetPrunedM", fatJetPrunedM,"fatJetPrunedM[nFatJets]/F");
   RazorEvents->Branch("fatJetTrimmedM", fatJetTrimmedM,"fatJetTrimmedM[nFatJets]/F");
   RazorEvents->Branch("fatJetFilteredM", fatJetFilteredM,"fatJetFilteredM[nFatJets]/F");
+  RazorEvents->Branch("fatJetSoftDropM", fatJetSoftDropM,"fatJetSoftDropM[nFatJets]/F");
+  RazorEvents->Branch("fatJetCorrectedSoftDropM", fatJetCorrectedSoftDropM,"fatJetCorrectedSoftDropM[nFatJets]/F");
+  RazorEvents->Branch("fatJetUncorrectedSoftDropM", fatJetUncorrectedSoftDropM,"fatJetUncorrectedSoftDropM[nFatJets]/F");
   RazorEvents->Branch("fatJetTau1", fatJetTau1,"fatJetTau1[nFatJets]/F");
   RazorEvents->Branch("fatJetTau2", fatJetTau2,"fatJetTau2[nFatJets]/F");
   RazorEvents->Branch("fatJetTau3", fatJetTau3,"fatJetTau3[nFatJets]/F");
+  RazorEvents->Branch("fatJetMaxSubjetCSV", fatJetMaxSubjetCSV, "fatJetMaxSubjetCSV[nFatJets]/F");
+  RazorEvents->Branch("fatJetPassIDLoose", fatJetPassIDLoose,"fatJetPassIDLoose[nFatJets]/O");
+  RazorEvents->Branch("fatJetPassIDTight", fatJetPassIDTight,"fatJetPassIDTight[nFatJets]/O");
 }
 
 void RazorTuplizer::enableMetBranches(){
@@ -766,6 +782,8 @@ void RazorTuplizer::loadEvent(const edm::Event& iEvent){
   iEvent.getByToken(jetsToken_, jets);
   iEvent.getByToken(jetsPuppiToken_, jetsPuppi);
   iEvent.getByToken(jetsAK8Token_, jetsAK8);
+  iEvent.getByToken(jetsAK8SoftDropPackedToken_, jetsAK8SoftDropPacked);
+  iEvent.getByToken(jetsAK8SubjetsToken_, jetsAK8Subjets);
   iEvent.getByToken(metToken_, mets);
   //iEvent.getByToken(metNoHFToken_, metsNoHF);
   iEvent.getByToken(metPuppiToken_, metsPuppi);
@@ -1045,12 +1063,21 @@ void RazorTuplizer::resetBranches(){
         fatJetPt[i] = 0.0;
         fatJetEta[i] = 0.0;
         fatJetPhi[i] = 0.0;
-        fatJetPrunedM[i] = 0.0;
+	fatJetCorrectedPt[i] = 0.0;
+        fatJetCorrectedEta[i] = 0.0;
+        fatJetCorrectedPhi[i] = 0.0;
+	fatJetPrunedM[i] = 0.0;
         fatJetTrimmedM[i] = 0.0;
         fatJetFilteredM[i] = 0.0;
-        fatJetTau1[i] = 0.0;
+        fatJetSoftDropM[i] = 0.0;
+        fatJetCorrectedSoftDropM[i] = 0.0;
+	fatJetUncorrectedSoftDropM[i] = 0.0;
+	fatJetTau1[i] = 0.0;
         fatJetTau2[i] = 0.0;
         fatJetTau3[i] = 0.0;
+        fatJetMaxSubjetCSV[i] = 0.0;
+        fatJetPassIDLoose[i] = false;
+        fatJetPassIDTight[i] = false;
 
         genJetE[i] = 0.0;
         genJetPt[i] = 0.0;
@@ -1067,7 +1094,6 @@ void RazorTuplizer::resetBranches(){
       ele_SeedRechitIndex->clear();
       pho_EcalRechitIndex->clear();
       pho_SeedRechitIndex->clear();
-      
       ecalRechitID_ToBeSaved.clear();
       ecalRechitEtaPhi_ToBeSaved.clear();
       ecalRechitJetEtaPhi_ToBeSaved.clear();
@@ -1082,6 +1108,7 @@ void RazorTuplizer::resetBranches(){
       ecalRechit_FlagOOT->clear();
       ecalRechit_GainSwitch1->clear();
       ecalRechit_GainSwitch6->clear();
+      ecalRechit_transpCorr->clear();
     }
 
     for(int i = 0; i < GENPARTICLEARRAYSIZE; i++){
@@ -1543,7 +1570,6 @@ bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
     ele_passTPTwoTagFilter[nElectrons] = passTPTwoTagFilter;
     ele_passTPOneProbeFilter[nElectrons] = passTPOneProbeFilter;
     ele_passTPTwoProbeFilter[nElectrons] = passTPTwoProbeFilter;
-
 
     if (enableEcalRechits_) {
       ele_SeedRechitID.push_back(ele->superCluster()->seed()->seed().rawId());
@@ -2150,8 +2176,8 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 };
 
 
-bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
-  
+bool RazorTuplizer::fillEcalRechits(const edm::Event& iEvent, const edm::EventSetup& iSetup){  
+
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> geoHandle;
   iSetup.get<CaloGeometryRecord>().get(geoHandle);
@@ -2160,6 +2186,10 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
 
   std::map<uint, uint> mapRecHitIdToIndex; mapRecHitIdToIndex.clear();
   uint rechitIndex = 0;
+
+  //ECAL conditions
+  edm::ESHandle<EcalLaserDbService> laser_;
+  iSetup.get<EcalLaserDbRecord>().get(laser_);
 
   //Barrel Rechits
   for (EcalRecHitCollection::const_iterator recHit = ebRecHits->begin(); recHit != ebRecHits->end(); ++recHit) {
@@ -2213,6 +2243,7 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
     ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
     ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
     ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    ecalRechit_transpCorr->push_back(laser_->getLaserCorrection(recHitId, iEvent.eventAuxiliary().time()));	
     rechitIndex++;
   }
   
@@ -2266,6 +2297,7 @@ bool RazorTuplizer::fillEcalRechits(const edm::EventSetup& iSetup){
     ecalRechit_FlagOOT->push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
     ecalRechit_GainSwitch1->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
     ecalRechit_GainSwitch6->push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+    ecalRechit_transpCorr->push_back(laser_->getLaserCorrection(recHitId, iEvent.eventAuxiliary().time()));	
     rechitIndex++;
 
   }
@@ -2386,16 +2418,83 @@ bool RazorTuplizer::fillJets(){
   return true;
 };
 
-bool RazorTuplizer::fillJetsAK8(){
+bool RazorTuplizer::fillJetsAK8(const edm::Event& iEvent) {
+
+  edm::Handle<std::vector<pat::Jet> > puppiSDjetHandle;
+  iEvent.getByToken(puppiSDjetToken_, puppiSDjetHandle);
   for (const pat::Jet &j : *jetsAK8) {
     fatJetE[nFatJets] = j.correctedP4(0).E();
     fatJetPt[nFatJets] = j.correctedP4(0).Pt();
     fatJetEta[nFatJets] = j.correctedP4(0).Eta();
     fatJetPhi[nFatJets] = j.correctedP4(0).Phi();
-    fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSValueMap:ak8PFJetsCHSPrunedMass");
-    fatJetTau1[nFatJets] =  (float) j.userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau1");
-    fatJetTau2[nFatJets] =  (float) j.userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau2");
-    fatJetTau3[nFatJets] =  (float) j.userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau3");
+    fatJetCorrectedPt[nFatJets] = j.pt();
+    fatJetCorrectedEta[nFatJets] = j.eta();
+    fatJetCorrectedPhi[nFatJets] = j.phi();
+    fatJetPassIDLoose[nFatJets] = passJetID(&j, 0);
+    fatJetPassIDTight[nFatJets] = passJetID(&j, 1);
+    fatJetPrunedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSPrunedMass");                                                     
+    fatJetTrimmedM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSTrimmedMass");
+    fatJetFilteredM[nFatJets] = (float) j.userFloat("ak8PFJetsCHSFilteredMass");  
+    fatJetSoftDropM[nFatJets] = (float) j.userFloat("ak8PFJetsPuppiValueMap:softDropMassPuppi");
+    fatJetTau1[nFatJets] =  (float) j.userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau1");
+    fatJetTau2[nFatJets] =  (float) j.userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau2");
+    fatJetTau3[nFatJets] =  (float) j.userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau3");
+
+    double min_dR = 999;
+    double uncorrSDMass = -999;
+    double corrSDMass = -999;   
+    const double distMax_ = 0.8;
+    for ( auto const & puppiSDJet : *puppiSDjetHandle ) {
+      float temp_dR = reco::deltaR(j.eta(),j.phi(),puppiSDJet.eta(),puppiSDJet.phi());
+      if ( temp_dR < distMax_ && temp_dR < min_dR ) {
+	min_dR = temp_dR;
+	TLorentzVector puppi_softdrop, puppi_softdrop_subjet;
+	TLorentzVector puppi_softdrop_corr, puppi_softdrop_subjet_corr;
+	auto const & sbSubjetsPuppi = puppiSDJet.subjets("SoftDrop");
+	for ( auto const & it : sbSubjetsPuppi ) {
+	  puppi_softdrop_subjet.SetPtEtaPhiM(it->correctedP4(0).pt(),it->correctedP4(0).eta(),it->correctedP4(0).phi(),it->correctedP4(0).mass());
+	  puppi_softdrop+=puppi_softdrop_subjet;
+	  puppi_softdrop_subjet_corr.SetPtEtaPhiM(it->pt(),it->eta(),it->phi(),it->mass());
+	  puppi_softdrop_corr+=puppi_softdrop_subjet_corr;
+	}
+	uncorrSDMass = puppi_softdrop.M();
+	corrSDMass   = puppi_softdrop_corr.M();
+      }
+      
+    }    
+    fatJetCorrectedSoftDropM[nFatJets] = corrSDMass;
+    fatJetUncorrectedSoftDropM[nFatJets] = uncorrSDMass;
+
+    // Loop over this collection to find the indices of this jet's subjets
+    min_dR = 999;
+    int vSubjet0 = -1;
+    int vSubjet1 = -1;
+    for (const pat::Jet &packedJet : *jetsAK8SoftDropPacked) {
+        float temp_dR = reco::deltaR(j.eta(), j.phi(), packedJet.eta(), packedJet.phi());
+        if ( temp_dR < distMax_ && temp_dR < min_dR ) {
+            min_dR = temp_dR;
+            if (packedJet.numberOfDaughters() > 0) {
+                vSubjet0 = packedJet.daughterPtr(0).key();
+            }
+            if (packedJet.numberOfDaughters() > 1) {
+                vSubjet1 = packedJet.daughterPtr(1).key();
+            }
+        }
+    }
+    float maxSubjetCSV = -999.;
+    if (vSubjet0 >= 0) {
+        maxSubjetCSV = (*jetsAK8Subjets)[vSubjet0].bDiscriminator(
+                "pfCombinedInclusiveSecondaryVertexV2BJetTags");
+    }
+    if (vSubjet1 >= 0) {
+        float subjet1CSV = (*jetsAK8Subjets)[vSubjet1].bDiscriminator(
+                "pfCombinedInclusiveSecondaryVertexV2BJetTags");
+        if (subjet1CSV > maxSubjetCSV) {
+            maxSubjetCSV = subjet1CSV;
+        }
+    }
+    fatJetMaxSubjetCSV[nFatJets] = maxSubjetCSV;
+
     nFatJets++;
   }
 
@@ -2987,20 +3086,24 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   NEvents->Fill(0); //increment event count  
 
   //filler methods should fill relevant tree variables and return false if the event should be rejected
-  bool isGoodEvent = fillEventInfo(iEvent) 
-    && fillPVAll();
-  isGoodEvent = isGoodEvent && fillMuons(iEvent);
-  isGoodEvent = isGoodEvent && fillElectrons(iEvent);
-  isGoodEvent = isGoodEvent && fillTaus();
-  isGoodEvent = isGoodEvent && fillIsoPFCandidates();
-  isGoodEvent = isGoodEvent && fillPhotons(iEvent,iSetup);
-  isGoodEvent = isGoodEvent && fillJets();
-  isGoodEvent = isGoodEvent && fillJetsAK8();
-  isGoodEvent = isGoodEvent && fillMet(iEvent);
+  bool isGoodEvent = fillEventInfo(iEvent) && fillPVAll();
+
+  //Fill Standard Objects
+  isGoodEvent = isGoodEvent 
+    && fillMuons() 
+    && fillElectrons(iEvent)
+    && fillTaus()
+    && fillIsoPFCandidates()
+    && fillPhotons(iEvent,iSetup)
+    && fillJets()
+    && fillMet(iEvent);
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
+  //Fill AK8Jets
+  if (enableAK8Jets_) isGoodEvent = isGoodEvent && fillJetsAK8(iEvent);
+
   //Fill Rechits
-  if (enableEcalRechits_) isGoodEvent = isGoodEvent && fillEcalRechits(iSetup);
+  if (enableEcalRechits_) isGoodEvent = isGoodEvent && fillEcalRechits(iEvent, iSetup);
 
   bool isGoodMCEvent = true;
   if (useGen_) {

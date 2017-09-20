@@ -69,6 +69,10 @@ using namespace std;
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
+//ECAL conditions
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbService.h"
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbRecord.h"
+
 // Geometry
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
@@ -126,12 +130,12 @@ public:
   virtual bool fillIsoPFCandidates();//Fills Isolated PF Candidates, PT > 5 GeV
   virtual bool fillPhotons(const edm::Event& iEvent, const edm::EventSetup& iSetup);//Fills photon 4-momentum only. PT > 20GeV && ISO < 0.3
   virtual bool fillJets();//Fills AK5 Jet 4-momentum, CSV, and CISV. PT > 20GeV 
-  virtual bool fillJetsAK8();//Fills AK8 Jet 4-momentum.
+  virtual bool fillJetsAK8(const edm::Event& iEvent);//Fills AK8 Jet 4-momentum.
   virtual bool fillMet(const edm::Event& iEvent);//Fills MET(mag, phi)
   virtual bool fillTrigger(const edm::Event& iEvent);//Fills trigger information
   virtual bool fillMC();
   virtual bool fillGenParticles();
-  virtual bool fillEcalRechits(const edm::EventSetup& iSetup);
+  virtual bool fillEcalRechits(const edm::Event& iEvent, const edm::EventSetup& iSetup); 
   
   //------ HELPER FUNCTIONS ------//
   
@@ -188,6 +192,7 @@ protected:
   bool enableTriggerInfo_;
   bool enableEcalRechits_;
   bool readGenVertexTime_;
+  bool enableAK8Jets_;
   
   // Mapping of the HLT Triggers and Filters
   string triggerPathNamesFile_;
@@ -214,6 +219,9 @@ protected:
   edm::EDGetTokenT<pat::JetCollection> jetsToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsPuppiToken_;
   edm::EDGetTokenT<pat::JetCollection> jetsAK8Token_;
+  edm::EDGetTokenT<pat::JetCollection> jetsAK8SoftDropPackedToken_;
+  edm::EDGetTokenT<pat::JetCollection> jetsAK8SubjetsToken_;
+  edm::EDGetTokenT<pat::JetCollection> puppiSDjetToken_;
   edm::EDGetTokenT<pat::PackedCandidateCollection> packedPFCandsToken_;
   edm::EDGetTokenT<edm::View<reco::GenParticle> > prunedGenParticlesToken_;
   edm::EDGetTokenT<edm::View<pat::PackedGenParticle> > packedGenParticlesToken_;
@@ -283,6 +291,8 @@ protected:
   edm::Handle<pat::JetCollection> jets;
   edm::Handle<pat::JetCollection> jetsPuppi;
   edm::Handle<pat::JetCollection> jetsAK8;
+  edm::Handle<pat::JetCollection> jetsAK8SoftDropPacked;
+  edm::Handle<pat::JetCollection> jetsAK8Subjets;
   edm::Handle<pat::METCollection> mets;
   edm::Handle<pat::METCollection> metsEGClean;
   edm::Handle<pat::METCollection> metsMuEGClean;
@@ -540,6 +550,7 @@ protected:
   vector<bool> *ecalRechit_FlagOOT;
   vector<bool> *ecalRechit_GainSwitch1;
   vector<bool> *ecalRechit_GainSwitch6;
+  vector<float> *ecalRechit_transpCorr;
 
   //AK4 Jets
   int nJets;
@@ -580,12 +591,21 @@ protected:
   float fatJetPt[OBJECTARRAYSIZE];
   float fatJetEta[OBJECTARRAYSIZE];
   float fatJetPhi[OBJECTARRAYSIZE];
+  float fatJetCorrectedPt[OBJECTARRAYSIZE];
+  float fatJetCorrectedEta[OBJECTARRAYSIZE];
+  float fatJetCorrectedPhi[OBJECTARRAYSIZE];
   float fatJetTrimmedM[OBJECTARRAYSIZE];
   float fatJetPrunedM[OBJECTARRAYSIZE];
   float fatJetFilteredM[OBJECTARRAYSIZE];
+  float fatJetSoftDropM[OBJECTARRAYSIZE];
+  float fatJetCorrectedSoftDropM[OBJECTARRAYSIZE];
+  float fatJetUncorrectedSoftDropM[OBJECTARRAYSIZE];
   float fatJetTau1[OBJECTARRAYSIZE];
   float fatJetTau2[OBJECTARRAYSIZE];
   float fatJetTau3[OBJECTARRAYSIZE];
+  float fatJetMaxSubjetCSV[OBJECTARRAYSIZE];
+  bool fatJetPassIDLoose[OBJECTARRAYSIZE];
+  bool fatJetPassIDTight[OBJECTARRAYSIZE];
 
   //MET 
   float metPt;
