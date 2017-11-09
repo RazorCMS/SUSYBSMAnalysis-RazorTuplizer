@@ -508,6 +508,9 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("pho_sumChargedHadronPt", &pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_sumNeutralHadronEt", pho_sumNeutralHadronEt, "pho_sumNeutralHadronEt[nPhotons]/F");
   RazorEvents->Branch("pho_sumPhotonEt", pho_sumPhotonEt, "pho_sumPhotonEt[nPhotons]/F");
+  RazorEvents->Branch("pho_ecalPFClusterIso", pho_ecalPFClusterIso, "pho_ecalPFClusterIso[nPhotons]/F");
+  RazorEvents->Branch("pho_hcalPFClusterIso", pho_hcalPFClusterIso, "pho_hcalPFClusterIso[nPhotons]/F");
+  RazorEvents->Branch("pho_trkSumPtHollowConeDR03", pho_trkSumPtHollowConeDR03, "pho_trkSumPtHollowConeDR03[nPhotons]/F");
   RazorEvents->Branch("pho_sumWorstVertexChargedHadronPt", pho_sumWorstVertexChargedHadronPt, "pho_sumWorstVertexChargedHadronPt[nPhotons]/F");
   RazorEvents->Branch("pho_pfIsoChargedHadronIso", pho_pfIsoChargedHadronIso, "pho_pfIsoChargedHadronIso[nPhotons]/F");
   RazorEvents->Branch("pho_pfIsoChargedHadronIsoWrongVtx", pho_pfIsoChargedHadronIsoWrongVtx, "pho_pfIsoChargedHadronIsoWrongVtx[nPhotons]/F");
@@ -990,6 +993,9 @@ void RazorTuplizer::resetBranches(){
 	pho_sumChargedHadronPt[i] = -99.0;
 	pho_sumNeutralHadronEt[i] = -99.0;
         pho_sumPhotonEt[i] = -99.0;
+        pho_ecalPFClusterIso[i] = -99.0;
+        pho_hcalPFClusterIso[i] = -99.0;
+        pho_trkSumPtHollowConeDR03[i] = -99.0;
 	pho_sumWorstVertexChargedHadronPt[i] = -99.0;
 	pho_pfIsoChargedHadronIso[i] = -99.0;
 	pho_pfIsoChargedHadronIsoWrongVtx[i] = -99.0;
@@ -1914,6 +1920,9 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     pho_sumChargedHadronPt[nPhotons] = chargedIsoSum;
     pho_sumNeutralHadronEt[nPhotons] = neutralHadronIsoSum;
     pho_sumPhotonEt[nPhotons] = photonIsoSum;
+    pho_ecalPFClusterIso[nPhotons] = pho.ecalPFClusterIso();
+    pho_hcalPFClusterIso[nPhotons] = pho.hcalPFClusterIso();
+    pho_trkSumPtHollowConeDR03[nPhotons] = pho.trkSumPtHollowConeDR03();
     
     //*****************************************************************
     //Compute Worst Isolation Looping over all vertices

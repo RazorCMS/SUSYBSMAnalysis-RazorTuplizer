@@ -499,6 +499,9 @@ protected:
   float pho_sumChargedHadronPt[OBJECTARRAYSIZE];
   float pho_sumNeutralHadronEt[OBJECTARRAYSIZE];
   float pho_sumPhotonEt[OBJECTARRAYSIZE];
+  float pho_ecalPFClusterIso[OBJECTARRAYSIZE];
+  float pho_hcalPFClusterIso[OBJECTARRAYSIZE];
+  float pho_trkSumPtHollowConeDR03[OBJECTARRAYSIZE];
   float pho_sumWorstVertexChargedHadronPt[OBJECTARRAYSIZE];
   float pho_pfIsoChargedHadronIso[OBJECTARRAYSIZE];
   float pho_pfIsoChargedHadronIsoWrongVtx[OBJECTARRAYSIZE];
