@@ -579,6 +579,10 @@ void RazorTuplizer::enableJetBranches(){
   RazorEvents->Branch("jetPhi", jetPhi,"jetPhi[nJets]/F");
   RazorEvents->Branch("jetCSV", jetCSV,"jetCSV[nJets]/F");
   RazorEvents->Branch("jetCISV", jetCISV,"jetCISV[nJets]/F");
+  RazorEvents->Branch("jetProbb", jetProbb,"jetProbb[nJets]/F");
+  RazorEvents->Branch("jetProbc", jetProbc,"jetProbc[nJets]/F");
+  RazorEvents->Branch("jetProbudsg", jetProbudsg,"jetProbudsg[nJets]/F");
+  RazorEvents->Branch("jetProbbb", jetProbbb,"jetProbbb[nJets]/F");
   RazorEvents->Branch("jetMass", jetMass, "jetMass[nJets]/F");
   RazorEvents->Branch("jetJetArea", jetJetArea, "jetJetArea[nJets]/F");
   RazorEvents->Branch("jetPileupE", jetPileupE, "jetPileupE[nJets]/F");
@@ -2302,6 +2306,10 @@ bool RazorTuplizer::fillJets(){
     jetEta[nJets] = j.correctedP4(0).Eta();
     jetPhi[nJets] = j.correctedP4(0).Phi();
     jetCSV[nJets] = j.bDiscriminator("pfCombinedSecondaryVertexBJetTags");
+    jetProbb[nJets] = j.bDiscriminator("pfDeepCSVJetTags:probb");
+    jetProbc[nJets] = j.bDiscriminator("pfDeepCSVJetTags:probc");
+    jetProbudsg[nJets] = j.bDiscriminator("pfDeepCSVJetTags:probudsg");
+    jetProbbb[nJets] = j.bDiscriminator("pfDeepCSVJetTags:probbb");
     jetCISV[nJets] = j.bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
     jetMass[nJets] = j.correctedP4(0).M();
     jetJetArea[nJets] = j.jetArea();
