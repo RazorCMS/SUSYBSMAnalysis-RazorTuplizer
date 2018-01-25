@@ -563,6 +563,10 @@ protected:
   float jetPhi[OBJECTARRAYSIZE];
   float jetCSV[OBJECTARRAYSIZE];
   float jetCISV[OBJECTARRAYSIZE];
+  float jetProbb[OBJECTARRAYSIZE];
+  float jetProbc[OBJECTARRAYSIZE];
+  float jetProbudsg[OBJECTARRAYSIZE];
+  float jetProbbb[OBJECTARRAYSIZE];
   float jetMass[OBJECTARRAYSIZE];
   float jetJetArea[OBJECTARRAYSIZE];
   float jetPileupE[OBJECTARRAYSIZE];  
