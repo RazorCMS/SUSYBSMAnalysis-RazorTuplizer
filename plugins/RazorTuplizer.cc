@@ -369,12 +369,22 @@ void RazorTuplizer::enablePVAllBranches() {
   allTrackT = new std::vector<float>; allTrackT->clear();
   allTrackPt = new std::vector<float>; allTrackPt->clear();
   allTrackPvIndex = new std::vector<int>; allTrackPvIndex->clear();
+  allTrackPhi = new std::vector<float>; allTrackPhi->clear();
+  allTrackEta = new std::vector<float>; allTrackEta->clear();
+  allTrackX = new std::vector<float>; allTrackX->clear();
+  allTrackY = new std::vector<float>; allTrackY->clear();
+  allTrackZ = new std::vector<float>; allTrackZ->clear();
 
   RazorEvents->Branch("allTrackPvIndex", "vector<int>", &allTrackPvIndex);
   RazorEvents->Branch("allTrackdT", "vector<float>", &allTrackdT);
   RazorEvents->Branch("allTrackT", "vector<float>", &allTrackT);
   RazorEvents->Branch("allTrackPt", "vector<float>", &allTrackPt);
   RazorEvents->Branch("allTrackdZ", "vector<float>", &allTrackdZ);
+  RazorEvents->Branch("allTrackPhi", "vector<float>", &allTrackPhi);
+  RazorEvents->Branch("allTrackEta", "vector<float>", &allTrackEta);
+  RazorEvents->Branch("allTrackX", "vector<float>", &allTrackX);
+  RazorEvents->Branch("allTrackY", "vector<float>", &allTrackY);
+  RazorEvents->Branch("allTrackZ", "vector<float>", &allTrackZ);
 
   RazorEvents->Branch("pvAllLogSumPtSq_dt", pvAllLogSumPtSq_dt,"pvAllLogSumPtSq_dt[nPVAll]/F");
   RazorEvents->Branch("pvAllSumPt_dt", pvAllSumPt_dt,"pvAllSumPt_dt[nPVAll]/F");
@@ -847,7 +857,11 @@ void RazorTuplizer::resetBranches(){
     allTrackT->clear();
     allTrackPt->clear();
     allTrackdZ->clear();
-
+    allTrackPhi->clear();
+    allTrackEta->clear();
+    allTrackX->clear();
+    allTrackY->clear();
+    allTrackZ->clear();
 
     allNtrack = 0;
  
@@ -1427,12 +1441,12 @@ bool RazorTuplizer::fillPVAll() {
 
       pvNtrack[ipvmin] += 1;
 
-    /*
-    allTrackParticleId.push_back(pfcand.particleId());
-    allTrackX.push_back(pfcand.trackRef()->vx());
-    allTrackY.push_back(pfcand.trackRef()->vy());
-    allTrackZ.push_back(pfcand.trackRef()->vz());
-    allTrackPt.push_back(pfcand.trackRef()->pt());
+    
+      //allTrackParticleId.push_back(pfcand.particleId());
+    allTrackX->push_back(pfcand.trackRef()->vx());
+    allTrackY->push_back(pfcand.trackRef()->vy());
+    allTrackZ->push_back(pfcand.trackRef()->vz());
+    /*allTrackPt.push_back(pfcand.trackRef()->pt());
     allTrackPx.push_back(pfcand.trackRef()->px());
     allTrackPy.push_back(pfcand.trackRef()->py());
     allTrackPz.push_back(pfcand.trackRef()->pz());
@@ -1444,8 +1458,11 @@ bool RazorTuplizer::fillPVAll() {
     allTrackdT->push_back((*times)[pfcand.trackRef()] - vtx.t());
     allTrackT->push_back((*times)[pfcand.trackRef()]);
     allTrackPt->push_back(pfcand.trackRef()->pt());
+    allTrackPhi->push_back(pfcand.trackRef()->phi());
+    allTrackEta->push_back(pfcand.trackRef()->eta());
     allTrackdZ->push_back(mindz);
     allTrackPvIndex->push_back(ipvmin);
+    
 	/*
       const reco::Vertex &vtx = vertices->at(ipvmin);
       if(std::abs(vtx.z() - 0.0462162) < 0.0000001)
@@ -1887,7 +1904,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
   noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
     
   for (const reco::Photon &pho : *photons) {
-    if (pho.pt() < 20) continue;
+    //if (pho.pt() < 20) continue;
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
 
