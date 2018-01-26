@@ -21,6 +21,7 @@ using namespace std;
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/LuminosityBlock.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -346,11 +347,16 @@ protected:
   float pvAllSumPt[MAX_NPV];
   
 
+  vector<float> *allTrackX;
+  vector<float> *allTrackY;
+  vector<float> *allTrackZ;
   vector<int> *allTrackPvIndex;
   vector<float> *allTrackdZ;
   vector<float> *allTrackdT;
   vector<float> *allTrackT;
   vector<float> *allTrackPt;
+  vector<float> *allTrackPhi;
+  vector<float> *allTrackEta;
 
   float pvAllSumPx[MAX_NPV];
   float pvAllSumPy[MAX_NPV];
