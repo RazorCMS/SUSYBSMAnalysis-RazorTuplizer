@@ -1443,9 +1443,6 @@ bool RazorTuplizer::fillPVAll() {
 
     
       //allTrackParticleId.push_back(pfcand.particleId());
-    allTrackX->push_back(pfcand.trackRef()->vx());
-    allTrackY->push_back(pfcand.trackRef()->vy());
-    allTrackZ->push_back(pfcand.trackRef()->vz());
     /*allTrackPt.push_back(pfcand.trackRef()->pt());
     allTrackPx.push_back(pfcand.trackRef()->px());
     allTrackPy.push_back(pfcand.trackRef()->py());
@@ -1462,6 +1459,9 @@ bool RazorTuplizer::fillPVAll() {
     allTrackEta->push_back(pfcand.trackRef()->eta());
     allTrackdZ->push_back(mindz);
     allTrackPvIndex->push_back(ipvmin);
+    allTrackX->push_back(pfcand.trackRef()->vx());
+    allTrackY->push_back(pfcand.trackRef()->vy());
+    allTrackZ->push_back(pfcand.trackRef()->vz());
     
 	/*
       const reco::Vertex &vtx = vertices->at(ipvmin);

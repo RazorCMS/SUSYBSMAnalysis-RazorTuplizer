@@ -347,9 +347,6 @@ protected:
   float pvAllSumPt[MAX_NPV];
   
 
-  vector<float> *allTrackX;
-  vector<float> *allTrackY;
-  vector<float> *allTrackZ;
   vector<int> *allTrackPvIndex;
   vector<float> *allTrackdZ;
   vector<float> *allTrackdT;
@@ -357,7 +354,10 @@ protected:
   vector<float> *allTrackPt;
   vector<float> *allTrackPhi;
   vector<float> *allTrackEta;
-
+  vector<float> *allTrackX;
+  vector<float> *allTrackY;
+  vector<float> *allTrackZ;
+  
   float pvAllSumPx[MAX_NPV];
   float pvAllSumPy[MAX_NPV];
   float pvAllSumPz[MAX_NPV];

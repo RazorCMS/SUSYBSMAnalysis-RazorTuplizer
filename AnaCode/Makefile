@@ -3,8 +3,8 @@ CXX      = g++
 CXXFLAGS= $(shell root-config --cflags)
 LIBS    = $(shell root-config --libs) 
 
-SOURCES = NtupleVariables.cc UpgradeAna.cc 
-HEADERS = NtupleVariables.h UpgradeAna.h 
+SOURCES = UpgradeAna.cc 
+HEADERS = UpgradeAna.h 
 OBJECTS = $(SOURCES:.cc=.o)
 
 EXECUTABLE = analyzePhase2
@@ -30,5 +30,4 @@ clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
 
 ###
-NtupleVariables.o: NtupleVariables.h
-AnalyzeTTJets.o:NtupleVariables.h UpgradeAna.h
+AnalyzeTTJets.o:UpgradeAna.h
