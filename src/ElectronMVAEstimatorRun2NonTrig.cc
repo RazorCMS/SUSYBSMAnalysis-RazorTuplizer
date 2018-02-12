@@ -187,7 +187,7 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const reco::GsfElectron& ele,
   // Energy matching
   fMVAVar_fbrem           =  ele.fbrem();
   fMVAVar_gsfhits         =  ele.gsfTrack()->hitPattern().trackerLayersWithMeasurement();
-  fMVAVar_expectedMissingInnerHits = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+  fMVAVar_expectedMissingInnerHits = ele.gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS);
 
   reco::ConversionRef conv_ref = ConversionTools::matchedConversion(ele,conversions, beamspotPosition);
   double vertexFitProbability = -1.; 
@@ -297,7 +297,7 @@ Double_t ElectronMVAEstimatorRun2NonTrig::mvaValue(const pat::Electron& ele,
     // Energy matching
     fMVAVar_fbrem           =  ele.fbrem();
     fMVAVar_gsfhits         =  ele.gsfTrack()->found();
-    fMVAVar_expectedMissingInnerHits = ele.gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+    fMVAVar_expectedMissingInnerHits = ele.gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS);
 
     reco::ConversionRef conv_ref = ConversionTools::matchedConversion(ele,conversions, beamspotPosition);
     double vertexFitProbability = -1.; 

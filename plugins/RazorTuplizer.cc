@@ -1320,8 +1320,11 @@ bool RazorTuplizer::fillPVAll() {
     pvAllSumPyD[ipv] = 0.;
   }
   
+  int counter = 0;
   for (const pat::PackedCandidate &pfcand : *packedPFCands) {
+    counter++;
     if (pfcand.charge()==0) continue;
+
     double mindz = std::numeric_limits<double>::max();
     int ipvmin = -1;
     for (int ipv = 0; ipv < nPVAll; ++ipv) {
@@ -1499,7 +1502,7 @@ bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
     ele_chargedIso[nElectrons] = ele->pfIsolationVariables().sumChargedHadronPt;
     ele_photonIso[nElectrons] = ele->pfIsolationVariables().sumPhotonEt;
     ele_neutralHadIso[nElectrons] = ele->pfIsolationVariables().sumNeutralHadronEt;
-    ele_MissHits[nElectrons] = ele->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS);
+    ele_MissHits[nElectrons] = ele->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS);
 
     //*************************************************
     //Conversion Veto
@@ -1887,7 +1890,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
       
 
       // Increment the appropriate isolation sum
-      if( thisCandidateType == reco::PFCandidate::h ){
+      if( thisCandidateType == reco::PFCandidate::h && candidate.hasTrackDetails() ){
 	// for charged hadrons, additionally check consistency
 	// with the PV
 	float dxy = -999, dz = -999;
@@ -1955,13 +1958,13 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 	//require that PFCandidate is a charged hadron
 	const int pdgId = candidate.pdgId();
 	if( abs(pdgId) != 211) continue;
-
+	
 	if (candidate.pt() < ptMin)
 	  continue;
       
 	float dxy = -999, dz = -999;
-	dz = candidate.pseudoTrack().dz(myPV->position());
-	dxy =candidate.pseudoTrack().dxy(myPV->position());
+	dz = candidate.dz(myPV->position());
+	dxy =candidate.dxy(myPV->position());
 	if( fabs(dxy) > dxyMax) continue;     
 	if ( fabs(dz) > dzMax) continue;
 	
@@ -2137,6 +2140,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
   //fill information on tracks to exclude around photons for vertex selection purposes
   for (const pat::PackedCandidate &pfcand : *packedPFCands) {
     if (pfcand.charge()==0) continue;
+
     double mindz = std::numeric_limits<double>::max();
     int ipvmin = -1;
     for (int ipv = 0; ipv < nPVAll; ++ipv) {

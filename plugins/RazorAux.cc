@@ -145,7 +145,7 @@ bool RazorTuplizer::hasMatchedPromptElectron(const reco::SuperClusterRef &sc, ed
     if (ele->superCluster()!=sc) continue;
     
     //check expected inner hits
-    if (ele->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS) > 0) continue;
+    if (ele->gsfTrack()->hitPattern().numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS) > 0) continue;
     
     //check if electron is matching to a conversion
     if (ConversionTools::hasMatchedConversion(*ele,convCol,beamspot,lxyMin,probMin,nHitsBeforeVtxMax)) continue;
