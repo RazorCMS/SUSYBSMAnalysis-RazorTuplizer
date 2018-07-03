@@ -72,7 +72,7 @@ using namespace std;
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 
 #include "DataFormats/DetId/interface/DetId.h"
-
+#include "DataFormats/EcalDigi/interface/EcalDigiCollections.h"
 //ROOT includes
 #include "TTree.h"
 #include "TFile.h"
@@ -258,6 +258,8 @@ protected:
   edm::EDGetTokenT<vector<reco::Conversion> > singleLegConversionsToken_;
   edm::EDGetTokenT<vector<reco::GsfElectronCore> > gedGsfElectronCoresToken_;
   edm::EDGetTokenT<vector<reco::PhotonCore> > gedPhotonCoresToken_;
+  //edm::EDGetTokenT<edm::SortedCollection<EcalTimeDigi,edm::StrictWeakOrdering<EcalTimeDigi> > > eeTimeDigiToken_;
+  //edm::EDGetTokenT<edm::SortedCollection<EcalTimeDigi,edm::StrictWeakOrdering<EcalTimeDigi> > > ebTimeDigiToken_;
 //  edm::EDGetTokenT<vector<reco::SuperCluster> > superClustersToken_;
 //  edm::EDGetTokenT<vector<reco::PFCandidate> > lostTracksToken_;
   
@@ -314,6 +316,8 @@ protected:
   edm::Handle<vector<reco::Conversion>> singleLegConversions;
   edm::Handle<vector<reco::GsfElectronCore> > gedGsfElectronCores;
   edm::Handle<vector<reco::PhotonCore> > gedPhotonCores;
+  //edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalTimeDigi> > > eeTimeDigi;
+  //edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalTimeDigi> > > ebTimeDigi;
 //  edm::Handle<vector<reco::SuperCluster> > superClusters;
 //  edm::Handle<vector<reco::PFCandidate> > lostTracks;
   const reco::Vertex *myPV;
@@ -357,7 +361,10 @@ protected:
   vector<float> *allTrackX;
   vector<float> *allTrackY;
   vector<float> *allTrackZ;
-  
+  vector<float> *allTrackDxy;
+  vector<float> *allTrackDz;
+
+
   float pvAllSumPx[MAX_NPV];
   float pvAllSumPy[MAX_NPV];
   float pvAllSumPz[MAX_NPV];
