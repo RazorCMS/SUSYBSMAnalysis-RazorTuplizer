@@ -11,7 +11,7 @@ Instructions for compiling in CMSSW
     cd CMSSW_9_3_2/src
     cmsenv
     git clone -b CMSSW_9_3_2 git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
-    scram b
+    scram b -j20
 
 ---------------------    
 Running the ntuplizer
