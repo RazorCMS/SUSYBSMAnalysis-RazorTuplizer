@@ -1,7 +1,7 @@
 SUSYBSMAnalysis-RazorTuplizer
 =============================
 
-Razor ntuplizer for running over LHC Run 2 AOD compatible with CMSSW_8_1_pre15
+Razor ntuplizer for running over LHC Run 2 GEN-SIM-RECO compatible with CMSSW_9_3_2
 
 -----------------------------------
 Instructions for compiling in CMSSW
