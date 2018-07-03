@@ -57,23 +57,23 @@ public :
    Float_t         beamSpotZ;
    Float_t         beamSpotSigmaZ;
    Int_t           nPVAll;
-   Float_t         pvAllX[134];   //[nPVAll]
-   Float_t         pvAllXError[134];   //[nPVAll]
-   Float_t         pvAllY[134];   //[nPVAll]
-   Float_t         pvAllYError[134];   //[nPVAll]
-   Float_t         pvAllZ[134];   //[nPVAll]
-   Float_t         pvAllZError[134];   //[nPVAll]
-   Float_t         pvAllT[134];   //[nPVAll]
-   Float_t         pvAllTError[134];   //[nPVAll]
-   Float_t         pvAllLogSumPtSq[134];   //[nPVAll]
-   Float_t         pvAllSumPt[134];   //[nPVAll]
-   Float_t         pvAllSumPx[134];   //[nPVAll]
-   Float_t         pvAllSumPy[134];   //[nPVAll]
-   Float_t         pvAllSumPz[134];   //[nPVAll]
-   Float_t         pvPUz[134];   //[nPVAll]
-   Int_t           pvNtrack[134];   //[nPVAll]
-   Int_t           pvNtrack_reco[134];   //[nPVAll]
-   Int_t           pvIndex[134];   //[nPVAll]
+   Float_t         pvAllX[1000];   //[nPVAll]
+   Float_t         pvAllXError[1000];   //[nPVAll]
+   Float_t         pvAllY[1000];   //[nPVAll]
+   Float_t         pvAllYError[1000];   //[nPVAll]
+   Float_t         pvAllZ[1000];   //[nPVAll]
+   Float_t         pvAllZError[1000];   //[nPVAll]
+   Float_t         pvAllT[1000];   //[nPVAll]
+   Float_t         pvAllTError[1000];   //[nPVAll]
+   Float_t         pvAllLogSumPtSq[1000];   //[nPVAll]
+   Float_t         pvAllSumPt[1000];   //[nPVAll]
+   Float_t         pvAllSumPx[1000];   //[nPVAll]
+   Float_t         pvAllSumPy[1000];   //[nPVAll]
+   Float_t         pvAllSumPz[1000];   //[nPVAll]
+   Float_t         pvPUz[1000];   //[nPVAll]
+   Int_t           pvNtrack[1000];   //[nPVAll]
+   Int_t           pvNtrack_reco[1000];   //[nPVAll]
+   Int_t           pvIndex[1000];   //[nPVAll]
    Int_t           allNtrack;
    std::vector<int>     *allTrackPvIndex;
    std::vector<float>   *allTrackdT;
@@ -85,12 +85,14 @@ public :
    std::vector<float>   *allTrackX;
    std::vector<float>   *allTrackY;
    std::vector<float>   *allTrackZ;
-   Float_t         pvAllLogSumPtSq_dt[134];   //[nPVAll]
-   Float_t         pvAllSumPt_dt[134];   //[nPVAll]
-   Float_t         pvAllSumPx_dt[134];   //[nPVAll]
-   Float_t         pvAllSumPy_dt[134];   //[nPVAll]
-   Float_t         pvAllSumPz_dt[134];   //[nPVAll]
-   Int_t           pvNtrack_dt[134];   //[nPVAll]
+   std::vector<float>   *allTrackDz;
+   std::vector<float>   *allTrackDxy;
+   Float_t         pvAllLogSumPtSq_dt[1000];   //[nPVAll]
+   Float_t         pvAllSumPt_dt[1000];   //[nPVAll]
+   Float_t         pvAllSumPx_dt[1000];   //[nPVAll]
+   Float_t         pvAllSumPy_dt[1000];   //[nPVAll]
+   Float_t         pvAllSumPz_dt[1000];   //[nPVAll]
+   Int_t           pvNtrack_dt[1000];   //[nPVAll]
    Int_t           nBunchXing;
    Int_t           BunchXing[7];   //[nBunchXing]
    Int_t           BunchXingIndex[7];   //[nBunchXing]
@@ -445,6 +447,8 @@ public :
    TBranch        *b_allTrackX;   //!
    TBranch        *b_allTrackY;   //!
    TBranch        *b_allTrackZ;   //!
+   TBranch        *b_allTrackDz;   //!
+   TBranch        *b_allTrackDxy;   //!
    TBranch        *b_pvAllLogSumPtSq_dt;   //!
    TBranch        *b_pvAllSumPt_dt;   //!
    TBranch        *b_pvAllSumPx_dt;   //!
@@ -769,6 +773,7 @@ public :
 
   // Define histograms here
   TH1D *h_dR;
+  TH1D *h_dT;
   TH1D *h_delPt;
   TH1D *h_leadingMuonPt;
   TH1D *h_leadingMuonTime;
@@ -777,6 +782,54 @@ public :
   TH1D *h_ChargedFractionR04_dT;
   TH1D *h_CMSchargedIso04;
   TH1D *h_diff;
+  TH1D *h_trackX;
+  TH1D *h_trackY;
+  TH1D *h_trackZ;
+  TH1D *h_trackDz;
+  TH1D *h_trackDxy;
+  TH1D *h_recoMuon_dT;
+  TH1D *h_recoMuon;
+  TH1D *h_genMuon;
+  TH1D *h_recoMuon_dTvtx;
+  TH1D *h_recoMuon_vtx;
+  TH1D *h_genMuon_vtx;
+  
+  //======================== photon histograms=====================//
+  TH2D *t1vsPvZ;
+  TH2D *t2vsPvZ;
+  TH1D *h_dT_pho;
+  TH1D *h_leadingPhoPt;
+  TH1D *h_leadingPhoTime;
+  TH1D *h_nleadingPhoPt;
+  TH1D *h_nleadingPhoTime;
+  TH1D *h_ChargedFractionR04_pho;
+  TH1D *h_ChargedFractionR04_dT_pho;
+  TH1D *h_CMSchargedIso04_pho;
+  TH1D *h_diff_pho;
+  TH1D *h_trackX_pho;
+  TH1D *h_trackY_pho;
+  TH1D *h_trackZ_pho;
+  TH1D *h_trackDz_pho;
+  TH1D *h_trackDxy_pho;
+  TH1D *h_diPhoPt;
+  TH1D *h_diPhoM;
+  TH1D *h_diPhoEta;
+  TH1D *h_diPhoPhi;
+  TH1D *h_PhoEtaDiff;
+  TH1D *h_PhoPhiDiff;
+  TH1D *h_diPhoPVIndex;
+  TH1D *h_genVsRecodiff_etal0p8;
+  TH1D *h_genVsRecodiff_etag0p8;
+  TH2D *h_tMinVsDeta;
+  TH1D *h_diPhoMwithVtx;
+  TH1D *h_genVspvdiff_etal0p8;
+  TH1D *h_genVspvdiff_etag0p8;
+  TH1D *h_recoPho_dT;
+  TH1D *h_recoPho;
+  TH1D *h_genPho;
+  TH1D *h_recoPho_dTvtx;
+  TH1D *h_recoPho_vtx;
+  TH1D *h_genPho_vtx;
 
 };
 
@@ -845,6 +898,8 @@ void UpgradeAna::Init(TTree *tree)
    allTrackX = 0;
    allTrackY = 0;
    allTrackZ = 0;
+   allTrackDz = 0;
+   allTrackDxy = 0;
    puZposition = 0;
    ntrks_lowpt = 0;
    ntrks_highpt = 0;
@@ -907,6 +962,8 @@ void UpgradeAna::Init(TTree *tree)
    fChain->SetBranchAddress("allTrackX", &allTrackX, &b_allTrackX);
    fChain->SetBranchAddress("allTrackY", &allTrackY, &b_allTrackY);
    fChain->SetBranchAddress("allTrackZ", &allTrackZ, &b_allTrackZ);
+   fChain->SetBranchAddress("allTrackDz", &allTrackDz, &b_allTrackDz);
+   fChain->SetBranchAddress("allTrackDxy", &allTrackDxy, &b_allTrackDxy);
    fChain->SetBranchAddress("pvAllLogSumPtSq_dt", pvAllLogSumPtSq_dt, &b_pvAllLogSumPtSq_dt);
    fChain->SetBranchAddress("pvAllSumPt_dt", pvAllSumPt_dt, &b_pvAllSumPt_dt);
    fChain->SetBranchAddress("pvAllSumPx_dt", pvAllSumPx_dt, &b_pvAllSumPx_dt);

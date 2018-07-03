@@ -7,11 +7,10 @@ Razor ntuplizer for running over LHC Run 2 AOD compatible with CMSSW_8_1_pre15
 Instructions for compiling in CMSSW
 -----------------------------------
 
-    cmsrel CMSSW_8_1_pre15
-    cd CMSSW_8_1_pre15/src
+    cmsrel CMSSW_9_3_2
+    cd CMSSW_9_3_2/src
     cmsenv
-    git cms-merge-topic -u cms-met:CMSSW_8_0_X-METFilterUpdate
-    git clone -b AOD git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
+    git clone -b CMSSW_9_3_2 git@github.com:RazorCMS/SUSYBSMAnalysis-RazorTuplizer SUSYBSMAnalysis/RazorTuplizer
     scram b
 
 ---------------------    
