@@ -11,7 +11,9 @@ process.load("Configuration.EventContent.EventContent_cff")
 #load input files
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        '/store/data/Run2018A/EGamma/MINIAOD/PromptReco-v1/000/315/259/00000/00B94F3A-644B-E811-AFFA-FA163EDF1ED5.root'
+        #'/store/data/Run2018A/EGamma/MINIAOD/PromptReco-v1/000/315/259/00000/00B94F3A-644B-E811-AFFA-FA163EDF1ED5.root'
+        #'/store/data/Run2018D/EGamma/MINIAOD/PromptReco-v2/000/320/823/00000/6C14ADA8-CD99-E811-88D3-FA163EB5453C.root'
+        '/store/data/Run2018B/EGamma/MINIAOD/PromptReco-v1/000/317/696/00000/FC9C403C-9970-E811-90FE-FA163E1FAB71.root'
     )
 )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
@@ -31,7 +33,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 #------ Declare the correct global tag ------#
 
 #Global Tag for Run2015D
-process.GlobalTag.globaltag = '101X_dataRun2_Prompt_v9'
+process.GlobalTag.globaltag = '101X_dataRun2_Prompt_v11'
 
 #------ If we add any inputs beyond standard miniAOD event content, import them here ------#
 
