@@ -703,6 +703,9 @@ protected:
   bool Flag_trkPOG_manystripclus53X;
   bool Flag_trkPOG_toomanystripclus53X;
   bool Flag_trkPOG_logErrorTooManyClusters;
+  bool Flag_BadPFMuonFilter;
+  bool Flag_BadChargedCandidateFilter;
+  bool Flag_ecalBadCalibFilter;
   bool Flag_METFilters;
  
 
