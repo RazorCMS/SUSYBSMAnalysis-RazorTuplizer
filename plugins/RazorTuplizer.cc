@@ -1763,8 +1763,11 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
     pho_HoverE[nPhotons] = pho.hadTowOverEm();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
-    pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
-							  conversions, beamSpot->position());
+
+    //pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
+    //conversions, beamSpot->position());
+    //use this for 2017 dataset and later - originally for synchronization with Myriam (ETH)
+    pho_passEleVeto[nPhotons] = pho.passElectronVeto();
 
     //**********************************************************
     // Fill default miniAOD isolation quantities
