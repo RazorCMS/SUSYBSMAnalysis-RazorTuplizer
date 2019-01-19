@@ -714,6 +714,9 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("Flag_trkPOG_manystripclus53X", &Flag_trkPOG_manystripclus53X, "Flag_trkPOG_manystripclus53X/O");
   RazorEvents->Branch("Flag_trkPOG_toomanystripclus53X", &Flag_trkPOG_toomanystripclus53X, "Flag_trkPOG_toomanystripclus53X/O");
   RazorEvents->Branch("Flag_trkPOG_logErrorTooManyClusters", &Flag_trkPOG_logErrorTooManyClusters, "Flag_trkPOG_logErrorTooManyClusters/O");
+  RazorEvents->Branch("Flag_BadPFMuonFilter", &Flag_BadPFMuonFilter, "Flag_BadPFMuonFilter/O");
+  RazorEvents->Branch("Flag_BadChargedCandidateFilter", &Flag_BadChargedCandidateFilter, "Flag_BadChargedCandidateFilter/O");
+  RazorEvents->Branch("Flag_ecalBadCalibFilter", &Flag_ecalBadCalibFilter, "Flag_ecalBadCalibFilter/O");
   RazorEvents->Branch("Flag_METFilters", &Flag_METFilters, "Flag_METFilters/O");  
 }
 
@@ -1193,8 +1196,11 @@ void RazorTuplizer::resetBranches(){
     Flag_trkPOG_manystripclus53X = false;
     Flag_trkPOG_toomanystripclus53X = false;
     Flag_trkPOG_logErrorTooManyClusters = false;
+    Flag_BadPFMuonFilter = false;
+    Flag_BadChargedCandidateFilter = false;
+    Flag_ecalBadCalibFilter = false;
     Flag_METFilters = false;
-
+    
     metType1PtJetResUp=-999.;
     metType1PtJetResDown=-999.;
     metType1PtJetEnUp=-999.;
@@ -1830,8 +1836,11 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
     pho_HoverE[nPhotons] = pho.hadTowOverEm();
     pho_isConversion[nPhotons] = pho.hasConversionTracks();
-    pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
-							  conversions, beamSpot->position());
+
+    //pho_passEleVeto[nPhotons] = !hasMatchedPromptElectron(pho.superCluster(),electrons, 
+    //conversions, beamSpot->position());
+    //use this for 2017 dataset and later - originally for synchronization with Myriam (ETH)
+    pho_passEleVeto[nPhotons] = pho.passElectronVeto();
 
     //**********************************************************
     // Fill default miniAOD isolation quantities
@@ -2678,7 +2687,7 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_trackingFailureFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_goodVertices") == 0)
 	Flag_goodVertices = metFilterBits->accept(i);
-      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_globalTightHalo2016Filter") == 0)
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_globalSuperTightHalo2016Filter") == 0)
 	Flag_CSCTightHaloFilter = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_trkPOGFilters") == 0)
 	Flag_trkPOGFilters = metFilterBits->accept(i);
@@ -2704,6 +2713,12 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_trkPOG_toomanystripclus53X = metFilterBits->accept(i);
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_hcalLaserEventFilter") == 0)
 	Flag_hcalLaserEventFilter = metFilterBits->accept(i);     
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_BadPFMuonFilter") == 0)
+	Flag_BadPFMuonFilter = metFilterBits->accept(i);     
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_BadChargedCandidateFilter") == 0)
+	Flag_BadChargedCandidateFilter = metFilterBits->accept(i);     
+      else if(strcmp(metNames.triggerName(i).c_str(), "Flag_ecalBadCalibFilter") == 0)
+	Flag_ecalBadCalibFilter = metFilterBits->accept(i);     
       else if(strcmp(metNames.triggerName(i).c_str(), "Flag_badMuons") == 0) {
 	Flag_badGlobalMuonFilter = metFilterBits->accept(i);     
 	cout << "found bad muon flag : " << "\n";
@@ -2712,9 +2727,9 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
 	Flag_duplicateMuonFilter = metFilterBits->accept(i);     
     } //loop over met filters
 
-    Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
-    Flag_badMuonFilter = *badMuonFilter;
-
+    //Turn this off to avoid confusion. We will only take the flags from miniAOD.
+    //Flag_badChargedCandidateFilter = *badChargedCandidateFilter;
+    //Flag_badMuonFilter = *badMuonFilter;
     
   }
 

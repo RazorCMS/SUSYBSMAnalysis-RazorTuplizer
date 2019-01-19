@@ -378,17 +378,31 @@ bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel) {
     }
   } 
 
-  //Tight
+  // //Tight for 2016
+  // else if (cutLevel == 1) {
+  //   if ( fabs(jet->eta()) <= 2.4) {
+  //     if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 
+  // 	   && CHF > 0 && CHM > 0 && CEMF < 0.99 ) result = true;	   
+  //   } else if( fabs(jet->eta()) <= 3.0)  {
+  //     if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 ) result = true;	  
+  //   } else {
+  //     if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+  //   }
+  // }
+  //Tight For 2017
   else if (cutLevel == 1) {
     if ( fabs(jet->eta()) <= 2.4) {
-      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 
-	   && CHF > 0 && CHM > 0 && CEMF < 0.99 ) result = true;	   
+      if ( NHF < 0.90 && NEMF < 0.90 && NumConst > 1 
+	   && CHF > 0 && CHM > 0 ) result = true;	   
+    } else if( fabs(jet->eta()) <= 2.7)  {
+      if ( NHF < 0.90 && NEMF < 0.90 && NumConst > 1 ) result = true;	  
     } else if( fabs(jet->eta()) <= 3.0)  {
-      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 ) result = true;	  
+      if ( NEMF < 0.99 && NEMF > 0.02 && NumNeutralParticles > 2 ) result = true;	  
     } else {
-      if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+      if ( NEMF < 0.90 && NHF > 0.02 && NumNeutralParticles > 10 ) result = true;	  
     }
   }
+
 
   //Tight Lep Veto
   else if (cutLevel == 2) {
