@@ -487,6 +487,7 @@ protected:
 
   //Photons
   int nPhotons;
+  int nPhotons_overlap;
   float phoE[OBJECTARRAYSIZE];
   float phoPt[OBJECTARRAYSIZE];
   float phoEta[OBJECTARRAYSIZE];
@@ -633,6 +634,11 @@ protected:
   float metType0Pt;
   float metType0Phi;
   float metType1Pt;
+  float metType1Pt_raw;
+  float metType1Px;
+  float metType1Py;
+  float metType1Eta;
+  float metType1Phi_raw;
   float metType1Phi;
   float metType0Plus1Pt;
   float metType0Plus1Phi;

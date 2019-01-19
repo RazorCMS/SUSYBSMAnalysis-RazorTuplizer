@@ -496,6 +496,7 @@ void RazorTuplizer::enableIsoPFCandidateBranches(){
 
 void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("nPhotons", &nPhotons,"nPhotons/I");
+  RazorEvents->Branch("nPhotons_overlap", &nPhotons_overlap,"nPhotons_overlap/I");
   RazorEvents->Branch("phoE", phoE,"phoE[nPhotons]/F");
   RazorEvents->Branch("phoPt", phoPt,"phoPt[nPhotons]/F");
   RazorEvents->Branch("phoEta", phoEta,"phoEta[nPhotons]/F");
@@ -648,8 +649,13 @@ void RazorTuplizer::enableMetBranches(){
   RazorEvents->Branch("sumMET", &sumMET, "sumMET/F");
   RazorEvents->Branch("metType0Pt", &metType0Pt, "metType0Pt/F");
   RazorEvents->Branch("metType0Phi", &metType0Phi, "metType0Phi/F");
+  RazorEvents->Branch("metType1Pt_raw", &metType1Pt_raw, "metType1Pt_raw/F");
   RazorEvents->Branch("metType1Pt", &metType1Pt, "metType1Pt/F");
+  RazorEvents->Branch("metType1Px", &metType1Px, "metType1Px/F");
+  RazorEvents->Branch("metType1Py", &metType1Py, "metType1Py/F");
+  RazorEvents->Branch("metType1Eta", &metType1Eta, "metType1Eta/F");
   RazorEvents->Branch("metType1Phi", &metType1Phi, "metType1Phi/F");
+  RazorEvents->Branch("metType1Phi_raw", &metType1Phi_raw, "metType1Phi_raw/F");
   RazorEvents->Branch("metType0Plus1Pt", &metType0Plus1Pt, "metType0Plus1Pt/F");
   RazorEvents->Branch("metType0Plus1Phi", &metType0Plus1Phi, "metType0Plus1Phi/F");
   RazorEvents->Branch("metNoHFPt", &metNoHFPt, "metNoHFPt/F");
@@ -844,6 +850,7 @@ void RazorTuplizer::resetBranches(){
     nElectrons = 0;
     nTaus = 0;
     nPhotons = 0;
+    nPhotons_overlap = 0;
     nJets = 0;
     nFatJets = 0;
     nGenJets = 0;
@@ -1150,8 +1157,13 @@ void RazorTuplizer::resetBranches(){
     UncMETdSumEt = -99.0;
     metType0Pt = -99.0;
     metType0Phi = -99.0;
+    metType1Pt_raw = -99.0;
     metType1Pt = -99.0;
+    metType1Px = -99.0;
+    metType1Py = -99.0;
+    metType1Eta = -99.0;
     metType1Phi = -99.0;
+    metType1Phi_raw = -99.0;
     metType0Plus1Pt = -99.0;
     metType0Plus1Phi = -99.0;
     metPtRecomputed = -99.0;
@@ -1726,10 +1738,71 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
   noZS::EcalClusterLazyTools *lazyToolnoZS = new noZS::EcalClusterLazyTools(iEvent, iSetup, ebRecHitsToken_, eeRecHitsToken_);
   
+  std::vector<unsigned int> idx_OOTphotonsToSkip;
+
   for(unsigned int ind_photons = 0; ind_photons<photons.size();ind_photons++)
   {
+	
+    unsigned int idx_OOTphotons = 0;
 
   for (const pat::Photon &pho : *photons[ind_photons]) {
+    if(ind_photons > 0) idx_OOTphotons ++;
+    bool toBeSkipped = false;
+    //for OOT photons, check if this photon is marked as to be skipped
+    if (ind_photons > 0){
+	for(unsigned int i=0; i<idx_OOTphotonsToSkip.size(); i++){
+		if(idx_OOTphotons == idx_OOTphotonsToSkip[i]){
+			toBeSkipped = true;
+			continue;
+		}
+	}	
+    } 
+    //for in-time photons, check if it is overlapped with OOT photons
+    //if overlap, and pT_inTime > pT_OOT, then remove OOT photon
+    //if overlap, and pT_OOT > pT_inTime, then remove in-time photon
+    if (ind_photons == 0 && photons.size()>0){
+	float pt_inTime = pho.pt();
+	float eta_inTime = pho.eta();
+	float phi_inTime = pho.phi();
+	unsigned int idx_OOTphotons_beingchecked = 0;
+	for(unsigned int ind_photons_OOT = 1; ind_photons_OOT<photons.size();ind_photons_OOT++){
+		for (const pat::Photon &pho_OOT : *photons[ind_photons_OOT]) {
+			idx_OOTphotons_beingchecked ++;
+			float deltaR_inTime_OOT = deltaR(eta_inTime, phi_inTime, pho_OOT.eta(), pho_OOT.phi());
+			if(deltaR_inTime_OOT > 0.3) continue;
+			else{
+				cout<<"DEBUG ... clean photon overlapping, found one overlap at run = "<< runNum<<"   lumi = "<<lumiNum<<"   event = "<<eventNum<<endl;
+				cout<<"in-Time photon (pt, eta, phi) = ( "<<pt_inTime<<", "<<eta_inTime<<", "<<phi_inTime<<" )"<<endl;
+				cout<<"OOT photon (pt, eta, phi) = ( "<<pho_OOT.pt()<<", "<<pho_OOT.eta()<<", "<<pho_OOT.phi()<<" )"<<endl;
+				if(pt_inTime < pho_OOT.pt()) toBeSkipped = true; // remove the in time photon
+				else idx_OOTphotonsToSkip.push_back(idx_OOTphotons_beingchecked);
+			}
+		}
+	}
+    }
+
+    if (toBeSkipped) {
+	//MET correction: if remove inTime photon, add its pt to met pt, because it should not be considered in the met calculation but it was
+	if(ind_photons == 0){
+		metType1Px = metType1Px + pho.px();
+		metType1Py = metType1Py + pho.py();
+		metType1Pt = sqrt(metType1Px*metType1Px+metType1Py*metType1Py); 
+		TVector3 vec_met_temp(metType1Px, metType1Py, 0);
+		metType1Phi = vec_met_temp.Phi();	
+	}
+	if(pho.pt() > 15) nPhotons_overlap ++;
+	continue;
+    }
+    //MET correction: if keep OOT photon, subtract its pt to met pt, because it was originally not considered in the met calculation
+    
+    if(ind_photons > 1){
+	metType1Px = metType1Px - pho.px();
+	metType1Py = metType1Py - pho.py();
+	metType1Pt = sqrt(metType1Px*metType1Px+metType1Py*metType1Py);
+	TVector3 vec_met_temp(metType1Px, metType1Py, 0);
+	metType1Phi = vec_met_temp.Phi();	
+    }
+
     if (pho.pt() < 15) continue;
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
@@ -2530,7 +2603,12 @@ bool RazorTuplizer::fillMet(const edm::Event& iEvent){
   sumMET = Met.sumEt();
   metType0Pt = 0;
   metType0Phi = 0;
+  metType1Pt_raw = Met.pt();
   metType1Pt = Met.pt();
+  metType1Px = Met.px();
+  metType1Py = Met.py();
+  metType1Eta = Met.eta();
+  metType1Phi_raw = Met.phi();
   metType1Phi = Met.phi();
   metType0Plus1Pt = 0;
   metType0Plus1Phi = 0;
@@ -3115,9 +3193,9 @@ void RazorTuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     && fillElectrons(iEvent)
     && fillTaus()
     && fillIsoPFCandidates()
+    && fillMet(iEvent)
     && fillPhotons(iEvent,iSetup)
-    && fillJets()
-    && fillMet(iEvent);
+    && fillJets();
   //NOTE: if any of the above functions return false, the event will be rejected immediately with no further processing
   
   //Fill AK8Jets
