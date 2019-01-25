@@ -1801,7 +1801,7 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
     }
     //MET correction: if keep OOT photon, subtract its pt to met pt, because it was originally not considered in the met calculation
     
-    if(ind_photons > 1){
+    if(ind_photons > 0){
 	metType1Px = metType1Px - pho.px();
 	metType1Py = metType1Py - pho.py();
 	metType1Pt = sqrt(metType1Px*metType1Px+metType1Py*metType1Py);
