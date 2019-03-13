@@ -1509,7 +1509,7 @@ bool RazorTuplizer::fillElectrons(const edm::Event& iEvent){
     eleSigmaIetaIeta[nElectrons] = ele->sigmaIetaIeta();
     eleFull5x5SigmaIetaIeta[nElectrons] = ele->full5x5_sigmaIetaIeta();
     eleR9[nElectrons] = ele->r9();
-    ele_dEta[nElectrons] = ele->deltaEtaSuperClusterTrackAtVtx();
+    ele_dEta[nElectrons] = ele->deltaEtaSuperClusterTrackAtVtx() - ele->superCluster()->eta() + ele->superCluster()->seed()->eta();
     ele_dPhi[nElectrons] = ele->deltaPhiSuperClusterTrackAtVtx();
     ele_HoverE[nElectrons] = ele->hcalOverEcal();
     ele_d0[nElectrons] = -ele->gsfTrack().get()->dxy(myPV->position());
