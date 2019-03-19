@@ -69,6 +69,11 @@ using namespace std;
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
+//ECAL tools
+#include "RecoEcal/EgammaCoreTools/interface/EcalTools.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+
 //ECAL conditions
 #include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbService.h"
 #include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbRecord.h"
@@ -495,6 +500,8 @@ protected:
   float phoSigmaIetaIeta[OBJECTARRAYSIZE];
   float phoFull5x5SigmaIetaIeta[OBJECTARRAYSIZE];
   float phoR9[OBJECTARRAYSIZE];
+  float pho_sminor[OBJECTARRAYSIZE];
+  float pho_smajor[OBJECTARRAYSIZE];
   float pho_HoverE[OBJECTARRAYSIZE];
   float pho_sumChargedHadronPtAllVertices[OBJECTARRAYSIZE][MAX_NPV];
   float pho_sumChargedHadronPt[OBJECTARRAYSIZE];

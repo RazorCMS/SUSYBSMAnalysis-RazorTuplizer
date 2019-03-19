@@ -504,6 +504,8 @@ void RazorTuplizer::enablePhotonBranches(){
   RazorEvents->Branch("phoSigmaIetaIeta", phoSigmaIetaIeta, "phoSigmaIetaIeta[nPhotons]/F");
   RazorEvents->Branch("phoFull5x5SigmaIetaIeta", phoFull5x5SigmaIetaIeta, "phoFull5x5SigmaIetaIeta[nPhotons]/F");
   RazorEvents->Branch("phoR9", phoR9, "phoR9[nPhotons]/F");
+  RazorEvents->Branch("pho_sminor", pho_sminor, "pho_sminor[nPhotons]/F");
+  RazorEvents->Branch("pho_smajor", pho_smajor, "pho_smajor[nPhotons]/F");
   RazorEvents->Branch("pho_HoverE", pho_HoverE, "pho_HoverE[nPhotons]/F");
   RazorEvents->Branch("pho_sumChargedHadronPtAllVertices", &pho_sumChargedHadronPtAllVertices,Form("pho_sumChargedHadronPtAllVertices[nPhotons][%d]/F",MAX_NPV));
   RazorEvents->Branch("pho_sumChargedHadronPt", &pho_sumChargedHadronPt, "pho_sumChargedHadronPt[nPhotons]/F");
@@ -1003,6 +1005,8 @@ void RazorTuplizer::resetBranches(){
         phoSigmaIetaIeta[i] = -99.0;
         phoFull5x5SigmaIetaIeta[i] = -99.0;
         phoR9[i] = -99.0;
+        pho_sminor[i] = -99.0;
+        pho_smajor[i] = -99.0;
         pho_HoverE[i] = -99.0;
 	pho_sumChargedHadronPt[i] = -99.0;
 	pho_sumNeutralHadronEt[i] = -99.0;
@@ -1777,9 +1781,6 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 			float deltaR_inTime_OOT = deltaR(eta_inTime, phi_inTime, pho_OOT.eta(), pho_OOT.phi());
 			if(deltaR_inTime_OOT > 0.3) continue;
 			else{
-				cout<<"DEBUG ... clean photon overlapping, found one overlap at run = "<< runNum<<"   lumi = "<<lumiNum<<"   event = "<<eventNum<<endl;
-				cout<<"in-Time photon (pt, eta, phi) = ( "<<pt_inTime<<", "<<eta_inTime<<", "<<phi_inTime<<" )"<<endl;
-				cout<<"OOT photon (pt, eta, phi) = ( "<<pho_OOT.pt()<<", "<<pho_OOT.eta()<<", "<<pho_OOT.phi()<<" )"<<endl;
 				if(pt_inTime < pho_OOT.pt()) toBeSkipped = true; // remove the in time photon
 				else idx_OOTphotonsToSkip.push_back(idx_OOTphotons_beingchecked);
 			}
@@ -1813,6 +1814,13 @@ bool RazorTuplizer::fillPhotons(const edm::Event& iEvent, const edm::EventSetup&
 
     std::vector<float> vCov = lazyToolnoZS->localCovariances( *(pho.superCluster()->seed()) );
 
+    //get photon smajor and sminor
+    const auto recHits = (pho.isEB() ? ebRecHits.product() : eeRecHits.product());
+    if(recHits->size() > 0) {
+        Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *(pho.superCluster()), *recHits);
+        pho_smajor[nPhotons] = ph2ndMoments.sMaj;
+        pho_sminor[nPhotons] = ph2ndMoments.sMin;
+    }
     //-------------------------------------------------
     //default photon 4-mometum already vertex corrected
     //-------------------------------------------------
