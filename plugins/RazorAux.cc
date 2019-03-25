@@ -354,7 +354,7 @@ TLorentzVector RazorTuplizer::photonP4FromVtx( TVector3 vtx, TVector3 phoPos, do
   return phoP4;
 };
 
-bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel) {
+bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel, int year) {
   bool result = false;
 
   double NHF = jet->neutralHadronEnergyFraction();
@@ -366,6 +366,52 @@ bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel) {
   int NumNeutralParticles =jet->neutralMultiplicity();
   int CHM = jet->chargedMultiplicity();
 
+  if(year == 2016){
+  //https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetID13TeVRun2016
+  //Loose
+  if (cutLevel == 0) {
+    if ( fabs(jet->eta()) <= 2.4) {
+      if ( NHF  < 0.99 && NEMF < 0.99 && NumConst > 1 
+	   && CHF > 0 && CHM > 0 && CEMF < 0.99 ) result = true;	   
+     } else if ( fabs(jet->eta()) <= 2.7) {
+      if ( NHF  < 0.99 && NEMF < 0.99 && NumConst > 1) result = true;	   
+     } else if( fabs(jet->eta()) <= 3.0)  {
+      if ( NHF  < 0.98 && NEMF > 0.01 && NumNeutralParticles > 2 ) result = true;	  
+     } else {
+      if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+    }
+  } 
+
+   //Tight for 2016
+  if (cutLevel == 1) {
+    if ( fabs(jet->eta()) <= 2.4) {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 
+	   && CHF > 0 && CHM > 0 && CEMF < 0.99 ) result = true;	   
+     } else if ( fabs(jet->eta()) <= 2.7) {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1) result = true;	   
+     } else if( fabs(jet->eta()) <= 3.0)  {
+      if ( NHF  < 0.98 && NEMF > 0.01 && NumNeutralParticles > 2 ) result = true;	  
+     } else {
+      if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+    }
+  }
+
+  //Tight Lep Veto
+  else if (cutLevel == 2) {
+    if ( fabs(jet->eta()) <= 2.4) {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 
+	   && CHF > 0 && CHM > 0 && CEMF < 0.99 && MUF < 0.8 ) result = true;	   
+    } else if( fabs(jet->eta()) <= 2.7)  {
+      if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 && MUF < 0.8) result = true;	   
+    } else if( fabs(jet->eta()) <= 3.0)  {
+      if ( NHF  < 0.90 && NEMF > 0.01 && NumConst > 1 ) result = true;	  
+    } else {
+      if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
+    }
+  }
+}
+
+  if(year == 2017){
   //Loose
   if (cutLevel == 0) {
     if ( fabs(jet->eta()) <= 2.4) {
@@ -377,18 +423,6 @@ bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel) {
       if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
     }
   } 
-
-  // //Tight for 2016
-  // else if (cutLevel == 1) {
-  //   if ( fabs(jet->eta()) <= 2.4) {
-  //     if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 
-  // 	   && CHF > 0 && CHM > 0 && CEMF < 0.99 ) result = true;	   
-  //   } else if( fabs(jet->eta()) <= 3.0)  {
-  //     if ( NHF  < 0.90 && NEMF < 0.90 && NumConst > 1 ) result = true;	  
-  //   } else {
-  //     if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
-  //   }
-  // }
   //Tight For 2017
   else if (cutLevel == 1) {
     if ( fabs(jet->eta()) <= 2.4) {
@@ -415,6 +449,9 @@ bool RazorTuplizer::passJetID( const pat::Jet *jet, int cutLevel) {
       if ( NEMF < 0.90 && NumNeutralParticles > 10 ) result = true;	  
     }
   }
-
+}
   return result;
 }
+
+
+

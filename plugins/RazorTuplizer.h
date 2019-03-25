@@ -174,7 +174,7 @@ public:
 					double dROuterSize = 0.4,
 					double r_iso_min = 0.05, double r_iso_max = 0.2 , double kt_scale = 10.0);
   TLorentzVector photonP4FromVtx( TVector3 vtx, TVector3 phoPos, double E );
-  bool passJetID( const pat::Jet *jet, int cutLevel);
+  bool passJetID( const pat::Jet *jet, int cutLevel, int year=2017);
 
 protected:
   virtual void beginJob() override;
